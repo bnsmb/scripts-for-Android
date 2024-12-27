@@ -1,0 +1,2119 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>compile_omnirom_15</title>
+  </head>
+  <body>
+    <br>
+    <br>
+    a<br>
+    <br>
+    <table width="100%" cellspacing="2" cellpadding="2" border="1">
+      <tbody>
+        <tr>
+          <td valign="top"><b>FIle/Directory</b><br>
+          </td>
+          <td valign="top"><b>content</b><br>
+          </td>
+          <td valign="top"><b>Comment</b><b><br>
+            </b></td>
+        </tr>
+        <tr>
+          <td valign="top">/system/bin/openssh_bin_wrapper</td>
+          <td valign="top">wrapper script for the ssh binaries<br>
+          </td>
+          <td valign="top">The wrapper script is necessary to use the
+            OpenSSH libraries<br>
+          </td>
+        </tr>
+        <tr>
+          <td valign="top">/system/bin/ssh<br>
+            /system/bin/ssh-add<br>
+            /system/bin/ssh-agent<br>
+            /system/bin/ssh-copy-id<br>
+            /system/bin/ssh-keygen<br>
+            /system/bin/ssh-keyscan<br>
+            /system/bin/sshd</td>
+          <td valign="top">ssh binaries<br>
+          </td>
+          <td valign="top">These are symbolic links to the wrapper
+            script /system/bin/openssh_bin_wrapper<br>
+          </td>
+        </tr>
+        <tr>
+          <td valign="top">/system/lib64/openssh_libs<br>
+          </td>
+          <td valign="top">libcrypto.so<br>
+            libedit.so<br>
+            libldns.so<br>
+            libncurses.so<br>
+            libssl.so<br>
+            <br>
+          </td>
+          <td valign="top">The libraries for OpenSSH must not overwrite
+            the libraries from the OS<br>
+          </td>
+        </tr>
+        <tr>
+          <td valign="top">/system/usr/libexec/<br>
+          </td>
+          <td valign="top">sftp-server<br>
+            ssh-keysign<br>
+            ssh-pkcs11-helper<br>
+            ssh-sk-helper<br>
+            sshd-session<br>
+            <br>
+          </td>
+          <td valign="top">help programs for ssh<br>
+            <br>
+            These are symbolic links to the wrapper script
+            /system/bin/openssh_bin_wrapper</td>
+        </tr>
+        <tr>
+          <td valign="top">/data/local/tmp/var/<br>
+            /data/local/tmp/var/run<br>
+            /data/local/tmp/var/empty<br>
+            /data/local/tmp/var/mail<br>
+            /data/local/tmp/home<br>
+            <br>
+          </td>
+          <td valign="top">writable data directories for ssh and sshd<br>
+          </td>
+          <td valign="top">The data in these directories is not changed
+            when the Magisk Module is reinstalled or updated<br>
+          </td>
+        </tr>
+        <tr>
+          <td valign="top"><br>
+          </td>
+          <td valign="top"><br>
+          </td>
+          <td valign="top"><br>
+          </td>
+        </tr>
+        <tr>
+          <td valign="top">/data/local/tmp/home/.ssh<br>
+          </td>
+          <td valign="top">.ssh directory of the user shell<br>
+          </td>
+          <td valign="top">This directory is used for the files
+            known_hosts, authorized_keys and others<br>
+          </td>
+        </tr>
+        <tr>
+          <td valign="top">/data/local/tmp/home/.ssh/authorized_keys</td>
+          <td valign="top">ssh public keys for ssh access via public key<br>
+          </td>
+          <td valign="top"><br>
+          </td>
+        </tr>
+        <tr>
+          <td valign="top">/etc/ssh/ssh_host_ed25519_key<br>
+            /etc/ssh/ssh_host_ed25519_key.pub<br>
+            /etc/ssh/ssh_host_rsa_key<br>
+            /etc/ssh/ssh_host_rsa_key.pub<br>
+          </td>
+          <td valign="top">ssh host keys<br>
+            <br>
+          </td>
+          <td valign="top">The host keys are created by the
+            customization script of the Magisk Module if they do not yet
+            exist<br>
+            The host keys are preserved if the Magisk Module is
+            reinstalled or updated<br>
+            <br>
+            To change or add new ssh host keys, create the keys in the
+            directory /data/adb/modules/openssh/system/etc/ssh, update
+            the file /system/etc/sshd_config, and reboot the phone<br>
+            Note that the owner of the host keys must be the user shell.<br>
+          </td>
+        </tr>
+        <tr>
+          <td valign="top"><br>
+          </td>
+          <td valign="top"><br>
+          </td>
+          <td valign="top"><br>
+          </td>
+        </tr>
+        <tr>
+          <td valign="top">/etc/ssh/ssh_config<br>
+          </td>
+          <td valign="top">ssh config file<br>
+          </td>
+          <td valign="top">To update the file edit the file
+            /data/adb/modules/openssh/system/etc/ssh/ssh_config and
+            reboot the phone or remount the file /system/etc/ssh_config<br>
+          </td>
+        </tr>
+        <tr>
+          <td valign="top">/etc/ssh/sshd_config<br>
+          </td>
+          <td valign="top">sshd config file<br>
+          </td>
+          <td valign="top">To update the file edit the file
+            /data/adb/modules/openssh/system/etc/ssh/sshd_config and
+            reboot the phone or remount the file /system/etc/sshd_config</td>
+        </tr>
+        <tr>
+          <td valign="top"><br>
+          </td>
+          <td valign="top"><br>
+          </td>
+          <td valign="top"><br>
+          </td>
+        </tr>
+        <tr>
+          <td valign="top">/data/adb/modules_update/openssh/service.sh<br>
+          </td>
+          <td valign="top">start script for the sshd<br>
+          </td>
+          <td valign="top"><br>
+          </td>
+        </tr>
+        <tr>
+          <td valign="top"><br>
+          </td>
+          <td valign="top"><br>
+          </td>
+          <td valign="top"><br>
+          </td>
+        </tr>
+        <tr>
+          <td valign="top"><br>
+          </td>
+          <td valign="top"><br>
+          </td>
+          <td valign="top"><br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <br>
+    <br>
+    The module service script
+    /data/adb/modules_update/openssh/service.sh starts the sshd
+    automatically after booting the phone if the file
+    /data/local/tmp/home/start_sshd exists.<br>
+    The sshd is started by the script with the log file
+    /data/local/tmp/var/log if the directory /data/local/tmp/var/log
+    exists.<br>
+    The sshd is started as user shell.<br>
+    <br>
+    The service script writes STDERR and STDLOG messages to the file
+    /data/local/tmp/start_sshd.log if the file /data/local/tmp/debug
+    exists.<br>
+    <br>
+    The file /data/local/tmp/home/start_sshd is NOT created by the
+    Magisk Module customization script.<br>
+    <br>
+    <br>
+    Notes<br>
+    <br>
+    Please note that the sshd configuration is somehow not secure to
+    allow the sshd to be started by the user shell!<br>
+    <br>
+    The sshd can be started by the user shell or the user root; the
+    default port used by the sshd is 9022:<br>
+    <br>
+    ┌shell@localhost:/<br>
+    └─$ grep ^Port /etc/ssh/sshd_config<br>
+    Port 9022<br>
+    ┌shell@localhost:/<br>
+    └─$ <br>
+    <br>
+    <br>
+    The binaries are compiled with the android NDK r27b using the API
+    version 33<br>
+    <br>
+    Openssh was compiled with these options:<br>
+    <br>
+    OpenSSH has been configured with the following options:<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    User binaries: /system/usr/bin<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    System binaries: /system/usr/sbin<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    Configuration files: /system/etc/ssh<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    Askpass program: /system/usr/libexec/ssh-askpass<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    Manual pages: /system/usr/man/manX<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    PID file: /data/local/tmp/var/run<br>
+    &nbsp; Privilege separation chroot path: /data/local/tmp/var/empty<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    sshd default user PATH: /system/bin<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    Manpage format: doc<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    PAM support: no<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    OSF SIA support: no<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    KerberosV support: no<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    SELinux support: no<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    libedit support: yes<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    libldns support: yes<br>
+    &nbsp; Solaris process contract support: no<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Solaris
+    project support: no<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Solaris privilege
+    support: no<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; IP address in $DISPLAY hack: no<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    Translate v4 in v6 hack: no<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    BSD Auth support: no<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    Random number source: OpenSSL internal ONLY<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    Privsep sandbox style: none<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    PKCS#11 support: yes<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    U2F/FIDO support: yes<br>
+    <br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    Host: aarch64-unknown-linux-android<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Compiler:
+/data/develop/android/android-ndk-r27b/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android33-clang<br>
+    &nbsp;&nbsp;&nbsp; Compiler flags: --sysroot
+    /data/develop/android/android-ndk-r27b/toolchains/llvm/prebuilt/linux-x86_64/sysroot
+    --sysroot
+    /data/develop/android/android-ndk-r27b/toolchains/llvm/prebuilt/linux-x86_64/sysroot
+    --sysroot
+    /data/develop/android/android-ndk/toolchains/llvm/prebuilt/linux-x86_64/sysroot&nbsp;
+    -O2 -fPIE -fPIC
+    -I/data/develop/android/sysroot/usr/include&nbsp;&nbsp;
+    -Wno-implicit-function-declaration -Wno-int-conversion -O2 -fPIE
+    -fPIC -I/data/develop/android/sysroot/usr/include&nbsp;&nbsp;
+    -Wno-implicit-function-declaration -Wno-int-conversion -O2 -fPIE
+    -fPIC -I/data/develop/android/sysroot/usr/include&nbsp;&nbsp;
+    -Wno-implicit-function-declaration -Wno-int-conversion -pipe
+    -Wunknown-warning-option -Wno-error=format-truncation
+    -Qunused-arguments -Wall -Wextra -Wpointer-arith -Wuninitialized
+    -Wsign-compare -Wformat-security -Wsizeof-pointer-memaccess
+    -Wno-pointer-sign -Wno-unused-parameter -Wno-unused-result
+    -Wmisleading-indentation -Wbitwise-instead-of-logical
+    -fno-strict-aliasing -D_FORTIFY_SOURCE=2 -ftrapv
+    -fzero-call-used-regs=used -ftrivial-auto-var-init=zero -mretpoline
+    -fno-builtin-memset -Dfd_mask=int&nbsp; <br>
+    Preprocessor flags:&nbsp; -DHAVE_ATTRIBUTE__SENTINEL__=1
+    -DBROKEN_SETRESGID&nbsp; -I/system/usr/include<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Linker flags: --sysroot
+    /data/develop/android/android-ndk-r27b/toolchains/llvm/prebuilt/linux-x86_64/sysroot
+    --sysroot
+    /data/develop/android/android-ndk-r27b/toolchains/llvm/prebuilt/linux-x86_64/sysroot
+    --sysroot
+    /data/develop/android/android-ndk/toolchains/llvm/prebuilt/linux-x86_64/sysroot&nbsp;
+    -s -pie -L/data/develop/android/sysroot/usr/lib&nbsp; -s -pie
+    -L/data/develop/android/sysroot/usr/lib&nbsp; -s -pie
+    -L/data/develop/android/sysroot/usr/lib&nbsp; -Wl,-z,relro
+    -Wl,-z,now -Wl,-z,noexecstack -Wl,-z,retpolineplt -L/system/usr/lib
+    <br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Libraries: -lldns <br>
+    &nbsp;&nbsp;&nbsp;&nbsp; +for channels: -lcrypto&nbsp; -lz<br>
+    <br>
+    <br>
+    [xtrnaw7@t15g /data/develop/android/source/openssh-9.9p1]$ <br>
+    <br>
+    <br>
+    <br>
+    Trouble Shooting<br>
+    <br>
+    To execute the customize script of the Magisk Module with "set -x"
+    and write STDOUT and STDERR to the file
+    /data/local/tmp/openssh_customize.log create the (probably empty)
+    file /data/local/tmp/debug before installing the Magisk Module<br>
+    <br>
+    <br>
+    <br>
+    <hr size="2" width="100%"><br>
+    Compiling the CustomROM <a href="https://omnirom.org/"
+      target="_blank" class="link link--external" rel="ugc nofollow ugc
+      noopener" moz-do-not-send="true"><b>OmniROM 15</b></a> from within
+    <b>Linux</b> is again a very simple and straight forward process --
+    the developer for the <b>OmniROM</b> did once again a really
+    amazing good job setting up the build environment for the <b>OmniROM
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      15</b>.<br>
+    <br>
+    I'm repeating myself here - but it can't be said often enough.<br>
+    <br>
+    <b>Notes:</b><br>
+    <br>
+    The HowTos to compile the previous OmniROM versions for the <b>ASUS
+      Zenfone 8</b> are here:<br>
+    <br>
+    <table width="100%" cellspacing="2" cellpadding="2" border="1">
+      <tbody>
+        <tr>
+          <td valign="top"><b>OmniROM Version</b><b><br>
+            </b></td>
+          <td valign="top"><b>URL</b><b><br>
+            </b></td>
+          <td valign="top"><b>Comment</b><b><br>
+            </b></td>
+        </tr>
+        <tr>
+          <td valign="top">OmniROM 12<br>
+          </td>
+          <td valign="top"><a moz-do-not-send="true"
+href="file:///data/www/myhomepage/htdocs/My_HowTos_for_Android.html#How_to_compile_the_OmniROM_for_the_ASUS">How
+
+              to compile the OmniROM for the ASUS Zenfone 8</a></td>
+          <td valign="top"><br>
+          </td>
+        </tr>
+        <tr>
+          <td valign="top">OmniROM 13<br>
+          </td>
+          <td valign="top"><a moz-do-not-send="true"
+href="file:///data/www/myhomepage/htdocs/My_HowTos_for_Android.html#How_to_compile_the_OmniROM_13_for_the_the_ASUS_Zenfone_8">How
+to
+
+compile
+
+the
+
+OmniROM
+
+13
+
+for
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+              the ASUS Zenfone 8</a></td>
+          <td valign="top"><br>
+          </td>
+        </tr>
+        <tr>
+          <td valign="top">OmniROM 14<br>
+          </td>
+          <td valign="top"><a moz-do-not-send="true"
+href="file:///data/www/myhomepage/htdocs/My_HowTos_for_Android.html#How_to_compile_the_OmniROM_14_for_the_the_ASUS_Zenfone_8">How
+to
+
+compile
+
+the
+
+OmniROM
+
+14
+
+for
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+              the ASUS Zenfone 8</a> </td>
+          <td valign="top"><br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <br>
+    <br>
+    <br>
+    <hr size="2" width="100%"> <b>Hardware requirements</b><b><br>
+    </b><br>
+    Message from the <b>repo</b> tool:<br>
+    <br>
+    "The minimum required amount of free memory is around 16GB, and even
+    with that, some configurations may not work."<br>
+    <br>
+    In my experience, the computer on which OmniROM is compiled should
+    have at least 32 GB RAM and 4 CPU cores.<br>
+    (The numbers in this document are for a PC with an Intel Core i7
+    with 16 cores and 128 GB RAM).<br>
+    <br>
+    Note that the scripts used to create the OmniROM image start one
+    workspace per CPU and each workspace requires about 4 GB of RAM.
+    Plus about 2 GB RAM for the general tasks.<br>
+    <br>
+    As of <b>09.01.2024</b>, the repositories for <b>OmniROM 15</b>
+    occupy about <b>138 GB</b> of disk space; the additional
+    repositories for the hardware-specific repositories for the <b>ASUS
+      Zenfone 8</b> occupy about <b>20 GB</b> of disk space.<br>
+    The compile process will occupy additional <b>?? GB</b> for the
+    temporary output files.<br>
+    In total, the repositories for <b>OmniROM 15</b> require around <b>??</b><b>
+      GB</b> of storage space (the space used will increase with every "<b>repo
+
+      sync</b>")<br>
+    <br>
+    <br>
+    <hr size="2" width="100%"> <b>Prerequisites</b><b><br>
+    </b><br>
+    Some of the repositories for <b>OmniROM 15</b> are on <a
+      href="https://gitlab.com" target="_blank" moz-do-not-send="true">https://gitlab.com</a>
+    and the access to these repositories for the repository sync is done
+    via <b>ssh</b>. Therefore, to sync these repositories a user
+    account on <b>gitlab.com</b> with configured <b>public ssh key</b>
+    is required. The user account on <b>gitlab.com</b> is free of
+    charge and the public ssh key can be uploaded into the user profile
+    on <b>gitlab.com</b> (see here: <a
+      href="https://docs.gitlab.com/ee/user/ssh.html" target="_blank"
+      moz-do-not-send="true">https://docs.gitlab.com/ee/user/ssh.html</a>)<br>
+    <br>
+    The repositories on <a href="https://github.com" target="_blank"
+      moz-do-not-send="true">http://github.com</a> are currently
+    accessed via <b>https</b> but that might change in the future.
+    Therefor it's recommended to create a user on <b>github.com</b> and
+    add the ssh public key to the profile of that user also.<br>
+    <br>
+    <b>Note:</b><br>
+    <br>
+    To check how the access to the repositories is configured use this
+    command<br>
+    <br>
+    <samp>[ OmniRom 15 (devpool) - xtrnaw7@t15g
+      /devpool001/develop/OmniROM_15.0 ] $&nbsp; g<b>rep fetch $( find
+        .repo -name "*xml" )</b><br>
+      .repo/local_manifests/local_manifest.xml:&nbsp;&nbsp;&nbsp;
+      &nbsp;&nbsp;&nbsp; fetch="https://github.com/DonkeyCoyote" /&gt;<br>
+      .repo/manifests/omni-private.xml:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      fetch="ssh://git@github.com/omnirom"<br>
+      .repo/manifests/default.xml:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      fetch="https://android.googlesource.com"<br>
+      .repo/manifests/omni-aosp.xml:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      fetch="https://github.com/" /&gt;<br>
+      .repo/manifests/omni-aosp.xml:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      fetch="ssh://git@gitlab.com/omnirom" /&gt;<br>
+      .repo/manifests/omni-aosp.xml:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      fetch="https://github.com/omnirom"<br>
+      .repo/manifests/omni-caf.xml:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      fetch="https://github.com/" /&gt;<br>
+      .repo/manifests/omni-caf.xml:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      fetch="https://github.com/omnirom"<br>
+      .repo/manifests/omni-caf.xml:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      fetch="https://git.codelinaro.org/clo/la"<br>
+      [ OmniRom 15 (devpool) - xtrnaw7@t15g
+      /devpool001/develop/OmniROM_15.0 ] $ <br>
+    </samp><br>
+    <br>
+    Use the commands<br>
+    <br>
+    <samp>ssh git@github.com<br>
+      <br>
+      ssh git@gitlab.com<br>
+    </samp><br>
+    to test the access via ssh and add the ssh hostkeys of the hosts <b>github.com</b>
+    and <b>gitab.com</b> to the <b>known_hosts</b> file.<br>
+    <br>
+    Or use<br>
+    <br>
+    <samp>grep"^gitlab.com"~/.ssh/known_hosts&nbsp; ||ssh-keyscan
+      gitlab.com &gt;&gt;~/.ssh/known_hosts<br>
+      <br>
+      <samp>grep"^github.com"</samp></samp> <samp><samp>~/.ssh/known_hosts&nbsp;||</samp>
+      ssh-keyscan github.com &gt;&gt;~/.ssh/known_hosts<br>
+    </samp><br>
+    to add the ssh hostkeys of the repository server used to the local <b>known_hosts</b>
+    file of the user used to retrieve the repositories.<br>
+    <br>
+    It's recommended to start the <b>ssh-agent</b> and load the private
+    ssh keys before starting the sync of the repositories, e.g. if no
+    global ssh-agent is running use:<br>
+    <br>
+    <samp>$( eval ssh-agent )<br>
+      ssh-add<br>
+    </samp><br>
+    Use<br>
+    <br>
+    <samp>ssh-add -l</samp><br>
+    <br>
+    to list the ssh keys already loaded by the ssh-agent.<br>
+    <br>
+    <br>
+    <hr size="2" width="100%"> <br>
+    <br>
+    The tool <a href="https://source.android.com/setup/develop/repo"
+      target="_blank" moz-do-not-send="true"><b>repo</b></a> is required
+    to maintain the repositories for the <b>OmniROM 15</b>; you can
+    download the tool "<b>repo</b>" from <a
+      href="https://gerrit.googlesource.com/git-repo/" target="_blank"
+      moz-do-not-send="true">https://gerrit.googlesource.com/git-repo</a>
+    or download it with this command:<br>
+    <br>
+    <samp>curl https://storage.googleapis.com/git-repo-downloads/repo
+      &gt; ./repo <br>
+      chmod a+x ./repo &nbsp;</samp><br>
+    <br>
+    It's not necessary to install additional tools for creating an <b>OmniROM
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      15</b> image -- all necessary tools to create the image are in the
+    repositories for the <b>OmniROM 15</b>.<br>
+    <br>
+    <hr size="2" width="100%"> <br>
+    The repositories used for the <b>OmniROM 15</b> use the <b>git</b>
+    command line extension <a href="https://github.com/git-lfs/git-lfs"
+      target="_blank" moz-do-not-send="true">git lfs</a>. At least in <b>Fedora</b>
+    this extension is not installed by default while installing <b>git</b>.
+    In Fedora <b>git lfs</b> can be installed using this command:<br>
+    <br>
+    <samp>sudo dnf install git-lfs</samp>&nbsp;<br>
+    <br>
+    <br>
+    <hr size="2" width="100%"> <b>Creating the local copies of the
+      repositories for the OmniROM 15</b><b><br>
+    </b><br>
+    <br>
+    Most (but not all) of the necessarry steps to sync the repositories
+    necessary to create an <b>OmniROM 15</b> installation image are
+    described in the section "<b>Getting Started</b>" here: <a
+      href="https://github.com/omnirom/android" target="_blank"
+      moz-do-not-send="true">https://github.com/omnirom/android</a> but
+    some instructions are missing the details.<br>
+    <br>
+    <br>
+    To create a local copy of the repositories for <b>OmniROM 15</b>
+    these steps are required:<br>
+    <br>
+    <br>
+    First create a new directory for the repositories and change the
+    working directory to the new directory, e.g.:<br>
+    <br>
+    <samp>mkdir /data/develop/android/OmniROM_15.0<br>
+      cd /data/develop/android/OmniROM_15.0</samp><br>
+    <br>
+    Then init the local repositories using the command:<br>
+    <br>
+    <code>repo init -u https://github.com/omnirom/android.git -b
+      android-15.0 --git-lfs</code><br>
+    <br>
+    Note that the command <b>repo init</b> only creates a hidden
+    directory called <b>.repo</b>.<br>
+    <br>
+    <br>
+    Next do the initial sync of the repositories using the command:<br>
+    <br>
+    <code>repo sync &amp;&amp; repo forall -c git lfs pull</code><br>
+    <br>
+    <b>Please note that this command differs from the commands used to
+      synchronize the repositories of previous versions!</b> (see also <a
+      href="https://github.com/omnirom/android/tree/android-15"
+      target="_blank" moz-do-not-send="true">https://github.com/omnirom/android/tree/android-15</a>)<br>
+    <br>
+    The initial repository sync will download all repositories necessary
+    to create the <b>OmniROM 15</b> image except the hardware dependent
+    repositories (these repos are different for the various phone
+    models).<br>
+    <br>
+    Therefor you must add the repositories for the vendor and device
+    tree for your phone to the manifests in the local repositories after
+    the download finished.<br>
+    <br>
+    This should be done in the file <b>.repo/local_manifests/local_manifest.xml</b>
+    (just create the directory <b>.repo/local_manifests</b> if it does
+    not exist).<br>
+    <br>
+    For the <b>ASUS Zenfone 8</b> the file should look like this:&nbsp;
+    ???<br>
+    <br>
+    <code>[ OmniRom 15 Dev - xtrnaw7@t15g
+      /data/develop/android/OmniROM_15.0 ] $<b> cat
+        .repo/local_manifests/local_manifest.xml </b><br>
+      &lt;?xml version="1.0" encoding="UTF-8"?&gt;<br>
+      <br>
+      &lt;manifest&gt;<br>
+      &lt;remote name="DonkeyCoyote"<br>
+      fetch="https://github.com/DonkeyCoyote" /&gt;<br>
+      <br>
+      &lt;project path="device/asus/zenfone8"
+      name="android_device_asus_zenfone8" remote="omnirom"
+      revision="android-15.0" /&gt;<br>
+      &lt;project path="vendor/asus" name="proprietary_vendor_asus"
+      remote="DonkeyCoyote" revision="android-15.0" /&gt;<br>
+      &lt;project path="vendor/microg"
+      name="android_prebuilts_prebuiltapks" remote="omnirom"
+      revision="android-13.0" /&gt;<br>
+      &lt;project path="vendor/images/asus"
+      name="android_vendor_images_asus" remote="gitlab"
+      revision="android-13.0" /&gt;<br>
+      <br>
+      &lt;/manifest&gt;<br>
+      [ OmniRom 14 Dev - xtrnaw7@t15g /data/develop/android/OmniROM_15.0
+      ] $ <br>
+      <br>
+    </code> <br>
+    <br>
+    <b>Notes:</b><br>
+    <br>
+    The repository <b>android_prebuilts_prebuiltapks</b> is only
+    necessary for <b>OmniROM 15</b> images that should include the <a
+      href="https://microg.org/" target="_blank" moz-do-not-send="true">MicroG</a>
+    packages.<br>
+    <br>
+    <br>
+    After updating the file <b>local_manifest.xml</b> do another<br>
+    <br>
+    <code>repo sync &amp;&amp; repo forall -c git lfs pull</code><br>
+    <br>
+    to sync the added repositories. This time the download will be
+    faster because only the additional repos will be downloaded.<br>
+    <br>
+    <br>
+    Now you can start the build with these commands:&nbsp; ????<br>
+    <br>
+    <code># optional:<br>
+      #<br>
+      # to create an OmniROM image with MicroG packages set the
+      environment variable ROM_BUILDTYPE to MICROG before starting the
+      build<br>
+      #<br>
+      # to create an OmniROM image with GAPPS packages set the
+      environment variable ROM_BUILDTYPE to GAPPS before starting the
+      build<br>
+      #(that will only work if the repositories for the GAPPS are
+      configured, of course)<br>
+      #<br>
+      export ROM_BUILDTYPE=MICROG<br>
+      <br>
+      . build/envsetup.sh<br>
+      <br>
+      brunch omni_zenfone8-user<br>
+    </code><br>
+    <br>
+    in the directory with the downloaded repositories (use the command "<b>breakast</b>"
+    without parameter instead of "<b>brunch</b>" to see other possible
+    targets)<br>
+    <br>
+    Be aware that the first time the compile process will take 4 hours
+    or more.<br>
+    <br>
+    <br>
+    If everything is fine there will be a ZIP file with your own Custom
+    <b>OmniROM 15</b> image in the directory .<b>/out/target/product/zenfone8/</b>
+    when the compile script is done, e.g. for images with the <b>MicroG</b>
+    packages:<br>
+    <br>
+    ???<br>
+    <code>[ OmniRom 14 Dev - xtrnaw7@t15g
+      /data/develop/android/OmniROM_14.0 ] $ ls -l
+      out/target/product/zenfone8/omni-14-202311*zip<br>
+      -rw-rw-r--. 3 xtrnaw7 xtrnaw7 1363298353 Nov 20 10:22
+      out/target/product/zenfone8/omni-14-20231119-zenfone8-MICROG.zip<br>
+      [ OmniRom 14 Dev - xtrnaw7@t15g /data/develop/android/OmniROM_14.0
+      ] $ <br>
+      <br>
+    </code><br>
+    <br>
+    The image can now be installed on the <b>ASUS Zenfone 8</b> using
+    the <a href="https://download.lineageos.org/sake" target="_blank"
+      moz-do-not-send="true">LineageOS Recovery</a> or <a
+      href="https://twrp.me/asus/zenfone8.html" target="_blank"
+      moz-do-not-send="true">TWRP</a>.<br>
+    <br>
+    <br>
+    <hr size="2" width="100%"> <b><br>
+      Notes</b><br>
+    <br>
+    <hr size="2" width="100%"> <br>
+    Be aware that each new <b>OmniROM 15</b> image created with <b>brunch</b>
+    will overwrite the existing <b>OmniROM 15</b> image (the name of
+    the image is different but the used inodes are the same for all zip
+    files):<br>
+    ???<br>
+    <br>
+    <samp>[ OmniRom 14 Dev - xtrnaw7@t15g
+      /data/develop/android/OmniROM_14.0 ] $ <b>ls -il
+        out/target/product/zenfone8/omni-14-202311*zip</b><br>
+      <b>80813412</b> -rw-rw-r--. 3 xtrnaw7 xtrnaw7 1363298353 Nov 20
+      10:22
+      out/target/product/zenfone8/omni-14-20231119-zenfone8-MICROG.zip<br>
+      <b>80813412</b> -rw-rw-r--. 3 xtrnaw7 xtrnaw7 1363298353 Nov 20
+      10:22
+      out/target/product/zenfone8/omni-14-20231120-zenfone8-MICROG.zip<br>
+      [ OmniRom 14 Dev - xtrnaw7@t15g /data/develop/android/OmniROM_14.0
+      ] $<br>
+      <br>
+      [OmniRom 14 Dev - xtrnaw7@t15g /data/develop/android/OmniROM_14.0
+      ] $ <b>cksum out/target/product/zenfone8/omni-14-202311*zip</b><br>
+      1217746399 1363298353
+      out/target/product/zenfone8/omni-14-20231119-zenfone8-MICROG.zip<br>
+      1217746399 1363298353
+      out/target/product/zenfone8/omni-14-20231120-zenfone8-MICROG.zip<br>
+      [ OmniRom 14 Dev - xtrnaw7@t15g /data/develop/android/OmniROM_14.0
+      ] $<br>
+    </samp> <br>
+    <br>
+    Therefor you should copy the existing zip file with the image to a
+    new directory before building a new image.<br>
+    <br>
+    <br>
+    <hr size="2" width="100%"> <b>Certificates for the OS images</b><b><br>
+    </b><br>
+    For OS images that should be used on the phone for daily use I
+    strongly recommend to create your own certificates for the OS.<br>
+    <br>
+    In the <b>OmniROM</b> development directory tree the necessary
+    files, <b>platform.pk8</b> and <b>platform.x509.pem</b>, are in
+    the directory<br>
+    <br>
+    <b>./build/make/target/product/security</b><br>
+    <br>
+    in your build tree for the CustomROM, e.g.<br>
+    <br>
+    ???<br>
+    <code>[ OmniRom 14 Dev - xtrnaw7@t15g
+      /data/develop/android/OmniROM_14.0 ] $ ls -l
+      ./build/make/target/product/security/platform.*<br>
+      -rw-rw-r--. 1 xtrnaw7 xtrnaw7 1216 Nov 14 15:24
+      ./build/make/target/product/security/platform.pk8<br>
+      -rw-rw-r--. 1 xtrnaw7 xtrnaw7 1675 Nov 14 15:24
+      ./build/make/target/product/security/platform.x509.pem<br>
+      [ OmniRom 14 Dev - xtrnaw7@t15g /data/develop/android/OmniROM_14.0
+      ] $ </code><br>
+    <br>
+    Replace these files with your own certificate files and recreate the
+    image using the command <b>brunch</b> (see above).<br>
+    <br>
+    To view the certificate use this command:<br>
+    <br>
+    <samp>openssl x509 -in
+      ./build/make/target/product/security/platform.x509.pem -text</samp><br>
+    <br>
+    <br>
+    <br>
+    See here <a
+      href="https://source.android.com/devices/tech/ota/sign_builds"
+      target="_blank" moz-do-not-send="true">https://source.android.com/devices/tech/ota/sign_builds</a>
+    for how to create your own certificate.<br>
+    <br>
+    <details>
+      <summary><b>To manually create the keys use these commands:</b></summary>
+      <br>
+      To manually create the keys use these commands:<br>
+      <br>
+      Android uses 2048-bit RSA keys with public exponent 3. You can
+      generate certificate/private key pairs using the openssl tool from
+      <a href="https://openssl.org" target="_blank"
+        moz-do-not-send="true">openssl.org</a>:<br>
+      <br>
+      <samp># <b>generate RSA key</b></samp><b><samp><br>
+        </samp></b> <b><samp>#</samp></b><samp><br>
+        [xtrnaw7@t15g /data/develop/android/test1]$</samp> <samp><b>openssl
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          genrsa -3 -out temp.pem 2048</b><br>
+        [xtrnaw7@t15g /data/develop/android/test1]$ ls -ltr<br>
+        total 4<br>
+        -rw-------. 1 xtrnaw7 xtrnaw7 1704 Nov 14 13:24 temp.pem<br>
+        <br>
+        <br>
+        # <b>create a certificate with the public part of the key</b><br>
+        #<br>
+        [xtrnaw7@t15g /data/develop/android/test1]$</samp> <samp><b>openssl
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          req -new -x509 -key temp.pem -out releasekey.x509.pem -days
+          10000 -subj&nbsp; '/C=DE/ST=Hessen/L=Frankfurt am
+Main/O=Android/OU=Android/CN=Android/emailAddress=bnsmb01@gmail.com'</b><br>
+        [xtrnaw7@t15g /data/develop/android/test1]$</samp> <samp><br>
+        <br>
+        [xtrnaw7@t15g /data/develop/android/test1]$ ls -ltr<br>
+        total 8<br>
+        -rw-------. 1 xtrnaw7 xtrnaw7 1704 Nov 14 13:24 temp.pem<br>
+        -rw-rw-r--. 1 xtrnaw7 xtrnaw7 1456 Nov 14 13:25
+        releasekey.x509.pem<br>
+        [xtrnaw7@t15g /data/develop/android/test1]$</samp> <samp><br>
+        <br>
+        <br>
+        # <b>create a PKCS#8-formatted version of the private key</b><br>
+        #<br>
+        [xtrnaw7@t15g /data/develop/android/test1]$</samp> <samp><b>openssl
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          pkcs8 -in temp.pem -topk8 -outform DER -out releasekey.pk8
+          -nocrypt</b><br>
+        [xtrnaw7@t15g /data/develop/android/test1]$</samp> <samp><br>
+        <br>
+        <br>
+        [xtrnaw7@t15g /data/develop/android/test1]$ ls -ltr<br>
+        total 12<br>
+        -rw-------. 1 xtrnaw7 xtrnaw7 1704 Nov 14 13:24 temp.pem<br>
+        -rw-rw-r--. 1 xtrnaw7 xtrnaw7 1456 Nov 14 13:25
+        releasekey.x509.pem<br>
+        -rw-------. 1 xtrnaw7 xtrnaw7 1218 Nov 14 13:25 releasekey.pk8<br>
+        [xtrnaw7@t15g /data/develop/android/test1]$</samp> <samp><br>
+        <br>
+        # <b>securely delete the temp.pem file</b></samp><b><samp><br>
+        </samp></b> <b><samp>#</samp></b><samp><br>
+        [xtrnaw7@t15g /data/develop/android/test1]$ shred --remove
+        temp.pem<br>
+        [xtrnaw7@t15g /data/develop/android/test1]$</samp> <samp><br>
+        <br>
+        [xtrnaw7@t15g /data/develop/android/test1]$ ls -ltr<br>
+        total 8<br>
+        -rw-rw-r--. 1 xtrnaw7 xtrnaw7 1456 Nov 14 13:25
+        releasekey.x509.pem<br>
+        -rw-------. 1 xtrnaw7 xtrnaw7 1218 Nov 14 13:25 releasekey.pk8<br>
+        [xtrnaw7@t15g /data/develop/android/test1]$&nbsp;</samp><br>
+      <br>
+      From the documentation:<br>
+      <br>
+      <cite>The openssl pkcs8 command given above creates a</cite> <cite><b>.pk8</b></cite>
+      <cite>file with no password, suitable for use with the build
+        system. To create a</cite> <cite><b>.pk8</b></cite> <cite>secured
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        with a password (which you should do for all actual release
+        keys), replace the</cite> <cite><b>-nocrypt</b></cite> <cite>argument
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        with</cite> <cite><b>-passout stdin</b></cite><cite>; then
+        openssl will encrypt the private key with a password read from
+        standard input. No prompt is printed, so if stdin is the
+        terminal the program will appear to hang when it's really just
+        waiting for you to enter a password. Other values can be used
+        for the-passout argument to read the password from other
+        locations; for details, see the openssl documentation.</cite><cite><br>
+      </cite> <cite><br>
+      </cite> <cite>The</cite> <cite><b>temp.pem</b></cite> <cite>intermediate
+file
+
+contains
+
+the
+
+private
+
+key
+
+without
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        any kind of password protection, so dispose of it thoughtfully
+        when generating release keys. In particular, the GNUshred
+        utility may not be effective on network or journaled
+        filesystems. You can use a working directory located in a RAM
+        disk (such as a tmpfs partition) when generating keys to ensure
+        the intermediates are not inadvertently exposed.</cite><br>
+      <br>
+    </details>
+    <br>
+    <br>
+    <hr size="2" width="100%"> <b>Updating the local repositories<br>
+      <br>
+    </b> To update the local repositories change the working directory
+    to the directory with the repositories for <b>OmniROM 15</b> and
+    execute<br>
+    <br>
+    <code>repo sync &amp;&amp; repo forall -c git lfs pull</code><br>
+    <br>
+    After the synchronization is complete, create a new operating system
+    image using the commands described above.<br>
+    <br>
+    It is recommended to create a new image at least once a month after
+    the new security patches for Android are added to the repositories
+    for <b>OmniROM 15</b>.<br>
+    <br>
+    To view the date of the security patch in the source files for the <b>OmniROM
+
+      15</b> execute this command in the directory with the source files
+    for the <b>OmniROM 15</b>:<br>
+    <br>
+    ???<br>
+    <samp>[ OmniRom 14 Dev - xtrnaw7@t15g
+      /data/develop/android/OmniROM_14.0 ] $ date<br>
+      <b>Tue Jan&nbsp; 9 07:24:05 PM CET 2024</b><br>
+      [ OmniRom 14 Dev - xtrnaw7@t15g /data/develop/android/OmniROM_14.0
+      ] $ <b>grep "^[[:space:]]*PLATFORM_SECURITY_PATCH[[:space:]]*:="
+        ./build/make/core/version_defaults.mk</b><br>
+      <b>&nbsp;&nbsp;&nbsp; PLATFORM_SECURITY_PATCH := 2024-01-05</b><br>
+      [ OmniRom 14 Dev - xtrnaw7@t15g /data/develop/android/OmniROM_14.0
+      ] $<br>
+      <br>
+    </samp> <br>
+    See <a moz-do-not-send="true"
+href="file:///data/www/myhomepage/htdocs/My_HowTos_for_Android.html#How_to_apply_the_Android_Security_patches_to_a_local_repository">How
+to
+
+apply
+
+the
+
+Android
+
+Security
+
+patches
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      to a local repository</a> for how to apply an <b>Android Security</b>
+    patch to the local repository.<br>
+    <br>
+    <br>
+    <hr size="2" width="100%"> <b>Moving the repositories to another
+      directory</b><br>
+    <br>
+    In case you want to move the repositories for <b>OmniROM 15</b> to
+    another directory or rename the directory with the repositories:<br>
+    <br>
+    Be aware that the make scripts create some absolute links in the
+    output directory; to list these absolute links use this command
+    while in the directory with the repositories for <b>OmniROM 15</b>
+    :<b><br>
+    </b><br>
+    <samp>find . -type l -ls | grep "$PWD"<b><br>
+      </b></samp><br>
+    <br>
+    e.g. there are currently a lot of absolute links in the output
+    directory:<br>
+    ???<br>
+    <samp>[ OmniRom 14 Dev - xtrnaw7@t15g
+      /data/develop/android/OmniROM_14.0 ] $ <b>find . -type l -ls |
+        grep "$PWD" | wc -l</b><br>
+    </samp> <b><samp>131245</samp></b><samp><br>
+      [ OmniRom 14 Dev - xtrnaw7@t15g /data/develop/android/OmniROM_14.0
+      ] $<br>
+    </samp><br>
+    <br>
+    Before starting another build after moving the directories with the
+    repositories you must correct these links (or clean the directory .<b>/out</b>)<br>
+    <br>
+    <br>
+    <hr size="2" width="100%"> <b>Log files</b><br>
+    <br>
+    The verbose log of the compile script is always written to a
+    compressed file in the output directory, e.g.:<br>
+    ???<br>
+    <details open="">
+      <summary><b>ls -ltr
+          /data/develop/android/OmniROM_14.0/out/verbose.log*</b></summary>
+      <samp><br>
+        [ OmniRom 14 Dev - xtrnaw7@t15g
+        /data/develop/android/OmniROM_14.0 ] $ <b>ls -ltr
+          /data/develop/android/OmniROM_14.0/out/verbose.log*</b><br>
+        -rw-rw-r--. 1 xtrnaw7 xtrnaw7&nbsp;&nbsp;&nbsp;&nbsp; 938 Nov 19
+        19:00 /data/develop/android/OmniROM_14.0/out/verbose.log.4.gz<br>
+        -rw-rw-r--. 1 xtrnaw7 xtrnaw7 7321648 Nov 19 19:02
+        /data/develop/android/OmniROM_14.0/out/verbose.log.5.gz<br>
+        -rw-rw-r--. 1 xtrnaw7 xtrnaw7&nbsp;&nbsp; 21660 Nov 19 19:05
+        /data/develop/android/OmniROM_14.0/out/verbose.log.3.gz<br>
+        -rw-rw-r--. 1 xtrnaw7 xtrnaw7&nbsp;&nbsp; 20241 Nov 19 19:10
+        /data/develop/android/OmniROM_14.0/out/verbose.log.2.gz<br>
+        -rw-rw-r--. 1 xtrnaw7 xtrnaw7 2917838 Nov 19 20:33
+        /data/develop/android/OmniROM_14.0/out/verbose.log.1.gz<br>
+        -rw-rw-r--. 1 xtrnaw7 xtrnaw7&nbsp;&nbsp; 73725 Nov 20 10:22
+        /data/develop/android/OmniROM_14.0/out/verbose.log.gz<br>
+        [ OmniRom 14 Dev - xtrnaw7@t15g
+        /data/develop/android/OmniROM_14.0 ] $</samp><br>
+    </details>
+    <br>
+    <br>
+    <hr size="2" width="100%"> <b>Other options of the make tools</b><br>
+    <br>
+    To create the image with other options use<br>
+    <br>
+    <code>. build/envsetup.sh lunch $ make &lt;options&gt;</code><br>
+    <br>
+    To list the known options for the make command use this command:<br>
+    ???<br>
+    <details open="">
+      <summary><b>make help</b></summary>
+      <br>
+      <samp>[ OmniRom 14 Dev - xtrnaw7@t15g
+        /data/develop/android/OmniROM_14.0 ] $ <b>make help</b><br>
+        The basic Android build process is:<br>
+        <br>
+        cd /data/develop/android/OmniROM_14.0<br>
+        source build/envsetup.sh&nbsp;&nbsp;&nbsp; # Add "lunch" (and
+        other utilities and variables)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+#
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        to the shell environment.<br>
+        lunch [&lt;product&gt;-&lt;variant&gt;] # Choose the device to
+        target.<br>
+        m
+        [&lt;goals&gt;]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+#
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        Execute the configured build.<br>
+        <br>
+        Usage of "m" imitates usage of the program "make".<br>
+        See /data/develop/android/OmniROM_14.0/build/make/Usage.txt for
+        more info about build usage and concepts.<br>
+        <br>
+        The parallelism of the build can be set with a -jN argument to
+        "m".&nbsp; If you<br>
+        don't provide a -j argument, the build system automatically
+        selects a parallel<br>
+        task count that it thinks is optimal for your system.<br>
+        <br>
+        Common goals are:<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;
+        clean&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+(aka
+
+clobber)
+
+equivalent
+
+to
+
+rm
+
+-rf
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        out/<br>
+        &nbsp;&nbsp;&nbsp;
+        checkbuild&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Build
+
+every
+
+module
+
+defined
+
+in
+
+the
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        source tree<br>
+        &nbsp;&nbsp;&nbsp;
+        droid&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        Default target<br>
+        &nbsp;&nbsp;&nbsp;
+        sync&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Build
+everything
+
+in
+
+the
+
+default
+
+target
+
+except
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        the images,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+for
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        use with adb sync.<br>
+        &nbsp;&nbsp;&nbsp;
+        nothing&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Do
+
+not
+
+build
+
+anything,
+
+just
+
+parse
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        and validate the build structure<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;
+        java&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Build
+
+all
+
+the
+
+java
+
+code
+
+in
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        the source tree<br>
+        &nbsp;&nbsp;&nbsp;
+        native&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Build
+
+all
+
+the
+
+native
+
+code
+
+in
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        the source tree<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;
+        host&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Build
+
+all
+
+the
+
+host
+
+code
+
+(not
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        to be run on a device) in the source tree<br>
+        &nbsp;&nbsp;&nbsp;
+        target&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Build
+
+all
+
+the
+
+target
+
+code
+
+(to
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        be run on the device) in the source tree<br>
+        <br>
+        &nbsp;&nbsp;&nbsp; (java|native)-(host|target)<br>
+        &nbsp;&nbsp;&nbsp; (host|target)-(java|native)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Build
+
+the
+
+intersection
+
+of
+
+the
+
+two
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        given arguments<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;
+        snod&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Quickly
+
+rebuild
+
+the
+
+system
+
+image
+
+from
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        built packages<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+Stands
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        for "System, NO Dependencies"<br>
+        &nbsp;&nbsp;&nbsp;
+        vnod&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Quickly
+
+rebuild
+
+the
+
+vendor
+
+image
+
+from
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        built packages<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+Stands
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        for "Vendor, NO Dependencies"<br>
+        &nbsp;&nbsp;&nbsp;
+        pnod&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Quickly
+
+rebuild
+
+the
+
+product
+
+image
+
+from
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        built packages<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+Stands
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        for "Product, NO Dependencies"<br>
+        &nbsp;&nbsp;&nbsp;
+        senod&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Quickly
+
+rebuild
+
+the
+
+system_ext
+
+image
+
+from
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        built packages<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+Stands
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        for "SystemExt, NO Dependencies"<br>
+        &nbsp;&nbsp;&nbsp;
+        onod&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Quickly
+
+rebuild
+
+the
+
+odm
+
+image
+
+from
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        built packages<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+Stands
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        for "Odm, NO Dependencies"<br>
+        &nbsp;&nbsp;&nbsp;
+        vdnod&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Quickly
+
+rebuild
+
+the
+
+vendor_dlkm
+
+image
+
+from
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        built packages<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+Stands
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        for "VendorDlkm, NO Dependencies"<br>
+        &nbsp;&nbsp;&nbsp;
+        odnod&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Quickly
+
+rebuild
+
+the
+
+odm_dlkm
+
+image
+
+from
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        built packages<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+Stands
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        for "OdmDlkm, NO Dependencies"<br>
+        &nbsp;&nbsp;&nbsp;
+        sdnod&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Quickly
+
+rebuild
+
+the
+
+system_dlkm
+
+image
+
+from
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        built packages<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+Stands
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        for "SystemDlkm, NO Dependencies"<br>
+        <br>
+        <br>
+        So, for example, you could run:<br>
+        <br>
+        cd /data/develop/android/OmniROM_14.0<br>
+        source build/envsetup.sh<br>
+        lunch aosp_arm-userdebug<br>
+        m -j java<br>
+        <br>
+        to build all of the java code for the userdebug variant of the
+        aosp_arm device.<br>
+        <br>
+        <br>
+        #### build completed successfully (4 seconds) ####<br>
+        <br>
+        [ OmniRom 14 Dev - xtrnaw7@t15g
+        /data/develop/android/OmniROM_14.0 ] $</samp><br>
+      <br>
+    </details>
+    <br>
+    <br>
+    <hr size="2" width="100%"> <b>Creating only the kernel or the boot
+      image</b><br>
+    <br>
+    To create only the kernel or the boot image use these commands:<br>
+    <br>
+    <code>. build/envsetup</code><code><br>
+    </code><code> </code><code><br>
+    </code><code> # select the target hardware</code><code><br>
+    </code><code> #</code><code><br>
+    </code><code> breakfast omni_zenfone8-user </code><code><br>
+    </code><code> </code><code><br>
+    </code><code> # Now instead of following the rest of the guide
+      (which will compile both Android and the kernel </code><code><br>
+    </code><code> # for your device), simply compile the kernel: </code><code><br>
+    </code><code> #</code><code><br>
+    </code><code> </code><code><b>mka kernel</b></code><code> </code><code><br>
+    </code><code> </code><code><br>
+    </code><code> # This command will also generate the device tree,
+      initramfs and boot.img images</code><code><br>
+    </code><code> #</code><code><br>
+    </code><code> </code><b><code>mka bootimage</code><br>
+    </b><br>
+    &nbsp;<br>
+    <hr size="2" width="100%"> <b>Trouble Shooting</b><br>
+    <br>
+    see <a moz-do-not-send="true"
+href="file:///data/www/myhomepage/htdocs/My_HowTos_for_Android.html#Some_hints_for_repo_sync_troubleshooting">Some
+
+      hints for repo sync troubleshooting</a> for how to fix some common
+    errors while executing the command "<b>repo sync</b>".<br>
+    <br>
+    see <a moz-do-not-send="true"
+href="file:///data/www/myhomepage/htdocs/My_HowTos_for_Android.html#Some_hints_for_fixing_errors_building_an_Custom_ROM_Android_image">Some
+hints
+
+for
+
+fixing
+
+errros
+
+building
+
+an
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      Custom ROM Android image</a> for how to fix some common errors
+    while creating the image<br>
+    <br>
+    <br>
+  </body>
+</html>

@@ -1,0 +1,99 @@
+#
+# for debugging only
+#
+if [ 1 = 0 ] ; then
+
+  CUR_USER=$( /system/bin/id -u -n  )
+
+#
+# /data is only writable by the root user so the logging in this file will only work if the profile is executed by the user root
+#
+# to log also the execution of the execution of the profile by a non-root user you must change the permission for /data and /data/profile.log to writable for all
+#
+# For phones with installed Magisk this can be done with a script like this:
+#    
+#    root@ASUS_I006D:/ # cat /data/adb/post-fs-data.d/writable_data.sh
+#        echo "Change /data/profile.log to writable for all at $( date ) ..." >>/data/postfstdata.log
+#        touch /data/profile.log
+#        chmod 777 /data /data/profile.log
+#        setenforce 0
+#    
+
+  echo "
+
+  /system/profile is executed by the process \"$0\" with the parameter \"$*\" executed by the user \"${CUR_USER}\" at $( date ) ; the PID is $$; the PPID is $PPID
+
+  Process $$ is:
+  $( /system/bin/ps -fp $$ 2>&1 )
+
+  Process $PPID is:
+  $( /system/bin/ps -fp $PPID 2>&1  )
+  
+  $( /system/bin/tty -s &&  echo "Running with a tty" || "Running without a tty" )
+
+  " >>/data/profile.log
+fi
+
+#
+# check if we're running in an interactive session
+#
+if ! tty -s; then
+#
+# this is not an interactive session - so we're just doing nothing at all
+#
+  :
+else
+#
+# running in an interactive session
+#
+  CUR_USER=` /system/bin/id -u -n  `
+
+  echo "/etc/profile is executed by the executable \"$0\" with the parameter \"$*\" started by the user \"${CUR_USER}\"  ..."
+  
+  #   
+  # defining a different honme directory for a user is only usefull for the user "root"
+  #
+  if [ "${CUR_USER}"x = "root"x ] ; then
+  
+    if  [ "${HOME}"x != "/"x -a "${HOME}"x != ""x  ]  ; then
+      if [ ! -d "${HOME}" ] ; then
+        echo "ERROR: The pre defined home directory \"${HOME}\" does NOT exist!"
+      else
+        echo "Using the pre defined home directory \"${HOME}\"" 
+      fi
+    else
+      HOME="/data/home/${CUR_USER}"
+      if [ ! -d "${HOME}" ] ; then
+        echo "Creating the home directory \"${HOME}\" ..."
+        mkdir -p  "${HOME}" && chmod 2750  "${HOME}"
+        if [ $? -ne 0 ] ; then
+          echo "ERROR: Error creating the home directory \"${HOME}\""
+        else
+          echo "Using the pre defined home directory \"${HOME}\""
+          export HOME
+        fi
+      else
+        echo "Using the existing home directory \"${HOME}\""
+      fi
+    fi
+  else
+    echo "WARNING: Can not change the home directory for the user \"${CUR_USER}\" " 
+  fi
+
+#
+# settings for all users
+#
+  set -o emacs
+
+  ADD_BIN_DIRS="/data/bin"
+
+  for CUR_DIR in ${ADD_BIN_DIRS} ; do
+    [[ :${PATH}: != *:${CUR_DIR}:* ]] &&   PATH=$PATH:${CUR_DIR}
+  done
+
+  export PATH
+
+fi
+
+
+
