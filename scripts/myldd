@@ -1,0 +1,44 @@
+#!/system/bin/sh
+
+# wrapper script for the ldd from Android
+#
+# History
+#  18.12.2024 1.0.0 /bs
+#   initial version
+#
+#  24.01.2025 2.0.0 /bs
+#    script rewritten
+#
+#
+if [ $# -eq 0 -o  "$1"x = "-h"x  -o "$1"x = "--help"x ] ; then
+  echo "Usage $0 [binary] [...]"
+  exit 1
+fi
+
+while [ $# -ne 0 ] ;  do
+  echo ""	
+  CUR_FILE="$1"
+  shift
+  if [[ "${CUR_FILE}" = /* ]] ; then
+     :
+  elif [ -r "${PWD}/${CUR_FILE}" ] ; then
+    CUR_FILE="${PWD}/${CUR_FILE}"
+  elif [[ ${CUR_FILE} != */* ]] ; then
+	  if [[ "$( which ${CUR_FILE} )"  != "" ]] ; then
+      CUR_FILE="$( which ${CUR_FILE} )"
+    fi
+  fi
+  
+  for CUR_DIR in /data/local/tmp/sysroot/usr/lib /data/local/tmp/develop/sysroot/usr/lib ; do
+    if [ -d "${CUR_DIR}" ] ; then
+      if [[ ":${LD_LIBRARY_PATH}:" != *:${CUR_DIR}:* ]] ; then
+        LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${CUR_DIR}
+      fi
+    fi
+  done
+ 
+  [  !  -z ${VERBOSE} ] && echo "The LD_LIBRARY_PATH used for this command is ${LD_LIBRARY_PATH}"
+  echo "# Executing ldd \"${CUR_FILE}\" "
+  ldd "${CUR_FILE}"
+done
+
