@@ -489,6 +489,10 @@ if [ ! -r /data/recovery/adb_initialized ] ; then
 
 # ---------------------------------------------------------------------
 
+# set device provisioned 
+#
+  settings put global device_provisioned 1
+
 #
 # enable the developer options
 #  

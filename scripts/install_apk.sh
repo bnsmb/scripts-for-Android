@@ -90,7 +90,9 @@
 #   24.11.2024 2.1.0 /bs
 #     added the parameters --install_on_phone and --keep
 #
-
+#   02.02.2025 2.2.0 /bs
+#     added the directory /data/local/tmp/sysroot/usr/lib to list of directories with libraries in the environment variable LDFLAGS
+#
 # read the script version from the script source code
 #
 SCRIPT_VERSION="$( grep -E "^#.*/bs" $0 | tail -1 | awk '{ print $3 }' )"

@@ -34,7 +34,9 @@ else
 
 		adb_root "mkdir -p /data/data/com.termux/files"
                 sleep 2
-		cat ${BACKUP_FILE} | adb shell "su - -c 'cd /data/data/com.termux/files/ && tar ${TAR_OPTIONS} - '"
+		adb push ${BACKUP_FILE} /sdcard/Download/ && adb shell "su - -c 'cd /data/data/com.termux/files/ && tar ${TAR_OPTIONS} /sdcard/Download/${BACKUP_FILE##*/}  '"
+
+#		cat ${BACKUP_FILE} | adb shell "su - -c 'cd /data/data/com.termux/files/ && tar ${TAR_OPTIONS} - '"
 
 		echo "Correcting the permissions for the data files ..."
 

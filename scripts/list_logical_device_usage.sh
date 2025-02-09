@@ -3,13 +3,14 @@
 # list_logical_device_usage.sh - list logical devices configured on a physical device
 #
 #h#
-#h# Usage: list_logical_device_usage.sh [var=value] [--verbose|-v] [--help|-h] [--short] [--noheader] [physical_device]
+#h# Usage: list_logical_device_usage.sh [var=value] [--verbose|-v] [--help|-h] [--short] [--noheader] [--noloop] [physical_device]
 #h#
 #h# Parameter: 
 #h#   --verbose | -v  print more messages
 #h#   --help | -h     print this usage help
 #h#   --short         do not print infos about unknown disk parts
 #h#   --noheader      print only the results
+#h#   --noloop        ignore loop devices
 #h#
 #h# "physical_device" is the name of the physical device, example: "sda19", "/dev/block/sda19", or "super"
 #h# The default physical device is "super"
@@ -56,6 +57,8 @@ TMPFILE="${TMPFILE:=/data/local/tmp/tmpfile.$$}"
 PRINT_INFOS_ABOUT_UNKNOWN_PARTS=${__TRUE}
 
 PRINT_HEADER=${PRINT_HEADER=${__TRUE}}
+
+IGNORE_LOOP_DEVICES=${__FALSE}
 
 # ---------------------------------------------------------------------
 
@@ -140,7 +143,11 @@ while [ $# -ne 0 ] ; do
   
   case ${CUR_PARAMETER} in
 
-    --noheader | --no_header )
+    --noloop | --no_loop | --no-loop )
+      IGNORE_LOOP_DEVICES=${__FALSE} 
+      ;;
+
+    --noheader | --no_header | --no-header )
       PRINT_HEADER=${__FALSE}
       ;;
   

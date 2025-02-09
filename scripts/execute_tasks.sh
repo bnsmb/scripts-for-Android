@@ -63,12 +63,13 @@
 #H#        parameter \"<groupname>\". E.g. to execute all tasks in the task group \"TASK_GROUP_include1\" use the
 #H#        script parameter \"include1\".
 #H#        
-#H#        Parameter for a task group are not possible but the tasks in a task group can be defined with parameter.
+#H#        Parameters for a task group are not possible, but the tasks in a task group can be defined with parameters.
 #H#        To use parameter define the task like this
 #H#
 #H#          task#:parameter1[:...[:parameter#]]
 #H#
 #H#        Note: Whitespaces in the parameter for a task in a task group are not allowed.
+#H#
 #H#        Comments in task group definitions are allowed; comments must start with a hash \"#\" in the first column. 
 #H#        So to add comments to a task group use a task group definition with line breaks, e.g.:
 #H#        
@@ -382,7 +383,7 @@
 ###
 ###   2     Invalid parameter found
 ### 200     Script aborted for unknown reason; EXIST signal received
-### 201	    Script aborted for unknown reason, QUIT signal received
+### 201     Script aborted for unknown reason, QUIT signal received
 ### 202     This script must be executed by root only
 ### 203     internal error
 ### 250     ${SCRIPTNAME} aborted by CTRL-C
@@ -575,6 +576,14 @@
 #V#     tasked skipped in single-user mode are now added to the tasks not executed on user request
 #V#     fixed some typos in the comments and messages 
 #V# 
+#V#   30.05.2024  v2.3.4 /bs
+#V#     removed not necessary messages
+#V#     fixed some typos in the messages
+#V#
+#V#   04.06.2024  v2.3.5 /bs
+#V#     removed unneccessary messages
+#V#     the startup message now contains the version of the script
+#V#
 
 #T# ---------------------------------------------------------------------
 #T#
@@ -734,7 +743,7 @@ SUPPORTED_INCLUDE_FILE_VERSIONS="1.0.0.0"
 USAGE_HELP=""
 
 
-# check if "grep -E" is supported
+# check if "grep -E" is supported (-> use ${EGREP} instead of egrep)
 #
 echo test | grep -E test 2>/dev/null >/dev/null && EGREP="grep -E " || EGREP="egrep"
 
@@ -742,10 +751,10 @@ echo test | grep -E test 2>/dev/null >/dev/null && EGREP="grep -E " || EGREP="eg
 # use gsed if available
 #
 SED="$( whence gsed )"
-[ "${SED}"x = ""x ] && SED="$( whence gsed )"
+[ "${SED}"x = ""x ] && SED="$( whence sed )"
 
 
-# enviroment variables used by the script
+# environment variables used by the script
 #
 # format:
 #
@@ -924,35 +933,35 @@ fi
 
 # general signals
 #
-#  Number	KSH name	Comments
-#  0	    EXIT	    This number does not correspond to a real signal, but the corresponding trap is executed before script termination.
-#  1	    HUP	        hangup
-#  2	    INT	        The interrupt signal typically is generated using the DEL or the ^C key
-#  3	    QUIT	    The quit signal is typically generated using the ^[ key. It is used like the INT signal but explicitly requests a core dump.
-#  9	    KILL	    cannot be caught or ignored
-#  10	    BUS	        bus error
-#  11	    SEGV	    segmentation violation
-#  13	    PIPE	    generated if there is a pipeline without reader to terminate the writing process(es)
-#  15	    TERM	    generated to terminate the process gracefully
-#  16	    USR1	    user defined signal 1, this value is different in other Unix OS!
-#  17	    USR2	    user defined signal 2, this value is different in other Unix OS!
-#  -	    DEBUG	    KSH only: This is no signal, but the corresponding trap code is executed before each statement of the script.
+#  Number   KSH name    Comments
+#  0        EXIT        This number does not correspond to a real signal, but the corresponding trap is executed before script termination.
+#  1        HUP         hangup
+#  2        INT         The interrupt signal typically is generated using the DEL or the ^C key
+#  3        QUIT        The quit signal is typically generated using the ^[ key. It is used like the INT signal but explicitly requests a core dump.
+#  9        KILL        cannot be caught or ignored
+#  10       BUS         bus error
+#  11       SEGV        segmentation violation
+#  13       PIPE        generated if there is a pipeline without reader to terminate the writing process(es)
+#  15       TERM        generated to terminate the process gracefully
+#  16       USR1        user defined signal 1, this value is different in other Unix OS!
+#  17       USR2        user defined signal 2, this value is different in other Unix OS!
+#  -        DEBUG       KSH only: This is no signal, but the corresponding trap code is executed before each statement of the script.
 #
 # signals in Solaris
-#  24       SIGTSTP		stop a running process (like CTRL-Z)
-#  25       SIGCONT		continue a stopped process in the background
+#  24       SIGTSTP     stop a running process (like CTRL-Z)
+#  25       SIGCONT     continue a stopped process in the background
 #
 # signals in Linux
-#  20       SIGTSTP		stop a running process (like CTRL-Z)
-#  18       SIGCONT		continue a stopped process in the background
+#  20       SIGTSTP     stop a running process (like CTRL-Z)
+#  18       SIGCONT     continue a stopped process in the background
 #
 # signals in AIX
-#  18       SIGTSTP		stop a running process (like CTRL-Z)
-#  19       SIGCONT		continue a stopped process in the background
+#  18       SIGTSTP     stop a running process (like CTRL-Z)
+#  19       SIGCONT     continue a stopped process in the background
 #
 # signals in MacOS (Darwin)
-#  18       SIGTSTP		stop a running process (like CTRL-Z)
-#  19       SIGCONT		continue a stopped process in the background
+#  18       SIGTSTP     stop a running process (like CTRL-Z)
+#  19       SIGCONT     continue a stopped process in the background
 #
 # 
 #
@@ -1319,7 +1328,7 @@ FINISH_FUNCTIONS=""
 #
 #  #msg  - message to print (replacing "_" with " "; 
 #          do NOT use blanks in the lines starting with #)
-#  else	 - variablename, print the name and value
+#  else  - variablename, print the name and value
 #
 RUNTIME_VARIABLES="
 
@@ -1481,7 +1490,7 @@ RCM_APPL_PARAMS_KEY[0]=0
 # format:
 #
 #  #msg  - message to print (replacing "_" with " ")
-#  else	 - variablename, print the name and value
+#  else  - variablename, print the name and value
 #
 APPLICATION_VARIABLES="
 "
@@ -1649,10 +1658,10 @@ ${THISMSG}"
 # note: the message is written using the function LogMsg
 #
 function LogOnly {
-  typeset __FUNCTION="LogOnly"	
+  typeset __FUNCTION="LogOnly"  
   ${__DEBUG_CODE}
   ${__FUNCTION_INIT}
-	
+    
   LogMsg "$*" >/dev/null  
 }
 
@@ -1672,7 +1681,7 @@ function LogInfo {
   typeset __FUNCTION="LogInfo"
   ${__DEBUG_CODE}
   ${__FUNCTION_INIT}
-	
+    
   [ ${VERBOSE} = ${__TRUE} ] && LogMsg "INFO: $*" >&2
 }
 
@@ -1718,7 +1727,7 @@ function LogMoreInfo {
 #          ${__FALSE} - message not printed
 #
 function LogRuntimeInfo {
-  typeset __FUNCTION="LogRuntimeInfo"	
+  typeset __FUNCTION="LogRuntimeInfo"   
   ${__DEBUG_CODE}
   ${__FUNCTION_INIT}
 
@@ -1744,11 +1753,11 @@ function LogRuntimeInfo {
 # note: the message is written using the function LogMsg
 #
 function LogError {
-  typeset __FUNCTION="LogError"	
+  typeset __FUNCTION="LogError" 
   ${__DEBUG_CODE}
   ${__FUNCTION_INIT}
 
-  if [ "$1"x = "-"x ] ; then	
+  if [ "$1"x = "-"x ] ; then    
     shift
     LogMsg "-" "ERROR: $*" >&2
     THISRC=$?
@@ -1772,11 +1781,11 @@ function LogError {
 # note: the message is written using the function LogMsg
 #
 function LogWarning  {
-  typeset __FUNCTION="LogWarning"	
+  typeset __FUNCTION="LogWarning"   
   ${__DEBUG_CODE}
   ${__FUNCTION_INIT}
 
-  if [ "$1"x = "-"x ] ; then	
+  if [ "$1"x = "-"x ] ; then    
     shift
     LogMsg "-" "WARNING: $*" >&2
     THISRC=$?
@@ -1802,7 +1811,7 @@ function LogWarning  {
 #          ${__FALSE} - error creating the log file
 #
 function __activate_logfile  {
-  typeset __FUNCTION="__activate_logfile"	
+  typeset __FUNCTION="__activate_logfile"   
   ${__DEBUG_CODE}
   ${__FUNCTION_INIT}
 
@@ -1844,10 +1853,10 @@ function __activate_logfile  {
 # returns: nothing
 #
 function curtimestamp {
-  typeset __FUNCTION="curtimestamp"	
+  typeset __FUNCTION="curtimestamp" 
   ${__DEBUG_CODE}
   ${__FUNCTION_INIT}
-	
+    
   date +%Y.%m.%d.%H_%M_%S_%s 
 }
   
@@ -1864,7 +1873,7 @@ function executeCommandAndLog {
   typeset __FUNCTION="executeCommandAndLog"
   ${__DEBUG_CODE}
   ${__FUNCTION_INIT}
-	
+    
   set +e
   typeset THISRC=0
 
@@ -2173,6 +2182,7 @@ abort                     - abort the script using kill -9
 
 singlestep / s            - enable single step for the remaining tasks
 singlestep_on_error / se  - enable single step if a task ends with an error
+singlestep_status         - print the status of the single step toggles
 
 Notes:
 
@@ -2180,6 +2190,20 @@ Notes:
 
 "        ;;
 
+      "singlestep_status" )
+        if [ ${SINGLE_STEP_MODE} = ${__TRUE} ] ; then
+          "printf" "Single Step mode is currently enabled\n"
+        else         
+          "printf" "Single Step mode is currently disabled\n"
+        fi
+
+        if [ ${ENABLE_SINGLE_STEP_ON_ERROR} = ${__TRUE} ] ; then
+          "printf" "Acitvating Single Step after a task failed is currently enabled\n"
+        else         
+          "printf" "Acitvating Single Step after a task failed is currently disable\n"
+        fi
+        ;;
+      
       "singlestep" | "single-step" | "ss" | "s" )
         SINGLE_STEP_MODE=${__TRUE}
         ENABLE_SINGLE_STEP_ON_ERROR=${__FALSE}
@@ -2471,7 +2495,7 @@ ${CUR_FUNCTION_CODE}
             else
               ADD_CODE="  "
             fi
-            eval "$( typeset -f  "${CUR_VALUE}" | ${SED} "1 s/{/\{ ${ADD_CODE}\\\$\{__DEBUG_CODE\}\;/" )"	                    
+            eval "$( typeset -f  "${CUR_VALUE}" | ${SED} "1 s/{/\{ ${ADD_CODE}\\\$\{__DEBUG_CODE\}\;/" )"                       
           done
           ;;
 
@@ -2546,7 +2570,7 @@ ${CUR_FUNCTION_CODE}
             if [[ $( "typeset" -f "${CUR_VALUE}" 2>&1 ) != *\$\{__DEBUG_CODE\}* ]] ; then
               "printf" "Adding debug code to the function ${CUR_VALUE} ...\n"           
               ADD_CODE=" typeset __FUNCTION=${CUR_VALUE}; "
-              eval "$( typeset -f  "${CUR_VALUE}" | ${SED} "1 s/{/\{ ${ADD_CODE}\\\$\{__DEBUG_CODE\}\;/" )"	                    
+              eval "$( typeset -f  "${CUR_VALUE}" | ${SED} "1 s/{/\{ ${ADD_CODE}\\\$\{__DEBUG_CODE\}\;/" )"                     
             fi
           done
           CUR_STATEMENT="eval ${CUR_STATEMENT} ] && printf \"\n*** Enabling trace for the function \${__FUNCTION:=\$0} ...\n\" >&2 && set -x "
@@ -2686,7 +2710,7 @@ function __enable_trace_for_functions {
       elif [[ $( typeset -f "${CUR_VALUE}" 2>&1 ) != *\$\{__DEBUG_CODE\}* ]] ; then
         LogMsg "Adding debug code to the function \"${CUR_VALUE}\" ..."           
         ADD_CODE=" typeset __FUNCTION=${CUR_VALUE}; "
-        eval "$( typeset -f  "${CUR_VALUE}" | ${SED} "1 s/{/\{ ${ADD_CODE}\\\$\{__DEBUG_CODE\}\;/" )"	                    
+        eval "$( typeset -f  "${CUR_VALUE}" | ${SED} "1 s/{/\{ ${ADD_CODE}\\\$\{__DEBUG_CODE\}\;/" )"                       
       else
         LogMsg "\"${CUR_VALUE}\" already contains debug code."      
       fi
@@ -2728,7 +2752,7 @@ function __enable_trace_for_functions {
 #       "#H#" without the "#H#"
 #
 function show_script_usage {
-  typeset __FUNCTION="show_script_usage"	
+  typeset __FUNCTION="show_script_usage"    
   ${__DEBUG_CODE}
   ${__FUNCTION_INIT}
 
@@ -2742,7 +2766,7 @@ function show_script_usage {
     REGEX="^#H#|^#h#"
   fi
   
-  HELPMSG="$( ${EGREP} "${REGEX}" "${REAL_SCRIPTNAME}" | cut -c4- | ${SED} "s/create_image.sh/${SCRIPTNAME}/g" )"
+  HELPMSG="$( ${EGREP} "${REGEX}" "${REAL_SCRIPTNAME}" | cut -c4- | ${SED} "s/execute_tasks.sh/${SCRIPTNAME}/g" )"
    
   eval echo \""${HELPMSG}"\"
 
@@ -3015,7 +3039,7 @@ function die {
 # returns: the function ends the script using the function die
 #
 function signal_exit_handler {  
-  typeset __FUNCTION="signal_exit_handler"	
+  typeset __FUNCTION="signal_exit_handler"  
   ${__DEBUG_CODE}
   ${__FUNCTION_INIT}
   
@@ -3194,7 +3218,7 @@ function print_runtime_variables {
   typeset __FUNCTION="print_runtime_variables"
   ${__DEBUG_CODE}
   ${__FUNCTION_INIT}
-	
+    
   typeset THISRC=${__TRUE}
   typeset CUR_VAR=""
   typeset CUR_VALUE=""
@@ -3228,7 +3252,7 @@ function isNumber {
   typeset __FUNCTION="isNumber"
   ${__DEBUG_CODE}
   ${__FUNCTION_INIT}
-	
+    
   typeset THISRC=${__FALSE}
 
 # old code:
@@ -3268,7 +3292,7 @@ function AskUser {
   typeset __FUNCTION="AskUser"
   ${__DEBUG_CODE}
   ${__FUNCTION_INIT}
-	
+    
   typeset THISRC=""
 
   if [ "${__USE_TTY}"x = "${__TRUE}"x ] ; then
@@ -3345,7 +3369,7 @@ function AskUser {
 # This function is only useful in RCM environments!
 #
 function check_rcm_values {
-  typeset __FUNCTION="check_rcm_values"	
+  typeset __FUNCTION="check_rcm_values" 
   ${__DEBUG_CODE}
   ${__FUNCTION_INIT}
   typeset THISRC=${__TRUE}
@@ -3433,7 +3457,7 @@ function get_rcm_userid {
 # This function is only useful in RCM environments!
 #
 function Read_APPL_PARAMS_entries {
-  typeset __FUNCTION="Read_APPL_PARAMS_entries"	
+  typeset __FUNCTION="Read_APPL_PARAMS_entries" 
   ${__DEBUG_CODE}
   ${__FUNCTION_INIT}
   typeset THISRC=${__TRUE}
@@ -4118,9 +4142,9 @@ function ListDefaultTasks {
     LogMsg "-" 
   fi
   
-  LogMsg "-"
-  LogMsg "-" "Tasks defined are"
-  LogMsg "-"  
+#  LogMsg "-"
+#  LogMsg "-" "Tasks defined are"  
+#  LogMsg "-"  
   
   NO_TASK_LIST_FOR_ALL_TEMP="$( echo "${NO_TASK_LIST_FOR_ALL}" | tr "\n" " " )"
   
@@ -4786,7 +4810,7 @@ fi
 gettime_in_seconds STARTTIME_IN_SECONDS
 STARTTIME_IN_HUMAN_READABLE_FORMAT="$( date "+%d.%m.%Y %H:%M:%S" )"
 
-LogMsg "### ${SCRIPTNAME} started at ${STARTTIME_IN_HUMAN_READABLE_FORMAT} (The PID of this process is $$)"
+LogMsg "### ${SCRIPTNAME} ${SCRIPT_VERSION} started at ${STARTTIME_IN_HUMAN_READABLE_FORMAT} (The PID of this process is $$)"
 
 # install the trap handler
 #
@@ -4845,7 +4869,7 @@ LIST_DEFINED_TASK=${__FALSE}
 
 LIST_DEFINED_TASK_GROUPS=${__FALSE}
 
-LIST_DEFAULT_TASK=${__FALSE}
+LIST_DEFAULT_TASKS=${__FALSE}
 
 LIST_DISABLED_TASKS=${__FALSE}
 
@@ -4879,6 +4903,8 @@ INPUT_FILES_ALLOWED=${__TRUE}
 ADDITIONAL_INCLUDE_FILES=""
 
 OPTIONAL_ADDITIONAL_INCLUDE_FILES=""
+
+NO_TASKS_SHOULD_BE_EXECUTED=${__FALSE}
 
 # the alias __getparameter is used for parameter that support values
 # these parameter can be used like this "-l logfile" or this "-l:logfile"
@@ -4980,6 +5006,7 @@ while [ $# -ne 0 ] ; do
        
     --print_includefile_help )
       SHOW_INCLUDE_FILE_USAGE=${__TRUE}
+      NO_TASKS_SHOULD_BE_EXECUTED=${__TRUE}
       ;;
 
     ++print_includefile_help )
@@ -4993,6 +5020,7 @@ while [ $# -ne 0 ] ; do
     --print_task_template | --print_task_template:* )
        __getparameter
       PRINT_TASK_TEMPLATE=${__TRUE}
+      NO_TASKS_SHOULD_BE_EXECUTED=${__TRUE}
 
       if [ "${CUR_VALUE}"x = ""x ] ; then
         LogInfo "Writing the task template to STDOUT"
@@ -5003,66 +5031,69 @@ while [ $# -ne 0 ] ; do
       fi
       ;;
 
-
     ++print_task_template )
       PRINT_TASK_TEMPLATE=${__FALSE}
       ;;
 
     --list_default_tasks )
-       LIST_DEFAULT_TASK=${__TRUE}
-       ;;
+      NO_TASKS_SHOULD_BE_EXECUTED=${__TRUE}
+      LIST_DEFAULT_TASKS=${__TRUE}
+      ;;
 
     ++list_default_tasks )
-       LIST_DEFAULT_TASK=${__FALSE}
-       ;;
+      LIST_DEFAULT_TASKS=${__FALSE}
+      ;;
 
     --list_disabled_tasks )
-       LIST_DISABLED_TASKS=${__TRUE}
-       ;;
+      LIST_DISABLED_TASKS=${__TRUE}
+      ;;
 
     ++list_disabled_tasks )
-       LIST_DISABLED_TASKS=${__FALSE}
-       ;;
+      LIST_DISABLED_TASKS=${__FALSE}
+      ;;
 
     --list )
-       LIST_DEFINED_TASK=${__TRUE}
-       LIST_DEFINED_TASK_GROUPS=${__TRUE}
-       ;;
+      LIST_DEFINED_TASK=${__TRUE}
+      LIST_DEFINED_TASK_GROUPS=${__TRUE}
+      NO_TASKS_SHOULD_BE_EXECUTED=${__TRUE}
+      ;;
 
     ++list )
-       LIST_DEFINED_TASK=${__FALSE}
-       LIST_DEFINED_TASK_GROUPS=${__FALSE}
-       ;;
+      LIST_DEFINED_TASK=${__FALSE}
+      LIST_DEFINED_TASK_GROUPS=${__FALSE}
+      ;;
 
     --list_tasks )
-       LIST_DEFINED_TASK=${__TRUE}
-       LIST_DEFINED_TASK_GROUPS=${__FALSE}
-       ;;
+      LIST_DEFINED_TASK=${__TRUE}
+      LIST_DEFINED_TASK_GROUPS=${__FALSE}
+      NO_TASKS_SHOULD_BE_EXECUTED=${__TRUE}
+      ;;
 
     ++list_tasks )
-       LIST_DEFINED_TASK=${__FALSE}
-       LIST_DEFINED_TASK_GROUPS=${__FALSE}
-       ;;
+      LIST_DEFINED_TASK=${__FALSE}
+      LIST_DEFINED_TASK_GROUPS=${__FALSE}
+      ;;
 
     --list_task_groups )
-       LIST_DEFINED_TASK_GROUPS=${__TRUE}
-       ;;
+      NO_TASKS_SHOULD_BE_EXECUTED=${__TRUE}
+      LIST_DEFINED_TASK_GROUPS=${__TRUE}
+      ;;
 
     ++list_task_groups )
-       LIST_DEFINED_TASK_GROUPS=${__FALSE}
-       ;;
+      LIST_DEFINED_TASK_GROUPS=${__FALSE}
+      ;;
 
     --disable_inputfiles )
-       INPUT_FILES_ALLOWED=${__FALSE}
-       ;;
+      INPUT_FILES_ALLOWED=${__FALSE}
+      ;;
 
     ++disable_inputfiles )
-       INPUT_FILES_ALLOWED=${__TRUE}
-       ;;
+      INPUT_FILES_ALLOWED=${__TRUE}
+      ;;
 
     --unique )
-       EXECUTE_TASKS_ONLY_ONCE=${__TRUE}
-       ;;
+      EXECUTE_TASKS_ONLY_ONCE=${__TRUE}
+      ;;
 
     ++unique )
        EXECUTE_TASKS_ONLY_ONCE=${__FALSE}
@@ -5093,71 +5124,72 @@ while [ $# -ne 0 ] ; do
 
     -i | --includefile | -i:* | --includefile:* )
 
-       __getparameter
-       if [ "${CUR_VALUE}"x = ""x ] ; then
-         LogError "Missing value for -i"
-         PARAMETER_OKAY=${__FALSE}
-       else
-         TEMPVAR="$( echo "${CUR_VALUE}" | tr "," " " )"
-         for CUR_VAR in ${TEMPVAR} ; do
-           case ${CUR_VAR} in
-             none )
-               USE_DEFAULT_INCLUDE_FILE=${__FALSE}
+      __getparameter
+      if [ "${CUR_VALUE}"x = ""x ] ; then
+        LogError "Missing value for -i"
+        PARAMETER_OKAY=${__FALSE}
+      else
+        TEMPVAR="$( echo "${CUR_VALUE}" | tr "," " " )"
+        for CUR_VAR in ${TEMPVAR} ; do
+          case ${CUR_VAR} in
+            none )
+              USE_DEFAULT_INCLUDE_FILE=${__FALSE}
 
-               if [ "${INCLUDE_FILES}"x != ""x ] ; then
-                 LogInfo "Parameter \"-i none\" found: Include files removed from the list are : \"${INCLUDE_FILES}\" "
-               fi
+              if [ "${INCLUDE_FILES}"x != ""x ] ; then
+                LogInfo "Parameter \"-i none\" found: Include files removed from the list are : \"${INCLUDE_FILES}\" "
+              fi
 
-               if [ "${OPTIONAL_INCLUDE_FILES}"x != ""x ] ; then
-                 LogInfo "Parameter \"-i none\" found: Optional include files removed from the list are : \"${OPTIONAL_INCLUDE_FILES}\" "
-               fi
+              if [ "${OPTIONAL_INCLUDE_FILES}"x != ""x ] ; then
+                LogInfo "Parameter \"-i none\" found: Optional include files removed from the list are : \"${OPTIONAL_INCLUDE_FILES}\" "
+              fi
 
-               INCLUDE_FILES=""
-               OPTIONAL_INCLUDE_FILES=""
-               ;;
+              INCLUDE_FILES=""
+              OPTIONAL_INCLUDE_FILES=""
+              ;;
 
-             default )
-               USE_DEFAULT_INCLUDE_FILE=${__TRUE}
-               if [ "${OPTIONAL_INCLUDE_FILES}"x != ""x ] ; then
-                 LogInfo "Parameter \"-i default\" found:  Optional include files removed are : \"${OPTIONAL_INCLUDE_FILES}\" "
-               fi
-               OPTIONAL_INCLUDE_FILES=""
-               ;;
+            default )
+              USE_DEFAULT_INCLUDE_FILE=${__TRUE}
+              if [ "${OPTIONAL_INCLUDE_FILES}"x != ""x ] ; then
+                LogInfo "Parameter \"-i default\" found:  Optional include files removed are : \"${OPTIONAL_INCLUDE_FILES}\" "
+              fi
+              OPTIONAL_INCLUDE_FILES=""
+              ;;
 
-             \?* )             
-               OPTIONAL_INCLUDE_FILES="${OPTIONAL_INCLUDE_FILES} ${CUR_VAR#\?*} "
-               ;;
+            \?* )             
+              OPTIONAL_INCLUDE_FILES="${OPTIONAL_INCLUDE_FILES} ${CUR_VAR#\?*} "
+              ;;
 
-             * )
-               if [[ ${CUR_VAR} == +* ]] ; then
-                 USE_DEFAULT_INCLUDE_FILE=${__TRUE}
-                 CUR_VAR="${CUR_VAR#+*}"
-               else
-                 USE_DEFAULT_INCLUDE_FILE=${__FALSE}
-               fi
-               INCLUDE_FILES="${INCLUDE_FILES} $( get_fqn "${CUR_VAR}" )"
-               ;;
-           esac
-         done
-       fi
-       ;;
+            * )
+              if [[ ${CUR_VAR} == +* ]] ; then
+                USE_DEFAULT_INCLUDE_FILE=${__TRUE}
+                CUR_VAR="${CUR_VAR#+*}"
+              else
+                USE_DEFAULT_INCLUDE_FILE=${__FALSE}
+              fi
+              INCLUDE_FILES="${INCLUDE_FILES} $( get_fqn "${CUR_VAR}" )"
+              ;;
+          esac
+        done
+      fi
+      ;;
 
     --create_include_file_template | --create_include_file_template:* )
-       __getparameter
+      __getparameter
 
-       CREATE_INCLUDE_FILE_TEMPLATE=${__TRUE}
-       if [ "${CUR_VALUE}"x = ""x ] ; then
-         LogInfo "Creating the default include file template: \"${DEFAULT_INCLUDE_FILE_NAME_TEMPLATE}\" "
-         NEW_INCLUDE_FILE="${DEFAULT_INCLUDE_FILE_NAME_TEMPLATE}"
-       else
-         NEW_INCLUDE_FILE="${CUR_VALUE}"
-         LogInfo "Creating the include file template \"${NEW_FILE}\" "
-       fi
-       ;;
+      CREATE_INCLUDE_FILE_TEMPLATE=${__TRUE}
+      NO_TASKS_SHOULD_BE_EXECUTED=${__TRUE}
+      if [ "${CUR_VALUE}"x = ""x ] ; then
+        LogInfo "Creating the default include file template: \"${DEFAULT_INCLUDE_FILE_NAME_TEMPLATE}\" "
+        NEW_INCLUDE_FILE="${DEFAULT_INCLUDE_FILE_NAME_TEMPLATE}"
+      else
+        NEW_INCLUDE_FILE="${CUR_VALUE}"
+        LogInfo "Creating the include file template \"${NEW_FILE}\" "
+      fi
+      ;;
 
     ++create_include_file_template )
-       CREATE_INCLUDE_FILE_TEMPLATE=${__FALSE}
-       ;;
+      CREATE_INCLUDE_FILE_TEMPLATE=${__FALSE}
+      ;;
 
     --no_init_tasks )
       DO_NOT_EXECUTE_INIT_TASKS=${__TRUE}
@@ -5177,6 +5209,7 @@ while [ $# -ne 0 ] ; do
       ;;
 
     --only_list_tasks )
+      NO_TASKS_SHOULD_BE_EXECUTED=${__TRUE}
       ONLY_LIST_TASKS_TO_EXECUTE=${__TRUE}
       ;;
 
@@ -5185,136 +5218,136 @@ while [ $# -ne 0 ] ; do
       ;;
       
     -h | "" )
-       SHORT_HELP=${__TRUE}
-       SHOW_SCRIPT_USAGE=${__TRUE}
-       ;;
+      SHORT_HELP=${__TRUE}
+      SHOW_SCRIPT_USAGE=${__TRUE}
+      ;;
 
     --help | -H | help |  "" )
-       SHORT_HELP=${__FALSE}
-       SHOW_SCRIPT_USAGE=${__TRUE}
-       ;;
+      SHORT_HELP=${__FALSE}
+      SHOW_SCRIPT_USAGE=${__TRUE}
+      ;;
 
     -V | --version )
-       PRINT_VERSION_AND_EXIT=${__TRUE}
-       ;;
+      PRINT_VERSION_AND_EXIT=${__TRUE}
+      ;;
 
     +V | ++version )
-       PRINT_VERSION_AND_EXIT=${__FALSE}
-       ;;
+      PRINT_VERSION_AND_EXIT=${__FALSE}
+      ;;
 
     -v | --verbose )
-       (( VERBOSE_LEVEL = VERBOSE_LEVEL+1 ))
-       SHORT_HELP=${__FALSE}
-       VERBOSE=${__TRUE}
-       ;;
+      (( VERBOSE_LEVEL = VERBOSE_LEVEL+1 ))
+      SHORT_HELP=${__FALSE}
+      VERBOSE=${__TRUE}
+      ;;
 
     +v | ++verbose )
-       VERBOSE=${__FALSE}
-       [ ${VERBOSE_LEVEL} -gt 0 ] && (( VERBOSE_LEVEL = VERBOSE_LEVEL-1 )) || VERBOSE_LEVEL=0
-       ;;
+      VERBOSE=${__FALSE}
+      [ ${VERBOSE_LEVEL} -gt 0 ] && (( VERBOSE_LEVEL = VERBOSE_LEVEL-1 )) || VERBOSE_LEVEL=0
+      ;;
 
     -q | --quiet )
-       QUIET=${__TRUE}
-       ;;
+      QUIET=${__TRUE}
+      ;;
 
     +q | ++quiet )
-       QUIET=${__FALSE}
-       ;;
+      QUIET=${__FALSE}
+      ;;
 
     -f | --force )
-       FORCE=${__TRUE}
-       ;;
+      FORCE=${__TRUE}
+      ;;
 
     +f | ++force )
-       FORCE=${__FALSE}
-       ;;
+      FORCE=${__FALSE}
+      ;;
 
     -o | --overwrite )
-       OVERWRITE=${__TRUE}
-       ;;
+      OVERWRITE=${__TRUE}
+      ;;
 
     +o | ++overwrite )
-       OVERWRITE=${__FALSE}
-       ;;
+      OVERWRITE=${__FALSE}
+      ;;
 
 
     -D | --debugshell )
-       if [ ${ENABLE_DEBUG}x != ${__TRUE}x ] ; then
-         LogError "DebugShell is disabled."
-         PARAMETER_OKAY=${__FALSE}
-       else
-         DebugShell 
-       fi
-       ;;
+      if [ ${ENABLE_DEBUG}x != ${__TRUE}x ] ; then
+        LogError "DebugShell is disabled."
+        PARAMETER_OKAY=${__FALSE}
+      else
+        DebugShell 
+      fi
+      ;;
 
     -d | --dryrun )
-       if [ ${DRYRUN_MODE_DISABLED} = ${__TRUE} ] ; then
-         LogError "Dryrun Mode is NOT supported"
-         PARAMETER_OKAY=${__FALSE}
-       else
-         PREFIX="${PREFIX:=${DEFAULT_DRYRUN_PREFIX}}"
-       fi
-       ;;
+      if [ ${DRYRUN_MODE_DISABLED} = ${__TRUE} ] ; then
+        LogError "Dryrun Mode is NOT supported"
+        PARAMETER_OKAY=${__FALSE}
+      else
+        PREFIX="${PREFIX:=${DEFAULT_DRYRUN_PREFIX}}"
+      fi
+      ;;
 
     +d | ++dryrun )
-       if [ ${DRYRUN_MODE_DISABLED} = ${__TRUE} ] ; then
-         LogError "Dryrun Mode is NOT supported"
-         PARAMETER_OKAY=${__FALSE}
-       else
-         if [ "${PREFIX}"x != ""x ] ; then
-           LogMsg "Disabling the dryrun mode (the dryrun prefix was \"${PREFIX}\")"
-         fi
-         PREFIX=""
-       fi
-       ;;
+      if [ ${DRYRUN_MODE_DISABLED} = ${__TRUE} ] ; then
+        LogError "Dryrun Mode is NOT supported"
+        PARAMETER_OKAY=${__FALSE}
+      else
+        if [ "${PREFIX}"x != ""x ] ; then
+          LogMsg "Disabling the dryrun mode (the dryrun prefix was \"${PREFIX}\")"
+        fi
+        PREFIX=""
+      fi
+      ;;
 
     -d:* | --dryrun:** )
        if [ ${DRYRUN_MODE_DISABLED} = ${__TRUE} ] ; then
-         LogError "Dryrun Mode is NOT supported"
-         PARAMETER_OKAY=${__FALSE}
-       else
-         PREFIX="${1#*:}"
-         LogMsg "The dryrun prefix used is: \"${PREFIX}\" "
-       fi
-       ;;
+        LogError "Dryrun Mode is NOT supported"
+        PARAMETER_OKAY=${__FALSE}
+      else
+        PREFIX="${1#*:}"
+        LogMsg "The dryrun prefix used is: \"${PREFIX}\" "
+      fi
+      ;;
 
     +y | ++yes | +n | ++no )
-       __USER_RESPONSE_IS=""
-       ;;
+      __USER_RESPONSE_IS=""
+      ;;
    
     -y | --yes )
-       __USER_RESPONSE_IS="y"
-       ;;
-       
+      __USER_RESPONSE_IS="y"
+      ;;
+      
     -n | --no )
-       __USER_RESPONSE_IS="n"
-       ;;
+      __USER_RESPONSE_IS="n"
+      ;;
 
     --nologrotate )
-       ROTATE_LOG=${__FALSE}
-       ;;
+      ROTATE_LOG=${__FALSE}
+      ;;
 
     ++nologrotate )
-       ROTATE_LOG=${__TRUE}
-       ;;
+      ROTATE_LOG=${__TRUE}
+      ;;
 
     --appendlog )
-       APPEND_LOG=${__TRUE}
-       ROTATE_LOG=${__FALSE}
-       ;;
-        
+      APPEND_LOG=${__TRUE}
+      ROTATE_LOG=${__FALSE}
+      ;;
+       
     ++appendlog )
-       APPEND_LOG=${__FALSE}
-       ROTATE_LOG=${__TRUE}
-       ;;
+      APPEND_LOG=${__FALSE}
+      ROTATE_LOG=${__TRUE}
+      ;;
 
     --noSTDOUTlog )
-       LOG_STDOUT=${__FALSE}
-       ;;
+      LOG_STDOUT=${__FALSE}
+      ;;
 
     ++noSTDOUTlog )
-       LOG_STDOUT=${__TRUE}
-       ;;
+      LOG_STDOUT=${__TRUE}
+      ;;
     
     --nocleanup )
       NO_CLEANUP=${__TRUE}
@@ -5336,111 +5369,111 @@ while [ $# -ne 0 ] ; do
       __getparameter
       
       if [ "${CUR_VALUE}"x = ""x ] ; then
-         LogError "Missing value for --var"
-         PARAMETER_OKAY=${__FALSE}
-       else
-         if [ ${ENABLE_DEBUG}x != ${__TRUE}x ] ; then
-           LogError "--var is disabled."
-           PARAMETER_OKAY=${__FALSE}
-         else
-           VAR_NAME="${CUR_VALUE%%=*}"
-           VAR_VALUE="${CUR_VALUE#*=}"
-           LogMsg "Found --VAR parameter for ${VAR_NAME}=\"${VAR_VALUE}\" "
-         
-           eval CUR_VALUE="\$${VAR_NAME}"
-           LogMsg "Current value of ${VAR_NAME} is: \"${CUR_VALUE}\" "
-         
-           eval ${VAR_NAME}=\"${VAR_VALUE}\" 
+        LogError "Missing value for --var"
+        PARAMETER_OKAY=${__FALSE}
+      else
+        if [ ${ENABLE_DEBUG}x != ${__TRUE}x ] ; then
+          LogError "--var is disabled."
+          PARAMETER_OKAY=${__FALSE}
+        else
+          VAR_NAME="${CUR_VALUE%%=*}"
+          VAR_VALUE="${CUR_VALUE#*=}"
+          LogMsg "Found --VAR parameter for ${VAR_NAME}=\"${VAR_VALUE}\" "
+        
+          eval CUR_VALUE="\$${VAR_NAME}"
+          LogMsg "Current value of ${VAR_NAME} is: \"${CUR_VALUE}\" "
+        
+          eval ${VAR_NAME}=\"${VAR_VALUE}\" 
 
-           eval NEW_VALUE="\$${VAR_NAME}"
-           LogMsg "New value of ${VAR_NAME} is now: \"${NEW_VALUE}\" "
-         fi
-       fi
-       ;;
-         
+          eval NEW_VALUE="\$${VAR_NAME}"
+          LogMsg "New value of ${VAR_NAME} is now: \"${NEW_VALUE}\" "
+        fi
+      fi
+      ;;
+        
     -t | --tracefunc | -t:* | --tracefunc:* )
-       __getparameter    
-       
-       if [ "${CUR_VALUE}"x = ""x ] ; then
-         LogError "Missing value for -t"
-         PARAMETER_OKAY=${__FALSE}
-       elif [ "${CUR_VALUE}"x = "none"x ] ; then
-         LogInfo "Disabling tracing for all functions"
-         FUNCTIONS_TO_TRACE=""
-       else
-         FUNCTIONS_TO_TRACE="${FUNCTIONS_TO_TRACE} $( echo "${CUR_VALUE}" | tr "," " " )"
-       fi
-       ;;
+      __getparameter    
+      
+      if [ "${CUR_VALUE}"x = ""x ] ; then
+        LogError "Missing value for -t"
+        PARAMETER_OKAY=${__FALSE}
+      elif [ "${CUR_VALUE}"x = "none"x ] ; then
+        LogInfo "Disabling tracing for all functions"
+        FUNCTIONS_TO_TRACE=""
+      else
+        FUNCTIONS_TO_TRACE="${FUNCTIONS_TO_TRACE} $( echo "${CUR_VALUE}" | tr "," " " )"
+      fi
+      ;;
 
     -L | --listfunctions ) 
-       LIST_FUNCTIONS_AND_EXIT=${__TRUE}
-       ;;
+      LIST_FUNCTIONS_AND_EXIT=${__TRUE}
+      ;;
 
     +L | ++listfunctions ) 
-       LIST_FUNCTIONS_AND_EXIT=${__FALSE}
-       ;;
+      LIST_FUNCTIONS_AND_EXIT=${__FALSE}
+      ;;
 
     -l | --logfile | -l:* | --logfile:* )
-       LOGFILE_PARAMETER_FOUND=${__TRUE}
-       __getparameter
+      LOGFILE_PARAMETER_FOUND=${__TRUE}
+      __getparameter
 
-       if [ "${CUR_VALUE}"x = ""x ] ; then
-         LogInfo "Running without a logfile (no value for the parameter -l found)"
-         LOGFILE=""
-       elif [[ ${CUR_VALUE} = -* ]] ; then
-         LogInfo "Running without a logfile (no value for the parameter -l found)"
-         LOGFILE=""
-       elif [ "${CUR_VALUE}"x = "none"x ] ; then
-         LogInfo "Running without a logfile"
-         LOGFILE=""
-       else
-         LOGFILE="${CUR_VALUE}"
-         LogRuntimeInfo "Using the logfile ${LOGFILE}"
-       fi
-       ;;
+      if [ "${CUR_VALUE}"x = ""x ] ; then
+        LogInfo "Running without a logfile (no value for the parameter -l found)"
+        LOGFILE=""
+      elif [[ ${CUR_VALUE} = -* ]] ; then
+        LogInfo "Running without a logfile (no value for the parameter -l found)"
+        LOGFILE=""
+      elif [ "${CUR_VALUE}"x = "none"x ] ; then
+        LogInfo "Running without a logfile"
+        LOGFILE=""
+      else
+        LOGFILE="${CUR_VALUE}"
+        LogRuntimeInfo "Using the logfile ${LOGFILE}"
+      fi
+      ;;
 
     -T | --tee )
-       # parameter is already processed - ignore it
-       :
-       ;;
+      # parameter is already processed - ignore it
+      :
+      ;;
 
 
     --disable_tty_check )
-       DISABLE_TTY_CHECK=${__TRUE}
-       ;;
+      DISABLE_TTY_CHECK=${__TRUE}
+      ;;
 
     ++disable_tty_check )
-       LogWarning "The parameter \"++disable_tty_check\" is not supported and will be ignored"   
-#       DISABLE_TTY_CHECK=${__FALSE}
-       ;;
+      LogWarning "The parameter \"++disable_tty_check\" is not supported and will be ignored"   
+#      DISABLE_TTY_CHECK=${__FALSE}
+      ;;
 
 
 # check for unknown switches
 #
     -*=* )
-       LogError "Unknown parameter found: $1  (wrong separator character? the separator character to use is the colon \":\")"
-       PARAMETER_OKAY=${__FALSE}
-       ;;
+      LogError "Unknown parameter found: $1  (wrong separator character? the separator character to use is the colon \":\")"
+      PARAMETER_OKAY=${__FALSE}
+      ;;
 
     -- )
 # the parameter will be processed below
-#        shift
-        break
-        ;;
+#       shift
+       break
+       ;;
 
 # check for unknown switches
 #
     -* )
-       LogError "Unknown parameter found: $1"
-       PARAMETER_OKAY=${__FALSE}
-       ;;
+      LogError "Unknown parameter found: $1"
+      PARAMETER_OKAY=${__FALSE}
+      ;;
 
 
     * ) 
-       break
-#       LogError "Unknown parameter found: $1"
-#       PARAMETER_OKAY=${__FALSE}
-       ;;
+      break
+#      LogError "Unknown parameter found: $1"
+#      PARAMETER_OKAY=${__FALSE}
+      ;;
      
   esac
   shift
@@ -5457,8 +5490,10 @@ else
   PARAMETER_FOR_INIT_TASKS=""  
 fi
 
-LogMsg "Tasks to execute are: \"${NOT_USED_PARAMETER}\" "
-LogMsg "Parameter for the function init_tasks are: \"${PARAMETER_FOR_INIT_TASKS}\" "
+if [ ${NO_TASKS_SHOULD_BE_EXECUTED} != ${__TRUE} ] ; then
+  LogMsg "Tasks to execute are: \"${NOT_USED_PARAMETER}\" "
+  LogMsg "Parameter for the function init_tasks are: \"${PARAMETER_FOR_INIT_TASKS}\" "
+fi
 
 if [ ${TRACE_TASKS} = ${__TRUE} ] ; then
   for CUR_TASK in ${NOT_USED_PARAMETER} ; do
@@ -5628,7 +5663,7 @@ if [ ${PRINT_TASK_TEMPLATE} = ${__TRUE} ] ; then
   fi
   die 0
 fi
-
+    
 # ----------------------------------------------------------------------
 
 if [ ${CREATE_INCLUDE_FILE_TEMPLATE} = ${__TRUE} ] ; then
@@ -5974,7 +6009,7 @@ fi
 # check for the parameter --list
 #
 
-if [ ${LIST_DEFINED_TASK} = ${__TRUE} -o ${LIST_DEFAULT_TASK} = ${__TRUE} -o ${LIST_DEFINED_TASK_GROUPS} = ${__TRUE}  ] ; then
+if [ ${LIST_DEFINED_TASK} = ${__TRUE} -o ${LIST_DEFAULT_TASKS} = ${__TRUE} -o ${LIST_DEFINED_TASK_GROUPS} = ${__TRUE}  ] ; then
 
   if [ ${LIST_DEFINED_TASK} = ${__TRUE} ] ; then
 
@@ -5998,7 +6033,7 @@ if [ ${LIST_DEFINED_TASK} = ${__TRUE} -o ${LIST_DEFAULT_TASK} = ${__TRUE} -o ${L
 
   fi
 
-  if [ ${LIST_DEFAULT_TASK} = ${__TRUE} ] ; then
+  if [ ${LIST_DEFAULT_TASKS} = ${__TRUE} ] ; then
 
     ListDefaultTasks
   

@@ -20,13 +20,33 @@
 __TRUE=0
 __FALSE=1
 
+SU_PREFIX="su - -c "
+
 LOGFILE="/sdcard/Download/${0##*/}.log"
 
+# 
+# execute the script with the commnad "script" if its available to get a log file
+#
+if [  "${POST_INSTALL_RUNNING}"x = ""x ] ; then
+  SCRIPT="$( which script )"
+  if [ "${SCRIPT}"x != ""x ]  ; then
+    export POST_INSTALL_RUNNING=TRUE
+
+    echo "Restarting the script with \"script\" ..."
+    exec "${SCRIPT}" -a "${LOGFILE}" -c "sh $0 $*"
+    exit $?
+  fi
+else
+  echo
+  echo "Script successfully restarted with script"
+  echo
+fi
+  
 if ! tty -s ; then
   echo "Running in an non-interactive session"
   RUNNING_IN_ADB_SESSION=${__FALSE}
 
-# the settings command does not work with redirected STDOU
+# the settings command does not work with redirected STDOUT
 # 
 #  exec >"${LOGFILE}" 2>&1
 #
@@ -45,7 +65,7 @@ if [ ! -r /sdcard/Download/empty_misc.img ] ; then
 #
   echo "Copying the partition /dev/block/by-name/misc to the file /sdcard/Download/empty_misc.img ..."
 
-  su - -c dd if=/dev/block/by-name/misc of=/sdcard/Download/empty_misc.img
+  ${SU_PREFIX} dd if=/dev/block/by-name/misc of=/sdcard/Download/empty_misc.img
 else
   echo "The image file for the empty partition /dev/block/by-name/misc already exists:"
   ls -l /sdcard/Download/empty_misc.img
@@ -54,7 +74,7 @@ fi
 #
 # enable adb via WiFI
 #
-su - -c setprop persist.adb.tcp.port 6666
+${SU_PREFIX} setprop persist.adb.tcp.port 6666
 
 # alternative:
 # settings put global mobile_data1 0
@@ -137,8 +157,8 @@ svc data disable
 echo "Enable logcat for boot messages ..."
 
 if [ -r /data/scripts/0001logcatboot -a -d /data/adb/post-fs-data.d/ ] ; then
-  su - -c cp /data/scripts/0001logcatboot /data/adb/post-fs-data.d/0001logcatboot &&  \
-    su - -c chmod 755 /data/adb/post-fs-data.d/0001logcatboot
+  ${SU_PREFIX} cp /data/scripts/0001logcatboot /data/adb/post-fs-data.d/0001logcatboot &&  \
+    ${SU_PREFIX} chmod 755 /data/adb/post-fs-data.d/0001logcatboot
 fi
 
 # enable notifications for Magisk in the Magisk installation task 
@@ -219,7 +239,7 @@ fi
 
 
 echo "Removing the directories system/priv-app/DocumentsUIGoogle and system/priv-app/DocumentsUI from the MiXplorer Magisk Module ..."
-su - -c "\rm -rf /data/adb/modules/MiXplorer/system/priv-app/DocumentsUIGoogle /data/adb/modules/MiXplorer/system/priv-app/DocumentsUI"
+${SU_PREFIX} "\rm -rf /data/adb/modules/MiXplorer/system/priv-app/DocumentsUIGoogle /data/adb/modules/MiXplorer/system/priv-app/DocumentsUI"
 
 if  [ -r /system/bin/sshd ] ; then
   echo "Enabling the automatic start of the sshd ..."
@@ -250,7 +270,8 @@ if [ $? -ne 0 ] ; then
 else
   echo "Configuring MicroG ..."
   
-  cp "${MICROG_CONFIG_FILE}" "${TMP_MICROG_CONFIG_FILE}"
+  ${SU_PREFIX} cp "${MICROG_CONFIG_FILE}" "${TMP_MICROG_CONFIG_FILE}"
+  ${SU_PREFIX} chmod 644 "${TMP_MICROG_CONFIG_FILE}"
   
   CUR_LINE="$( grep 'name="checkin_enable_service"' "${TMP_MICROG_CONFIG_FILE}" )"
   echo "${CUR_LINE}" | grep 'value="true"' >/dev/null
@@ -278,12 +299,12 @@ else
     fi
   fi
 
-  diff "${MICROG_CONFIG_FILE}" "${TMP_MICROG_CONFIG_FILE}"  >/dev/null
+  ${SU_PREFIX} diff "${MICROG_CONFIG_FILE}" "${TMP_MICROG_CONFIG_FILE}"  >/dev/null
   if [ $? -eq 0 ] ; then
     echo "All MicroG settings are already okay"
   else
     echo "Changing the MicroG config and restarting MicroG ..."
-    cp "${TMP_MICROG_CONFIG_FILE}" "${MICROG_CONFIG_FILE}"
+    ${SU_PREFIX} cp "${TMP_MICROG_CONFIG_FILE}" "${MICROG_CONFIG_FILE}"
     if [ $? -eq 0 ] ; then
       echo "Restarting MicroG ..."
 #

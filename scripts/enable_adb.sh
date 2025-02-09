@@ -121,7 +121,7 @@ else
     echo "The adb connection is already enabled"
   else
     echo "Now enabling the adb connection  ...."
-	"${SETTINGS}" put global adb_enabled 1
+    "${SETTINGS}" put global adb_enabled 1
     if [ $? -ne 0 ] ; then
       echo "ERROR: Something went wrong enabling the adb connection"
       ENABLING_ADB_WAS_SUCCESSFULL=${__FALSE}

@@ -14,7 +14,8 @@
 #  01.05.2023 v1.0.2.0 /bs #VERSION
 #    in some cases the script ended with RC=0 even if enabling the root access failed -- fixed
 #
-#
+#  30.04.2024 v1.0.3.0 /bs #VERSION
+#    the script returned ${__TRUE} even if the final reboot failed -- fixed
 #
 # This script can be used to enable root access via Magisk by adding the necessary entries to the sqlite database used by Magisk
 #
@@ -481,6 +482,7 @@ if [ ${DO_REBOOT_THE_PHONE} = ${__TRUE} ] ; then
   retrieve_phone_status
 
   reboot_phone 
+  THISRC=$?
 fi
 
 die ${THISRC}

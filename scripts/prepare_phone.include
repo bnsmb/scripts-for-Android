@@ -1039,12 +1039,40 @@ execute_script_on_the_phone:ignorerc
 # ---------------------------------------------------------------------
 #T# TASK_GROUP_reset_and_install_os  - install the OS into the inactive slot via install or sideload (auto) and do a factory reset
 #
-TASK_GROUP_reset_and_install_os="
+TASK_GROUP_reset_and_install_os_auto="
 # select the correct TWRP image for the running OS on the phone
 #
 select_twrp_image:ignorerc
 
+boot_phone_from_twrp_image
+
 install_os:reboot:factory_reset:auto
+"
+
+# ---------------------------------------------------------------------
+#T# TASK_GROUP_reset_and_install_os  - install the OS into the inactive slot via install or sideload (auto) and do a factory reset
+#
+TASK_GROUP_reset_and_install_os_sideload="
+# select the correct TWRP image for the running OS on the phone
+#
+select_twrp_image:ignorerc
+
+boot_phone_from_twrp_image
+
+install_os:noreboot:sideload:factory_reset:reboot
+"
+
+# ---------------------------------------------------------------------
+#T# TASK_GROUP_reset_and_install_os  - install the OS into the inactive slot via install or sideload (auto) and do a factory reset
+#
+TASK_GROUP_reset_and_install_os_via_install="
+# select the correct TWRP image for the running OS on the phone
+#
+select_twrp_image:ignorerc
+
+boot_phone_from_twrp_image
+
+install_os:noreboot:factory_reset:reboot
 "
 
 
@@ -16048,7 +16076,7 @@ function task_install_ASUS_raw_image {
 
     if [ "${CUR_RAW_IMAGE_DIR}"x = ""x ] ; then
       LogErrorMsg "No raw image to install defined"
-      THISRC=${__FAlSE}
+      THISRC=${__FALSE}
     fi
   fi
 
