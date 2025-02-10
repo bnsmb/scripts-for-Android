@@ -658,7 +658,10 @@ if [ ${USE_SIDELOAD} = ${__FALSE} ] ; then
     FREE_SPACE="$(  ${ADB} ${ADB_OPTIONS} shell df -k "${IMAGE_DIR}" | tail -1 | awk '{ print $4 }' )"
     if isNumber  "${FREE_SPACE}" ; then
       if [ ${FREE_SPACE} -lt ${MINIMUM_FREESPACE} ] ; then
-        LogMsg "The free space in the directory \"${IMAGE_DIR}\", \"${FREE_SPACE}\" kb, is less then \"${MINIMUM_FREESPACE}\" kb -- will now delete the image file \"${IMAGE_FILE_ON_THE_PHONE}\" ... "
+        LogMsg "The free space in the directory \"${IMAGE_DIR}\", ${FREE_SPACE} kb, is less then ${MINIMUM_FREESPACE} kb:"
+        ${ADB} ${ADB_OPTIONS} shell df -h "${IMAGE_DIR}"
+
+        LogMsg "Now deleting the image file \"${IMAGE_FILE_ON_THE_PHONE}\" ... "
          ${ADB} ${ADB_OPTIONS} shell rm  -f "${IMAGE_FILE_ON_THE_PHONE}"
         if [ $? -ne 0 ] ; then
           LogError "Error deleting the file \"${IMAGE_FILE_ON_THE_PHONE}\" "
@@ -666,12 +669,13 @@ if [ ${USE_SIDELOAD} = ${__FALSE} ] ; then
           LogMsg "Image file \"${IMAGE_FILE_ON_THE_PHONE}\" successfully deleted"
         else
           LogError "Error deleting the file \"${IMAGE_FILE_ON_THE_PHONE}\", the contents of the directory \"${IMAGE_DIR}\" are:"
-           ${ADB} ${ADB_OPTIONS} shell ls -l "${IMAGE_DIR}"
+          ${ADB} ${ADB_OPTIONS} shell ls -l "${IMAGE_DIR}"
         fi
-        FREE_SPACE="$(  ${ADB} ${ADB_OPTIONS} shell df -k ${IMAGE_DIR%/*} | tail -1 | awk '{ print $4}' )"
-        LogMsg "The free space in the directory \"${FREE_SPACE}\" is now \"${FREE_SPACE}\" kb"
+        FREE_SPACE="$(  ${ADB} ${ADB_OPTIONS} shell df -k "${IMAGE_DIR}" | tail -1 | awk '{ print $4}' )"
+        LogMsg "The free space in the directory \"${IMAGE_DIR}\" is now ${FREE_SPACE} kb"
+        ${ADB} ${ADB_OPTIONS} shell df -h "${IMAGE_DIR}"
       else
-        LogMsg "The free space in the directory \"${IMAGE_DIR}\", \"${FREE_SPACE}\" kb, is more then \"${MINIMUM_FREESPACE}\" kb -- will NOT delete the image file \"${IMAGE_FILE_ON_THE_PHONE}\"  "
+        LogMsg "The free space in the directory \"${IMAGE_DIR}\", ${FREE_SPACE} kb, is more then ${MINIMUM_FREESPACE} kb -- will NOT delete the image file \"${IMAGE_FILE_ON_THE_PHONE}\"  "
       fi
     else
       LogError "Error retrieving the free space in the directory \"${IMAGE_DIR}\"  "
