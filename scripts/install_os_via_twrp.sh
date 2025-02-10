@@ -37,7 +37,11 @@
 #     the script now starts a second attempt to install the operating system image if the first installation took less than MINIMUM_INSTALLATION seconds. 
 #     The script waits INSTALLATION_WAIT_TIME seconds until it starts the second attempt to install the operating system.
 #     This seems to be necessary to update the OS from an OS image with OmniROM 14 with patchset 08 / 2024.
-
+#
+#  10.02.2025 v2.1.4.0 /bs #VERSION
+#   the script now deletes the OS image file is there is less then 1 GB free space (variable MINIMUM_FREESPACE) in the filesystem with the image file
+#   use the parameter "keep_image_file" to disable the removal of the image file
+#
 # This script can be used to install an OS image via the command twrp from the TWRP recovery.
 #
 # This script uses the script
@@ -54,7 +58,7 @@
 #H# Usage
 #H# 
 #h#    install_os_via_twrp.sh [-h|help|-H] [--reboot|--noreboot] [force] [wipe|wipeall] [wipe_cache] [wipe_data] [wipe_dalvik] [wipe_all] [format_data] 
-#h#                          [format_metadata] [factory_reset] [sideload] [nosideload|install] [auto] [restart_as_root] [os_image_file] 
+#h#                          [format_metadata] [factory_reset] [sideload] [nosideload|install] [auto] [restart_as_root] [keep_image_file] [os_image_file] 
 #h#
 #H# All parameter are optional, except the parameter for the OS image to install "os_image_file".
 #H# The parameter can be used in any order.
@@ -183,6 +187,16 @@ AUTO_SELECT_INSTALLATION_METHOD=${__FALSE}
 
 RESTART_ADB_DAEMON_AS_ROOT=${__FALSE}
 
+# delete the image file after the successfull installation
+#
+KEEP_IMAGE_FILE=${__FALSE}
+
+# required free space in KB in the filesystem with the image file
+#
+MINIMUM_FREESPACE=1048576
+
+INSTALLATION_SUCCESSFULL=${__FALSE}
+
 
 # ---------------------------------------------------------------------
 # functions
@@ -286,7 +300,7 @@ fi
 #
 # process the parameter 
 #
-#     install_os_via_twrp.sh [-h|help|-H] [--reboot|--noreboot] [wipe|wipeall] [wipe_cache] [wipe_data] [wipe_dalvik] [sideload] [os_image_file]
+#     install_os_via_twrp.sh [-h|help|-H] [--reboot|--noreboot]  [keep_image_file|--keep_image_file] [wipe|wipeall] [wipe_cache] [wipe_data] [wipe_dalvik] [sideload] [os_image_file]
 
 
 while [ $# -ge 1 ] ; do
@@ -299,6 +313,10 @@ while [ $# -ge 1 ] ; do
 
     reboot | --reboot | -reboot )
       REBOOT=yes
+      ;;
+
+    keep_image_file | --keep_image_file )
+      KEEP_IMAGE_FILE=${__TRUE}
       ;;
 
     noreboot | --noreboot | -noreboot )
@@ -624,10 +642,39 @@ if [ ${USE_SIDELOAD} = ${__FALSE} ] ; then
       if [ ${RUNTIME} -lt ${MINIMUM_INSTALLATION} ] ; then
         LogWarning "The installation was probably not successfull"
       else
+        INSTALLATION_SUCCESSFULL=${__TRUE}
+      
         LogMsg "OS image file \"${IMAGE_FILE_ON_THE_PHONE}\" successfully installed."
       fi
     else
+      INSTALLATION_SUCCESSFULL=${__TRUE}
+      
       LogMsg "OS image file \"${IMAGE_FILE_ON_THE_PHONE}\" successfully installed."
+    fi
+  fi  
+
+  if [ ${INSTALLATION_SUCCESSFULL} = ${__TRUE} ] ; then
+    IMAGE_DIR="${IMAGE_FILE_ON_THE_PHONE%/*}"
+    FREE_SPACE="$(  ${ADB} ${ADB_OPTIONS} shell df -k "${IMAGE_DIR}" | tail -1 | awk '{ print $4 }' )"
+    if isNumber  "${FREE_SPACE}" ; then
+      if [ ${FREE_SPACE} -lt ${MINIMUM_FREESPACE} ] ; then
+        LogMsg "The free space in the directory \"${IMAGE_DIR}\", \"${FREE_SPACE}\" kb, is less then \"${MINIMUM_FREESPACE}\" kb -- will now delete the image file \"${IMAGE_FILE_ON_THE_PHONE}\" ... "
+         ${ADB} ${ADB_OPTIONS} shell rm  -f "${IMAGE_FILE_ON_THE_PHONE}"
+        if [ $? -ne 0 ] ; then
+          LogError "Error deleting the file \"${IMAGE_FILE_ON_THE_PHONE}\" "
+        elif [ ! -r "${IMAGE_FILE_ON_THE_PHONE}" ] ; then
+          LogMsg "Image file \"${IMAGE_FILE_ON_THE_PHONE}\" successfully deleted"
+        else
+          LogError "Error deleting the file \"${IMAGE_FILE_ON_THE_PHONE}\", the contents of the directory \"${IMAGE_DIR}\" are:"
+           ${ADB} ${ADB_OPTIONS} shell ls -l "${IMAGE_DIR}"
+        fi
+        FREE_SPACE="$(  ${ADB} ${ADB_OPTIONS} shell df -k ${IMAGE_DIR%/*} | tail -1 | awk '{ print $4}' )"
+        LogMsg "The free space in the directory \"${FREE_SPACE}\" is now \"${FREE_SPACE}\" kb"
+      else
+        LogMsg "The free space in the directory \"${IMAGE_DIR}\", \"${FREE_SPACE}\" kb, is more then \"${MINIMUM_FREESPACE}\" kb -- will NOT delete the image file \"${IMAGE_FILE_ON_THE_PHONE}\"  "
+      fi
+    else
+      LogError "Error retrieving the free space in the directory \"${IMAGE_DIR}\"  "
     fi
   fi
 else
@@ -646,6 +693,10 @@ else
   TEMPRC=$?
   LogMsg "The RC is ${TEMPRC}"
 
+  if [ ${TEMPRC} = 0 ] ; then
+    INSTALLATION_SUCCESSFULL=${__TRUE}
+  fi
+  
   wait_some_seconds 5
    
   retrieve_phone_status
