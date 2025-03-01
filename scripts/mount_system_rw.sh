@@ -6,7 +6,7 @@
 #h# Usage: mount_system_rw.sh [var=value] [--verbose|-v] [--help|-h] [--keep|-k]
 #h#
 #h# Parameter: 
-#h#   --verbose | -v  print more mesages
+#h#   --verbose | -v  print more messages
 #h#   --help | -h     print this usage help
 #h#   --keep | -k     do not delete the input files for dmctl
 #h#
@@ -535,7 +535,8 @@ linear ${LOGICAL_START_SECTOR} ${PARTITION_SIZE} /dev/block/by-name/super ${PART
     if [ ${KEEP_INPUT_FILES} = ${__FALSE} ] ; then
       LIST_OF_TEMP_FILES="${LIST_OF_TEMP_FILES} ${CUR_INPUT_FILE}"
     else
-      LIST_OF_INPUT_FILES="${LIST_OF_INPUT_FILES} ${CUR_INPUT_FILE}"
+      LIST_OF_INPUT_FILES="${LIST_OF_INPUT_FILES} 
+${CUR_INPUT_FILE}"
     fi
 
     LogInfo "The commands for dmctl in the file \"${CUR_INPUT_FILE}\" to create the device \"\" are: " && \
