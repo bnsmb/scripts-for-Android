@@ -158,8 +158,16 @@ ENABLE_SINGLE_STEP_ON_ERROR=${__TRUE}
 #H#
 #H#  31.08.2024 /bs
 #H#     the script booted from the "wrong" TWRP image after the installation of a new OS -- fixed
-#H#    
-
+#H#  
+#H#  10.02.2025 /bs
+#H#     the task task_restart_adb_daemon now waits until the adb daemon is usable again  
+#H#
+#H#  16.02.2025 /bs
+#H#     fixed a minor error in the function execute_script and added some more choices to the dialog
+#H#
+#H#  22.02.2025 /bs
+#H#     The task install_archive_file now uses the parameter -o -m for tar (-> ignore owner and time of the files in the tar archive)
+#H#
 # global variables
 #
 TMP="${TMP:=/tmp}"
@@ -307,6 +315,13 @@ SCRIPTS_DOWNLOAD_URL="http://bnsmb.de/files/public/Android"
 # DISABLE_THE_PARAMETER_ALL=${__TRUE}
 
 
+TASK_GROUP_testtasks="
+install_archive_file:\${NEO_BACKUP_TAR_FILE}:ignorerc
+
+# install_magisk_modules:\${MICROG_MAGISK_MODULE}:ignorerc
+"
+
+
 # ---------------------------------------------------------------------
 # define the tasks to be executed for the parameter "all"
 # (optional, default: execute all defined tasks if "all" is used)
@@ -396,14 +411,32 @@ install_archive_file:twrp:reboot:script=/cache/correct_setlinux_for_wifconifg.sh
 enable_disable_abort_on_error:disable
 install_essential_scripts
 execute_script_on_the_phone:ignorerc:/data/develop/android/scripts_on_linux/enable_wlan.sh
-execute_script:/data/develop/android/scripts_on_linux/install_termux.sh:ignorerc:noreboot
+# execute_script:/data/develop/android/scripts_on_linux/install_termux.sh:ignorerc:noreboot
 install_essential_apps:ignorerc
 install_essential_magisk_modules:ignorerc
+
 #
 # The variable MICROG_MAGISK_MODULE must be defined before starting the script either in the environment
 # or in the file prepare_phone.conf to install the Magisk Module with MicroG
 #
 install_magisk_modules:\${MICROG_MAGISK_MODULE}:ignorerc
+#
+#
+# The variable DISABLE_FAKE_STORE_MAGISK_MODULE must be defined before starting the script either in the environment
+# or in the file prepare_phone.conf to install the Magisk Module to Disable the FakeStore
+#
+install_magisk_modules:\${DISABLE_FAKE_STORE_MAGISK_MODULE}:ignorerc
+#
+#
+# The variable NEO_BACKUP_TAR_FILE must be defined before starting the script either in the environment
+# or in the file prepare_phone.conf to copy the tar file to the phone
+#
+install_archive_file:twrp:reboot:script=/cache/correct_setlinux_for_wifconifg.sh
+
+# install the NeoBackup data files
+#
+install_archive_file:\${NEO_BACKUP_TAR_FILE}:ignorerc:script=/sdcard/Download/change_owner_for_neobackup_dir.sh
+
 #
 enable_root_access_for_apps:reboot
 execute_script_on_the_phone:ignorerc
@@ -535,6 +568,8 @@ install_essential_magisk_modules:/data/backup/Android/Test_EssentialMagiskModule
 # install_essential_apps:/data/backup/Android/Essential_Apps_for_ASUS_Android
 # install_essential_magisk_modules:ignorerc
 
+install_archive_file:\${NEO_BACKUP_TAR_FILE}:ignorerc:script=/sdcard/Download/change_owner_for_neobackup_dir.sh
+
 enable_root_access_for_apps:reboot
 
 execute_script_on_the_phone:ignorerc
@@ -631,15 +666,21 @@ enable_disable_abort_on_error:disable
 install_essential_scripts
 execute_script_on_the_phone:ignorerc:/data/develop/android/scripts_on_linux/enable_wlan.sh
 
-execute_script:/data/develop/android/scripts_on_linux/install_termux.sh:ignorerc:noreboot
+# execute_script:/data/develop/android/scripts_on_linux/install_termux.sh:ignorerc:noreboot
+
 
 # use a separate directory for the apps to install for non-OmniROM ROMs 
 #
 install_essential_apps:/data/backup/Android/Test_EssentialApps:ignorerc
 install_essential_magisk_modules:/data/backup/Android/Test_EssentialMagiskModules:ignorerc
 
+
 # install_essential_apps:/data/backup/Android/Essential_Apps_for_ASUS_Android
 # install_essential_magisk_modules:ignorerc
+
+# install the NeoBackup data files
+#
+install_archive_file:\${NEO_BACKUP_TAR_FILE}:ignorerc:script=/sdcard/Download/change_owner_for_neobackup_dir.sh
 
 enable_root_access_for_apps:reboot
 
@@ -752,6 +793,10 @@ install_essential_magisk_modules:/data/backup/Android/Test_EssentialMagiskModule
 
 # install_essential_apps:/data/backup/Android/Essential_Apps_for_ASUS_Android
 # install_essential_magisk_modules:ignorerc
+
+# install the NeoBackup data files
+#
+install_archive_file:\${NEO_BACKUP_TAR_FILE}:ignorerc:script=/sdcard/Download/change_owner_for_neobackup_dir.sh
 
 enable_root_access_for_apps:reboot
 
@@ -2805,6 +2850,8 @@ function execute_script {
   typeset NEW_TWRP_IMAGE=""
   typeset NEW_IWRP_IMAGE_FILE_TYPE=""
   
+  typeset CUR_COMMAND=""
+  
   LogMsg "-"
   LogMsg " ---------------------------------------------------------------------- "  
 
@@ -2860,13 +2907,18 @@ The execution of the script \"${THIS_SCRIPT}\" with the parameter \"${THIS_PARAM
 
 Select wwhat to do next
 
-r or y   - Repeat the task
-c        - continue with the next task
-k        - kill the adb daemon
-t        - change the TWRP image to use
-r        - reset the USB port for the  phone
-shell    - open a shell
-q        - end the script
+r y repeat       - Repeat the task
+c cont continue  - continue with the next task
+k kill           - kill the adb daemon
+t twrp           - change the TWRP image to use
+R reset_usb      - reset the USB port for the  phone
+f format         - format /data
+m mount          - mount /data
+shell            - open a shell
+!cmd             - execute the command \"cmd\"
+
+quit             - end the script
+
 "
       AskUser "Your choice [default=repeat) >> " 
       if [ $? -eq 0 ] ; then
@@ -2879,6 +2931,24 @@ q        - end the script
       
         case ${USER_INPUT} in
         
+          f | format )
+            LogMsg "Formating /data ..."
+            CUR_OUTPUT="$( ${ADB} ${ADB_OPTIONS} shell twrp format data  2>&1  )"
+            LogMsg "-" "${CUR_OUTPUT}"
+            ;;
+
+          m  | mount  )
+            LogMsg "Formating /data ..."
+            CUR_OUTPUT="$( ${ADB} ${ADB_OPTIONS} shell twrp mount data 2>&1 )"
+            LogMsg "-" "${CUR_OUTPUT}"            
+            ;;
+           
+          fm )
+            LogMsg "Formating and mounting /data ..."
+            CUR_OUTPUT="$( exec 2>&1; set -x ; ${ADB} ${ADB_OPTIONS} shell twrp format data ; ${ADB} ${ADB_OPTIONS} shell twrp mount data )"
+            LogMsg "-" "${CUR_OUTPUT}"            
+            ;;
+
           k | K | kill ) 
             LogMsg "Running adb daemons are:"
             CUR_OUTPUT="$( ps -ef  | grep -v grep | grep adb )" 
@@ -2896,7 +2966,7 @@ q        - end the script
             LogMsg "-"
             ;;
             
-          r | R | repeat | "" )
+          r  | repeat | "" )
             DO_IT=${__TRUE}
             ;;
     
@@ -2905,7 +2975,7 @@ q        - end the script
             break
             ;;
           
-          r | R | reset_usb )
+          R | reset_usb )
 
             LogMsg "The list of known adb devices is now:"
             CUR_OUTPUT="$( adb devices 2>&1 )"
@@ -2960,6 +3030,14 @@ q        - end the script
             die 100 "Script aborted by the user"
             ;;
           
+          !* )
+            CUR_COMMAND="${USER_INPUT#*!}"
+            LogMsg "Executing the command \"${CUR_COMMAND}\" ..."
+            LogMsg "-"
+            eval ${CUR_COMMAND}
+            LogMsg "-"
+            ;;            
+
           * )
             LogMsg "Unknown key entered: \"${USER_INPUT}\" "
             ;;
@@ -4703,7 +4781,7 @@ function task_enable_root_access_for_apps {
     
   if [ ${THISRC} = ${__TRUE} -a ${CONT} = ${__TRUE} ] ; then
  
-    CMD_PARAMETER="apps=+${CUR_APPS_FOR_ROOT_ACCESS}"
+    CMD_PARAMETER="-f apps=+${CUR_APPS_FOR_ROOT_ACCESS}"
        
     LogMsg ""
     LogMsg "*** Enabling root access for additional apps using the script \"${CUR_SCRIPT}\" with the parameter \"${CMD_PARAMETER}\"  ..."
@@ -5975,7 +6053,7 @@ function task_install_magisk_modules {
 
 # remove leading and trailing white spaces
 #  
-    eval CUR_MAGISK_MODULES_TO_INSTALL=${CUR_MAGISK_MODULES_TO_INSTALL}
+    CUR_MAGISK_MODULES_TO_INSTALL=${CUR_MAGISK_MODULES_TO_INSTALL}
 
     if [ "${CUR_MAGISK_MODULES_TO_INSTALL}"x = ""x  ]  ; then
       LogMsg "No Magisk Modules found in the task parameter"      
@@ -10156,7 +10234,7 @@ ${CUR_COMMAND_HINTS}"
 #
 # function: restart the adb daemon on the PC
 #
-# usage: task_restart_adb_daemon [reboot|reboot=no|reboot=yes] [ignorerc] [root]
+# usage: task_restart_adb_daemon [reboot|reboot=no|reboot=yes] [nowait] [ignorerc] [root]
 #
 # returns: ${__TRUE} - ok executing the task
 #          ${__FALSE} - error executing the task
@@ -10174,7 +10252,7 @@ ${CUR_COMMAND_HINTS}"
 #
 function task_restart_adb_daemon {
   typeset __FUNCTION="task_restart_adb_daemon"
-  typeset TASK_USAGE="${__FUNCTION} [reboot|noreboot|reboot=no|reboot=yes] [ignorerc] [root]"
+  typeset TASK_USAGE="${__FUNCTION} [reboot|noreboot|reboot=no|reboot=yes] [ignorerc] [nowait] [root]"
   ${__DEBUG_CODE}
   ${__FUNCTION_INIT}
 
@@ -10210,6 +10288,8 @@ function task_restart_adb_daemon {
   typeset IGNORE_RC=${__FALSE}
 
   typeset CUR_DEBUG_CODE=":"
+
+  typeset WAIT_FOR_ADB_DAEMON=${__TRUE}
   
 # Reboot the phone after successfully executing the task?
 #
@@ -10229,6 +10309,10 @@ function task_restart_adb_daemon {
 
     case ${CUR_TASK_PARAMETER} in
 
+      nowait )
+        WAIT_FOR_ADB_DAEMON=${__FALSE}
+        ;;
+        
       ignorerc )
         IGNORE_RC=${__TRUE}
         ;;
@@ -10282,6 +10366,10 @@ function task_restart_adb_daemon {
     fi
 
     restart_adb_daemon ${CMD_PARAMETER}
+    if [ $? -eq ${__TRUE} -a ${WAIT_FOR_ADB_DAEMON} = ${__TRUE} ] ; then
+      wait_for_the_adb_daemon
+    fi
+
   fi
 
   if [ ${THISRC} = ${__TRUE} -a ${CONT} = ${__TRUE} ] ; then
@@ -12470,6 +12558,8 @@ function task_install_archive_file {
         ;;
 
       * )    
+        [[ ${CUR_TASK_PARAMETER} == \$* ]] && eval CUR_TASK_PARAMETER="${CUR_TASK_PARAMETER}"
+      
         if [[  ${CUR_TASK_PARAMETER} == */* ]] ;then
           if [ "${CUR_ARCHIVE_FILE}"x != ""x ] ; then
             LogErrorMsg "Task ${__FUNCTION#task_*}: Duplicate parameter for the file to use found: \"${CUR_TASK_PARAMETER}\" "
@@ -12484,6 +12574,7 @@ function task_install_archive_file {
           THISRC=${__FALSE}
           CONT=${__FALSE}
         fi
+set +x        
         ;;
      esac
   done
@@ -12496,6 +12587,7 @@ function task_install_archive_file {
   
   if [ ${THISRC} = ${__TRUE} -a ${CONT} = ${__TRUE} ] ; then
 
+    
     CUR_ARCHIVE_FILE="${CUR_ARCHIVE_FILE:=${ARCHIVE_FILE}}"
 
     if [ "${CUR_ARCHIVE_FILE}"x = ""x ] ; then
@@ -12692,7 +12784,7 @@ cd / && ${CMD_PREFIX} unzip \"${ARCHIVE_FILE_ON_THE_PHONE}\"
     else
       SCRIPT_CONTENTS="
 set -x      
-cd / &&  ${CMD_PREFIX} tar -xvf \"${ARCHIVE_FILE_ON_THE_PHONE}\"
+cd / &&  ${CMD_PREFIX} tar -omxvf \"${ARCHIVE_FILE_ON_THE_PHONE}\"
 "   
     fi
     CUR_OUTPUT="$( ( echo "${SCRIPT_CONTENTS}" >"${TMPFILE}" ) 2>&1 )"
