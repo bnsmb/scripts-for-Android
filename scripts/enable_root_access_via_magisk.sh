@@ -21,6 +21,7 @@
 #H#   Magisk 26.4
 #H#   Magisk 27.0
 #H#   Magisk 28.0
+#H#   Magisk 28.1
 #H# 
 #H# The format of the database entries for other Magisk versions may be different.
 #H# Therefor to use it for databases created by other Magisk versions use the parameter "-f"
@@ -65,6 +66,8 @@
 #    enabled support for Magisk v27.0
 #  21.11.2024 v1.6.0.0
 #    enabled support for Magisk v28.0
+#  09.02.2025 v1.7.0.0
+#    enabled support for Magisk v28.1
 #
 # Author
 #   Bernd.Schemmer (at) gmx.de
@@ -101,7 +104,7 @@ __FALSE=1
 #
 # list of Magisk versions tested
 #
-KNOWN_MAGISK_VERSIONS=" 24.2 24.3 25.1 25.2 26.1 26.2 26.3 26.4 27.0 28.0"
+KNOWN_MAGISK_VERSIONS=" 24.2 24.3 25.1 25.2 26.1 26.2 26.3 26.4 27.0 28.0 28.1"
 
 # default value for the parameter -f
 #
