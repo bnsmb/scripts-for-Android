@@ -8,6 +8,9 @@
 #   10.04.2024 /bs
 #     initial release
 #
+#   26.04.2024 /bs
+#     if the environment variable ALL_PKGS is not empty the script creates install commands for all apks.
+#
 #h# Usage:
 #h#
 #h#   cd <dir_with_apk_files>
@@ -310,6 +313,17 @@ ${CAT_COMMAND} "${CUR_APK}" | ${ADB_PREFIX} pm install --bypass-low-target-sdk-b
 
   else
     LogMsg "    The target sdk version okay"
+
+    if [ "${ALL_PKGS}"x = ""x ] ; then
+      CUR_APK_FILE_SIZE="$( ls -l "${CUR_APK_FILE}" | awk '{ print $5}' )"
+
+      CUR_CMD="# ${APK_LABEL} ${APK_VERSION} - target sdk version: ${APK_TARGET_SDK_VERSION}
+${CAT_COMMAND} "${CUR_APK}" | ${ADB_PREFIX} pm install  -S "${CUR_APK_FILE_SIZE}" "
+
+      echo ""
+      echo "${CUR_CMD}"
+
+    fi    
   fi
 
 done
