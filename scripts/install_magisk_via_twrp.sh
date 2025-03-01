@@ -168,6 +168,10 @@
 #   19.05.2024 v4.0.0.0 /bs #VERSION
 #     the script now uses the general routines from the helper script boot_phone_from_twrp.sh
 #
+#   24.11.2024 v4.1.0.0 /bs #VERSION
+#      added initial support for the OrangeFox recovery
+#
+#
 # Author
 #   Bernd.Schemmer (at) gmx.de
 #   Homepage: http://bnsmb.de/
@@ -195,6 +199,9 @@
 #     - OmniROM 14 (Android 14) and Magisk v26.x
 #     - OmniROM 14 (Android 14) and Magisk v27.x
 # 
+#     - OmniROM 14 (Android 14) and Magisk v28.x
+#     - OmniROM 15 (Android 15) and Magisk v28.x
+
 #     - AospExtended 9.x w/o GAPPS (Android 12) and Magisk v24.3
 #     - AospExtended 9.x w/o GAPPS (Android 12) and Magisk v25.0
 #
@@ -1474,6 +1481,7 @@ else
 # check if the phone is already booted from the TWRP image
 #  
   TWRP_STATUS="$( adb ${ADB_OPTIONS} shell getprop  ro.twrp.boot )"
+
 
   if [ "${TWRP_STATUS}"x != "1"x ] ; then
 #
