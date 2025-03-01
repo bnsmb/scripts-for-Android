@@ -20,7 +20,9 @@
 #  27.06.2024 v1.0.0 /bs
 #    initial release
 #
-
+#  25.02.2025 v1.0.0 /bs
+#   added the variable DEFAULT_TWRP_IMAGE for the default TRWP image that is used if the varialbe TWRP_IMAGE is not defined
+#
 #H# Environment variables used if set:
 #H#
 #H#  MAGISKBOOT    - set this variable to the fully qualified namee of the magiskboot executable if it's not available via the PATH variable
@@ -167,6 +169,7 @@ ADB="${ADB:=$( which adb )}"
 
 MAGISKBOOT="${MAGISKBOOT:=$( which magiskboot )}"
 
+DEFAULT_TWRP_IMAGE="/data/backup/ASUS_ZENFONE8/twrp/current_twrp.img"
 
 if [ "${MAGISKBOOT}"x = ""x  ] ; then
   echo "
@@ -179,6 +182,10 @@ unzip -p  Magisk-v27.0.apk  lib/x86/libmagiskboot.so  >magiskboot && chmod 755 m
 "
 
  die 10 "executable magiskboot not found"
+fi
+
+if [ "${TWRP_IMAGE}"x = ""x -a  "${DEFAULT_TWRP_IMAGE}"x != ""x  ] ; then
+  [ -r "${DEFAULT_TWRP_IMAGE}" -o -L "${DEFAULT_TWRP_IMAGE}" ] && TWRP_IMAGE="${DEFAULT_TWRP_IMAGE}"
 fi
 
 [ "${TWRP_IMAGE}"x = ""x ] && die 15 "No TWRP image to use defined (the environment variable TWRP_IMAGE is empty)"
