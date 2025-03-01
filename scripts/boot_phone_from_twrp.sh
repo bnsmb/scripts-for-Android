@@ -560,6 +560,16 @@
 #      added support for /e/ 2.6.3-t
 #      the script now also prints the TWRP image that should be used for the running OS
 #
+#   25.02.2025 v3.2.2.0 /bs #VERSION
+#      added support for /e/ 2.7-t
+#      added support for LineageOS 22.x
+#
+#   26.02.2025 v3.2.3.0 /bs #VERSION
+#      the function format_data now checks the output of the command "twrp format" for error messages starting with "E:" and returns an error if there is an error message
+#
+#   01.03.2025 v3.2.3.0 /bs #VERSION
+#      added support for /e/ 2.8-t
+#
 # Author
 #   Bernd.Schemmer (at) gmx.de
 #   Homepage: http://bnsmb.de
@@ -587,9 +597,9 @@
 #    --------------------------------------------------------
 #    ASUS Android           12, 13 
 #    OmniROM                12, 13, 14, 15
-#    /e/                    1.21 (Android 14)
+#    /e/                    1.21,  2.0-t, 2.4.1-t, 2.5-t, 2.6.3-t, 2.7-t, 2.8-t (2.x = Android 13)
 #    StatixXOS              7,x (Android 14)
-#    LineageOS              20 (Android 13), 21 (Android 14)
+#    LineageOS              20 (Android 13), 21 (Android 14), 22 (Android 15)
 #    LMODroid               4.2 (Android 13)
 #
 #
@@ -837,14 +847,17 @@ UL-ASUS* :  ${DEFAULT_TWRP_IMAGE} :  ASUS Android
 #
 LMODroid* : /data/backup/ASUS_ZENFONE8/LMODroid/twrp_LMODroid-4.2-20240429-RELEASE-sake.img : LMODroid :
 #
-e-1.21*   : /data/backup/ASUS_ZENFONE8/e/e-1.21t/twrp_recovery-e-1.21-t-20240325389105-dev-sake.img : /e/
-e-2.0*    : /data/backup/ASUS_ZENFONE8/e/e-2.0t/twrp_recovery-e-2.0-t-20240514401453-dev-sake.img : /e/
-e-2.5*    : /data/backup/ASUS_ZENFONE8/e/e-2.5/twrp_e-2.5-t-20241108446630-community-sake.img : /e/
-e-2.6*    : /data/backup/ASUS_ZENFONE8/e/e-2.6.3/twrp-e-2.6.3-t-20241217455572-community-sake.img : /e/
+e-1.21*   : /data/backup/ASUS_ZENFONE8/e/e-1.21t/twrp_recovery-e-1.21-t-20240325389105-dev-sake.img : /e/ 1.21
+e-2.0*    : /data/backup/ASUS_ZENFONE8/e/e-2.0t/twrp_recovery-e-2.0-t-20240514401453-dev-sake.img : /e/ 2.0
+e-2.5*    : /data/backup/ASUS_ZENFONE8/e/e-2.5/twrp-e-2.5-t-20241108446630-community-sake.img : /e/ 2.5
+e-2.6*    : /data/backup/ASUS_ZENFONE8/e/e-2.6.3/twrp-e-2.6.3-t-20241217455572-community-sake.img : /e/ 2.6
+e-2.7*    : /data/backup/ASUS_ZENFONE8/e/e-2.7/twrp-e-2.7-t-20250112460975-community-sake.img : /e/ 2.7
+e-2.8*    : /data/backup/ASUS_ZENFONE8/e/e-2.8/twrp-e-2.8-t-20250219470166-community-sake.img : /e/ 2.8
 #
 lineage-20.0-20240716-nightly-sake-signed.zip : /data/backup/ASUS_ZENFONE8/Lineage-20/2024-07-16/twrp_lineage-20.0-20240716-nightly-sake-signed.img : LineageOS 20.0
 lineage-20* : /data/backup/ASUS_ZENFONE8/Lineage-20/twrp_lineage-20.0-20240528-nightly-sake-signed.img : LineageOS 20.x
 lineage-21* : /data/backup/ASUS_ZENFONE8/Lineage-21/twrp_3.7.0_12-1-I006D_for_lineageOS21-20240220-sake.img : LineageOS 21.x
+lineage-22*  : /data/backup/ASUS_ZENFONE8/Lineage-22/2025-02-21/twrp_recovery_SAKE-2025-02-21-ksu-signed-FULL.img : LineageOS 22.x
 sake-* : /data/backup/ASUS_ZENFONE8/Lineage-21/twrp_3.7.0_12-1-I006D_for_lineageOS21-20240220-sake.img : LineageOS 21.x
 #
 statix_sake-20240106-14-v7.1-UPSIDEDOWNCAKE.zip : /data/backup/ASUS_ZENFONE8/Statix/20240106/twrp_statix_sake-20240106-14-v7.1-UPSIDEDOWNCAKE.img : StatixOS
@@ -875,6 +888,7 @@ vendor.asus.build.ext.version : * : ${DEFAULT_TWRP_IMAGE} :  ASUS Android
 ro.lineage.build.version : 20.0 : /data/backup/ASUS_ZENFONE8/Lineage-20/2024-07-16/twrp_lineage-20.0-20240716-nightly-sake-signed.img : LineageOS 
 ro.lineage.build.version : 20* : /data/backup/ASUS_ZENFONE8/Lineage-20/twrp_lineage-20.0-20240528-nightly-sake-signed.img : LineageOS 
 ro.lineage.build.version : 21* : /data/backup/ASUS_ZENFONE8/Lineage-21/twrp_3.7.0_12-1-I006D_for_lineageOS21-20240220-sake.img : LineageOS 
+ro.lineage.build.version : 22* : /data/backup/ASUS_ZENFONE8/Lineage-22/2025-02-21/twrp_recovery_SAKE-2025-02-21-ksu-signed-FULL.img : LineageOS 22.x
 #
 ro.statix.version : v7.1-*-20240106 : /data/backup/ASUS_ZENFONE8/Statix/20240106/twrp_statix_sake-20240106-14-v7.1-UPSIDEDOWNCAKE.img : StatixOS 
 ro.statix.version : v7.10-*-20240712 : /data/backup/ASUS_ZENFONE8/Statix/20240712/twrp_statix_sake-20240712-14-v7.10-UNOFFICIAL.zip : StatixOS
@@ -882,10 +896,12 @@ ro.statix.version : * : /data/backup/ASUS_ZENFONE8/Statix/20240712/twrp_statix_s
 #
 ro.lmodroid.build_name : LMODroid-4.2-20240429-RELEASE-sake : /data/backup/ASUS_ZENFONE8/LMODroid/twrp_LMODroid-4.2-20240429-RELEASE-sake.img : LMODroid
 ro.omni.version : * : ${DEFAULT_TWRP_IMAGE} : OmniROM
-ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.20240514.193325* : /data/backup/ASUS_ZENFONE8/e/e-2.0t/twrp_recovery-e-2.0-t-20240514401453-dev-sake.img : /e/
-ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.20240325.220445* : /data/backup/ASUS_ZENFONE8/e/e-1.21t/twrp_recovery-e-1.21-t-20240325389105-dev-sake.img : /e/
-ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.20241108.113816 release-keys : /data/backup/ASUS_ZENFONE8/e/e-2.5/twrp_e-2.5-t-20241108446630-community-sake.img
-ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.20241217.174531 release-keys : /data/backup/ASUS_ZENFONE8/e/e-2.6.3/twrp-e-2.6.3-t-20241217455572-community-sake.img : /e/
+ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.20240325.220445* : /data/backup/ASUS_ZENFONE8/e/e-1.21t/twrp_recovery-e-1.21-t-20240325389105-dev-sake.img : /e/ 1.21
+ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.20240514.193325* : /data/backup/ASUS_ZENFONE8/e/e-2.0t/twrp_recovery-e-2.0-t-20240514401453-dev-sake.img : /e/ 2.0
+ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.20241108.113816 release-keys : /data/backup/ASUS_ZENFONE8/e/e-2.5/twrp-e-2.5-t-20241108446630-community-sake.img : /e/ 2.5
+ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.20241217.174531 release-keys : /data/backup/ASUS_ZENFONE8/e/e-2.6.3/twrp-e-2.6.3-t-20241217455572-community-sake.img : /e/ 2.6
+ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.20250112.044158 release-keys : /data/backup/ASUS_ZENFONE8/e/e-2.7/twrp-e-2.7-t-20250112460975-community-sake.img : /e/ 2.7
+ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.20250219.225052 release-keys : /data/backup/ASUS_ZENFONE8/e/e-2.8/twrp-e-2.8-t-20250219470166-community-sake.img : /e/ 2.8
 "
 fi
 
@@ -3563,6 +3579,8 @@ function format_data  {
   typeset CUR_OUTPUT=""
   typeset TEMPRC=0
 
+  typeset CUR_ERROR_MESSAGE=""
+  
   typeset TWRP="$( ${ADB} ${ADB_OPTIONS} shell which twrp )"
   
   if [ ${PHONE_STATUS} != 1 -a ${PHONE_STATUS} != 2 ] ; then
@@ -3580,14 +3598,21 @@ function format_data  {
     LogMsg ""
     LogMsg "Formating /data ..."
     CUR_OUTPUT="$( set -x ; time ${ADB} ${ADB_OPTIONS} shell ${SHELL_OPTIONS} twrp format data  2>&1   )"
-#     ${ADB} ${ADB_OPTIONS} shell ${SHELL_OPTIONS} twrp format data  2>&1 
     TEMPRC=$?
     LogMsg "-" "${CUR_OUTPUT}"
+
+    CUR_ERROR_MESSAGE="$( echo "${CUR_OUTPUT}" | grep "E:" )"
+    if [ "${CUR_ERROR_MESSAGE}"x != ""x ] ; then
+      LogError "Format ended with an error : \"${CUR_ERROR_MESSAGE}\" "
+      LogMsg "-" "${CUR_OUTPUT}"
+      TEMPRC=255
+    fi
+            
     if [ ${TEMPRC} != 0 ] ; then
       LogError "Error formating the /data partition"
       THISRC=${__FALSE}
     else
-      LogMsg "Formating the data partition sucesfully done."      
+      LogMsg "Formating the data partition succesfully done."      
     fi  
   fi
 
