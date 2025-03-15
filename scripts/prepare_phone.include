@@ -15,7 +15,7 @@
 
 # debug code
 #
-# This code will be exeucted at every start of a function - the code should NOT write something to STDOUT!
+# This code will be executed at every start of a function - the code should NOT write something to STDOUT!
 #
 # __FUNCTION_INIT='eval echo "**** ${__FUNCTION}: TWRP_IMAGE is \"${TWRP_IMAGE}\" " >&2  '
 
@@ -147,8 +147,7 @@ ENABLE_SINGLE_STEP_ON_ERROR=${__TRUE}
 #H#  25.06.2024 /bs
 #H#     added the task task_enable_adb_in_ramdisk
 #H#     the task task_boot_phone_from_twrp_image now trys to detect the TWRP image to use for the running OS on the phone
-#H#
-
+#H#  
 #H#  02.08.2024 /bs
 #H#     addded the apps Termux (com.termux) and NeoBackup (com.machiav3lli.backup) to the default list of applications for root access
 #H#
@@ -165,11 +164,18 @@ ENABLE_SINGLE_STEP_ON_ERROR=${__TRUE}
 #H#  16.02.2025 /bs
 #H#     fixed a minor error in the function execute_script and added some more choices to the dialog
 #H#
+
 #H#  22.02.2025 /bs
 #H#     The task install_archive_file now uses the parameter -o -m for tar (-> ignore owner and time of the files in the tar archive)
 #H#
+#H#  15.03.2025 /bs
+#H#     the script now prints the list of tasks that were completed with errors that were ignored
+#H#
+
+
 # global variables
 #
+
 TMP="${TMP:=/tmp}"
 
 CHECK_STATUS_FILE="${CHECK_STATUS_FILE:=${TMP}/failed_checks.${PPID}.lst}"
@@ -1175,7 +1181,8 @@ enable_disable_abort_on_error:enable
 # select the correct TWRP image for the running OS on the phone
 #
 select_twrp_image:ignorerc
-boot_phone_from_twrp_image
+boot_phone_from_twrp_image:force
+
 install_os:noreboot:factory_reset
 #boot_phone_from_twrp_image:force
 install_twrp:noreboot:next
@@ -1189,8 +1196,46 @@ wait_for_access_via_adb:120:kill
 install_the_magisk_app
 wait_for_access_via_adb:120:kill
 install_archive_file:twrp:reboot
-execute_script_on_the_phone:ignorerc
+
 install_magisk_modules:ignorerc:/data/backup/Android/EssentialMagiskModules/twrp-keep.zip
+execute_script_on_the_phone:ignorerc
+"
+
+
+# ---------------------------------------------------------------------
+#T# TASK_GROUP_os_twrp_magisk_backup - install the OS into the inactive slot, and install TWRP and Magisk 
+#
+TASK_GROUP_os_twrp_magisk_bkp="
+enable_disable_abort_on_error:enable
+
+# select the correct TWRP image for the running OS on the phone
+#
+select_twrp_image:ignorerc
+boot_phone_from_twrp_image:force
+
+install_os:noreboot:factory_reset
+#boot_phone_from_twrp_image:force
+install_twrp:noreboot:next
+install_magisk_in_boot_partition_only:noreboot:next
+enable_adb:reboot
+execute_script_on_the_phone:ignorerc:pre_install.sh
+install_magisk_in_data_adb_only:noreboot:copy_apk:use_apk
+wait_for_access_via_adb:120:kill
+enable_root_access_for_the_shell:reboot
+wait_for_access_via_adb:120:kill
+install_the_magisk_app
+wait_for_access_via_adb:120:kill
+install_archive_file:twrp:reboot
+
+# install the NeoBackup data files
+#
+install_archive_file:\${NEO_BACKUP_TAR_FILE}:ignorerc:script=/sdcard/Download/change_owner_for_neobackup_dir.sh
+
+install_apps:/data/backup/Android/apps/com.machiav3lli.backup_8318.apk 
+
+install_magisk_modules:ignorerc:/data/backup/Android/EssentialMagiskModules/twrp-keep.zip
+
+execute_script_on_the_phone:ignorerc
 "
 
 
@@ -1820,6 +1865,11 @@ function task_template {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
+
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -2122,10 +2172,13 @@ function init_tasks {
 # global variables (also used by the scripts executed in the tasks)
 #
   export REBOOT="no"
- 
+
   export PATH=$PATH:/sbin:/usr/sbin:/bin/:/usr/bin
 
   ABORT_TASK_EXECUTION_ON_ERROR=${__TRUE}
+
+  TASKS_EXECUTED_WITH_IGNORED_ERROR=""
+  NO_TASKS_EXECUTED_WITH_IGNORED_ERROR=0
 
 #
 # read the config file if it exists
@@ -2517,6 +2570,16 @@ function finish_tasks {
     LogMsg "-" "${SEPARATOR}"
     LogMsg "Tasks executed with errors are:"
     for CUR_TASK in ${TASKS_WITH_ERRORS} ; do
+      LogMsg "-" "${CUR_TASK}"
+    done
+    LogMsg "-"
+  fi
+
+  if [ "${TASKS_EXECUTED_WITH_IGNORED_ERROR}"x != ""x ] ; then
+    LogMsg "-"
+    LogMsg "-" "${SEPARATOR}"
+    LogMsg "${NO_TASKS_EXECUTED_WITH_IGNORED_ERROR} task(s) executed with ignored errors:"
+    for CUR_TASK in ${TASKS_EXECUTED_WITH_IGNORED_ERROR} ; do
       LogMsg "-" "${CUR_TASK}"
     done
     LogMsg "-"
@@ -3204,6 +3267,10 @@ function task_install_os {
 
    if [ ${IGNORE_RC} = ${__TRUE} ]; then
      if [ ${THISRC} != ${__TRUE} ] ; then
+
+       TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+       (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+     
        LogMsg "Ignoring the return code of the task is requested via task parameter"
        THISRC=${__TRUE}
      fi
@@ -3384,7 +3451,7 @@ function task_install_twrp {
     if [ ${IGNORE_RC} = ${__TRUE} ]; then
       LogMsg "The Returncode of the script is ignored"
       IGNORE_SCRIPT_RC=${__TRUE}
-    else
+    else    
       LogMsg "The task execution stops if the script ends with a return code not zero"
       IGNORE_SCRIPT_RC=${__FALSE}
     fi
@@ -3397,7 +3464,12 @@ function task_install_twrp {
 # ---------------------------------------------------------------------
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
+
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -3593,6 +3665,9 @@ function task_install_magisk_in_boot_partition_only {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+     TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+     (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -3779,6 +3854,9 @@ function task_install_magisk_in_data_adb_only {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -3973,6 +4051,9 @@ function task_install_magisk_in_boot_partition {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -4182,6 +4263,9 @@ function task_install_magisk_v26_in_boot_partition {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -4437,6 +4521,9 @@ function task_enable_adb {
 
   if [ ${IGNORE_RC} = ${__TRUE} ] ; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+     TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+     (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -4618,6 +4705,9 @@ function task_enable_root_access_for_the_shell {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -4810,6 +4900,9 @@ function task_enable_root_access_for_apps {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -5045,6 +5138,9 @@ function task_install_essential_scripts {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -5325,6 +5421,9 @@ function task_install_essential_apps {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -5604,6 +5703,9 @@ function task_install_essential_magisk_modules {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -5881,6 +5983,9 @@ function task_install_apps {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -6144,6 +6249,9 @@ function task_install_magisk_modules {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -6375,6 +6483,9 @@ function task_install_the_magisk_app {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -6524,6 +6635,9 @@ function task_boot_phone_into_bootloader {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -6674,6 +6788,9 @@ function task_boot_phone_into_android {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -6822,6 +6939,9 @@ function task_boot_phone_into_fastboot {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -6971,6 +7091,9 @@ function task_boot_phone_into_recovery {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -7162,6 +7285,9 @@ function task_boot_phone_from_twrp_image {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -7694,6 +7820,9 @@ function task_wait_for_phone_state {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -7938,6 +8067,9 @@ function task_boot_phone_into_safemode {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -8180,6 +8312,9 @@ function task_factory_reset_via_twrp {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -8415,6 +8550,9 @@ function task_wipe_dalvik_and_cache_via_twrp {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -8871,6 +9009,9 @@ function task_wipe_cache_via_twrp {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -9100,6 +9241,9 @@ function task_wipe_data_via_twrp {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -9327,6 +9471,9 @@ function task_mount_data_via_twrp {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -9556,6 +9703,9 @@ function task_umount_data_via_twrp {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -9786,6 +9936,9 @@ function task_format_data_via_twrp {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -10014,6 +10167,9 @@ function task_format_metadata_via_twrp {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -10193,6 +10349,9 @@ function task_kill_adb_daemon {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -10383,6 +10542,9 @@ function task_restart_adb_daemon {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -10563,6 +10725,9 @@ function task_start_adb_daemon {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -10795,6 +10960,9 @@ ${SCRIPTS_DOWNLOAD_URL}/${CUR_SCRIPT}"
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -10964,6 +11132,9 @@ function task_wait_n_seconds {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -11683,6 +11854,9 @@ function task_restore_titanium_backup {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -11892,6 +12066,9 @@ function task_execute_script_on_the_phone {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -12161,6 +12338,9 @@ function task_update_include_file {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -12350,6 +12530,9 @@ function task_decrypt_data_partition {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -12860,6 +13043,9 @@ cd / &&  ${CMD_PREFIX} tar -omxvf \"${ARCHIVE_FILE_ON_THE_PHONE}\"
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -13139,6 +13325,9 @@ function task_restart_adbd_on_the_phone {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -13523,6 +13712,9 @@ function task_enable_adb_via_wifi {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -13869,6 +14061,9 @@ function task_disable_adb_via_wifi {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -14258,6 +14453,9 @@ function task_connect_using_adb_via_wifi {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -15125,6 +15323,9 @@ function task_backup_boot_partition {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -15565,6 +15766,9 @@ function task_restore_boot_partition {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -15992,6 +16196,9 @@ function task_execute_command_on_the_phone {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -16252,6 +16459,9 @@ function task_install_ASUS_raw_image {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -16474,6 +16684,9 @@ set +x
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -16640,6 +16853,9 @@ function task_DebugShell {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -16873,6 +17089,9 @@ function task_copy_file_to_phone {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -17110,6 +17329,10 @@ function task_reset_usb_port {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
+      LogMsg "Ignoring the return code of the task is requested via task parameter"
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -17579,6 +17802,9 @@ function task_send_notification_via_ntfy {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -17869,6 +18095,9 @@ function task_enable_adb_in_ramdisk {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi
@@ -18078,6 +18307,9 @@ function task_execute_script {
 
   if [ ${IGNORE_RC} = ${__TRUE} ]; then
     if [ ${THISRC} != ${__TRUE} ] ; then
+      TASKS_EXECUTED_WITH_IGNORED_ERROR="${TASKS_EXECUTED_WITH_IGNORED_ERROR} ${__FUNCTION#task_*}"
+      (( NO_TASKS_EXECUTED_WITH_IGNORED_ERROR = NO_TASKS_EXECUTED_WITH_IGNORED_ERROR + 1 ))
+
       LogMsg "Ignoring the return code of the task is requested via task parameter"
       THISRC=${__TRUE}
     fi

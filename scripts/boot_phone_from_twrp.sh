@@ -570,6 +570,9 @@
 #   01.03.2025 v3.2.3.0 /bs #VERSION
 #      added support for /e/ 2.8-t
 #
+#   12.03.2025 v3.2.4.0 /bs #VERSION
+#      added support for /e/ 2.9-t
+#
 # Author
 #   Bernd.Schemmer (at) gmx.de
 #   Homepage: http://bnsmb.de
@@ -597,7 +600,7 @@
 #    --------------------------------------------------------
 #    ASUS Android           12, 13 
 #    OmniROM                12, 13, 14, 15
-#    /e/                    1.21,  2.0-t, 2.4.1-t, 2.5-t, 2.6.3-t, 2.7-t, 2.8-t (2.x = Android 13)
+#    /e/                    1.21,  2.0-t, 2.4.1-t, 2.5-t, 2.6.3-t, 2.7-t, 2.8-t (2.x = Android 13), 2.9-t (my private image)
 #    StatixXOS              7,x (Android 14)
 #    LineageOS              20 (Android 13), 21 (Android 14), 22 (Android 15)
 #    LMODroid               4.2 (Android 13)
@@ -847,6 +850,10 @@ UL-ASUS* :  ${DEFAULT_TWRP_IMAGE} :  ASUS Android
 #
 LMODroid* : /data/backup/ASUS_ZENFONE8/LMODroid/twrp_LMODroid-4.2-20240429-RELEASE-sake.img : LMODroid :
 #
+
+e-2.8-UNOFFICIAL* : /data/backup/ASUS_ZENFONE8/e_local/twrp_e-2.8-current.img : /e/ 2.8 unofficial
+e-2.9-UNOFFICIAL* : /data/backup/ASUS_ZENFONE8/e_local/twrp_e-2.9-current.img : /e/ 2.9 unofficial
+#
 e-1.21*   : /data/backup/ASUS_ZENFONE8/e/e-1.21t/twrp_recovery-e-1.21-t-20240325389105-dev-sake.img : /e/ 1.21
 e-2.0*    : /data/backup/ASUS_ZENFONE8/e/e-2.0t/twrp_recovery-e-2.0-t-20240514401453-dev-sake.img : /e/ 2.0
 e-2.5*    : /data/backup/ASUS_ZENFONE8/e/e-2.5/twrp-e-2.5-t-20241108446630-community-sake.img : /e/ 2.5
@@ -896,6 +903,10 @@ ro.statix.version : * : /data/backup/ASUS_ZENFONE8/Statix/20240712/twrp_statix_s
 #
 ro.lmodroid.build_name : LMODroid-4.2-20240429-RELEASE-sake : /data/backup/ASUS_ZENFONE8/LMODroid/twrp_LMODroid-4.2-20240429-RELEASE-sake.img : LMODroid
 ro.omni.version : * : ${DEFAULT_TWRP_IMAGE} : OmniROM
+#
+ro.modversion : 2.8-t-202503*-UNOFFICIAL-sake : /data/backup/ASUS_ZENFONE8/e_local/twrp_e-2.8-current.img : /e/ 2.8 unofficial
+ro.modversion : 2.9-t-202503*-UNOFFICIAL-sake : /data/backup/ASUS_ZENFONE8/e_local/twrp_e-2.9-current.img : /e/ 2.9 unofficial
+#
 ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.20240325.220445* : /data/backup/ASUS_ZENFONE8/e/e-1.21t/twrp_recovery-e-1.21-t-20240325389105-dev-sake.img : /e/ 1.21
 ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.20240514.193325* : /data/backup/ASUS_ZENFONE8/e/e-2.0t/twrp_recovery-e-2.0-t-20240514401453-dev-sake.img : /e/ 2.0
 ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.20241108.113816 release-keys : /data/backup/ASUS_ZENFONE8/e/e-2.5/twrp-e-2.5-t-20241108446630-community-sake.img : /e/ 2.5

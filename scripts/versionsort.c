@@ -4,8 +4,6 @@
  *
 */
 
-#include <dirent.h>
-
 int strverscmp(const char *l0, const char *r0)
 {
 	const unsigned char *l = (const void *)l0;

@@ -42,6 +42,9 @@
 #   the script now deletes the OS image file is there is less then 1 GB free space (variable MINIMUM_FREESPACE) in the filesystem with the image file
 #   use the parameter "keep_image_file" to disable the removal of the image file
 #
+#  26.02.2025 v2.1.5.0 /bs #VERSION
+#   the script now formats the metadata partition before it formats the /data partition
+#
 # This script can be used to install an OS image via the command twrp from the TWRP recovery.
 #
 # This script uses the script
@@ -527,6 +530,16 @@ if [ ${WIPE_DALVIK} = ${__TRUE} ] ; then
 fi
 
 
+  if [ ${FORMAT_METADATA} = ${__TRUE} ] ; then
+    format_metadata
+    TEMPRC=$?
+    LogMsg "${CUR_OUTPUT}"
+    if [ ${TEMPRC} != 0 ] ; then
+      LogError "Error formating the metadata partition"
+      ERRORS_FOUND=${__TRUE}
+    fi
+  fi
+
   if [ ${FORMAT_DATA} = ${__TRUE} ] ; then
     format_data
     TEMPRC=$?
@@ -544,17 +557,7 @@ fi
       fi
     fi
   fi
-  
-  if [ ${FORMAT_METADATA} = ${__TRUE} ] ; then
-    format_metadata
-    TEMPRC=$?
-    LogMsg "${CUR_OUTPUT}"
-    if [ ${TEMPRC} != 0 ] ; then
-      LogError "Error formating the metadata partition"
-      ERRORS_FOUND=${__TRUE}
-    fi
-  fi
-  
+    
 if [ ${ERRORS_FOUND} = ${__TRUE} ] ; then
   if [ ${FORCE} = ${__TRUE} ] ; then
     LogMsg "Error wiping or formating the data but the parameter force was used so we will continue"

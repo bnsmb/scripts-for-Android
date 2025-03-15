@@ -44,6 +44,9 @@
 #     the script will now abort if the file /ramdisk-files.sha256sum does not exist even if the parameter "-f" is used
 #     the binary sha256sum is now optional if the parameter "-f" is used
 #
+#   22.11.2024 v1.3.0.0 /bs
+#     added support for the OrangeFox recovery
+#
 # Author
 #   Bernd.Schemmer (at) gmx.de
 #   Homepage: http://bnsmb.de/

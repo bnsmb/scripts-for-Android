@@ -201,6 +201,49 @@ if [ $? -eq 0 ] ; then
   pm grant com.machiav3lli.backup android.permission.WRITE_CALL_LOG
   pm grant com.machiav3lli.backup android.permission.WRITE_EXTERNAL_STORAGE
   pm grant com.machiav3lli.backup android.permission.READ_CONTACTS
+  pm grant com.machiav3lli.backup android.permission.PACKAGE_USAGE_STATS
+
+# Not working:
+#  pm grant com.machiav3lli.backup android.permission.REQUEST_INSTALL_PACKAGES
+
+
+  settings put secure install_non_market_apps 1
+  settings put global package_verifier_enable 0
+
+  appops set com.machiav3lli.backup MANAGE_EXTERNAL_STORAGE allow
+
+  appops set com.machiav3lli.backup GET_USAGE_STATS allow
+  appops set com.machiav3lli.backup RUN_IN_BACKGROUND allow
+  appops set com.machiav3lli.backup MANAGE_EXTERNAL_STORAGE allow
+
+# probably not working code
+#
+if [ 0 = 1 ] ;then
+  NEO_BACKUP_DIR=""
+  NEO_BACKUP_CONFIG_FILE="/data/data/com.machiav3lli.backup/shared_prefs/com.machiav3lli.backup_preferences.xml"
+  if [ -r "${NEO_BACKUP_CONFIG_FILE}" ] ; then
+    grep backup_location "${NEO_BACKUP_CONFIG_FILE}" 
+    if [ $? -eq 0 ] ;then
+      echo "The backup location is already definded in the file ${NEO_BACKUP_CONFIG_FILE} "
+    else
+      [ -d /sdcard/NeoTestBackup ] &&  NEO_BACKUP_DIR="/sdcard/NeoTestBackup"
+      [ -d /sdcard/NeoBackup ] &&  NEO_BACKUP_DIR="/sdcard/NeoBackup"
+      if [ "${NEO_BACKUP_DIR}"x != ""x ] ; then
+         echo "Configuring the NeoBackup Backup Dir ${NEO_BACKUP_DIR} ..."
+         sed -i -e "s#</map>#    <string name=\"backup_location\">${NEO_BACKUP_DIR}</string>\n</map>#g" "${NEO_BACKUP_CONFIG_FILE}"
+         echo "The contents of the config file for NeoBackup are now:"
+         echo
+         cat "${NEO_BACKUP_CONFIG_FILE}" 
+         echo 
+      else
+        echo "No directoryo with NeoBackup files found"
+      fi
+    fi
+  else
+    echo "The config file ${NEO_BACKUP_CONFIG_FILE} does not exist"
+  fi
+fi
+   
 
 fi
   
