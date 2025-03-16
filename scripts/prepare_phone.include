@@ -11,8 +11,17 @@
 #
 # a description how to use this file is here: http://bnsmb.de/My_HowTos_for_Android.html#How_to_install_and_configure_the_Android
 #
+# ---------------------------------------------------------------------
+# Important:
+# 
+# If you get an useless error message like this
 #
-
+# ./prepare_phone.sh[6474]: init_tasks[2170]: typeset: : invalid variable name
+#
+# most probably the include file is too large for your current environment -- either free some memory or remove (comment) lines from this file
+# ---------------------------------------------------------------------
+#
+#
 # debug code
 #
 # This code will be executed at every start of a function - the code should NOT write something to STDOUT!
@@ -168,8 +177,9 @@ ENABLE_SINGLE_STEP_ON_ERROR=${__TRUE}
 #H#  22.02.2025 /bs
 #H#     The task install_archive_file now uses the parameter -o -m for tar (-> ignore owner and time of the files in the tar archive)
 #H#
-#H#  15.03.2025 /bs
+#H#  16.03.2025 /bs
 #H#     the script now prints the list of tasks that were completed with errors that were ignored
+#H#     added code to enable or disable single step mode in the dialog used after one of the scripts failed
 #H#
 
 
@@ -815,8 +825,10 @@ execute_script_on_the_phone:ignorerc
 #T# TASK_GROUP_os_twrp_magisk_sideload - install the OS via sideload into the inactive slot, install TWRP and Magisk and enable adb
 #
 # History
-#
-TASK_GROUP_os_twrp_magisk_sideload="# 
+#   16.05.2024 
+#    task group rewritten
+
+TASK_GROUP_os_twrp_magisk_backup_sideload="# 
   
 enable_disable_abort_on_error:enable
 
@@ -858,6 +870,7 @@ backup_boot_partition:active
 #
 install_magisk_in_boot_partition_only:noreboot:active
 
+
 # create a Magisk init rc script to enable the access via adb
 #
 enable_adb:reboot:active
@@ -897,6 +910,26 @@ enable_adb_in_ramdisk:ignorerc
 
 install_essential_scripts
 execute_script_on_the_phone:ignorerc:/data/develop/android/scripts_on_linux/enable_wlan.sh
+
+execute_script:/data/develop/android/scripts_on_linux/install_termux.sh:ignorerc:noreboot
+
+# use a separate directory for the apps to install for non-OmniROM ROMs 
+#
+# install_essential_apps:/data/backup/Android/Test_EssentialApps:ignorerc
+# install_essential_magisk_modules:/data/backup/Android/Test_EssentialMagiskModules:ignorerc
+
+# install_essential_apps:/data/backup/Android/Essential_Apps_for_ASUS_Android
+# install_essential_magisk_modules:ignorerc
+
+# install Neobackup App
+#
+install_apps:/data/backup/Android/apps/com.machiav3lli.backup_8318.apk
+
+# install the NeoBackup data files
+#
+install_archive_file:\${NEO_BACKUP_TAR_FILE}:ignorerc:script=/sdcard/Download/change_owner_for_neobackup_dir.sh
+
+enable_root_access_for_apps:reboot
 
 execute_script_on_the_phone:ignorerc
 "
@@ -1175,67 +1208,255 @@ execute_script_on_the_phone:ignorerc
 # ---------------------------------------------------------------------
 #T# TASK_GROUP_os_twrp_magisk - install the OS into the inactive slot, and install TWRP and Magisk 
 #
+# History
+#
+#  16.03.2025 /bs
+#    task group rewritten
+#
 TASK_GROUP_os_twrp_magisk="
 enable_disable_abort_on_error:enable
 
-# select the correct TWRP image for the running OS on the phone
+# select the correct TWRP image for the currently running OS on the phone
 #
 select_twrp_image:ignorerc
+#
+
+# install the OS
+#
 boot_phone_from_twrp_image:force
 
 install_os:noreboot:factory_reset
-#boot_phone_from_twrp_image:force
-install_twrp:noreboot:next
-install_magisk_in_boot_partition_only:noreboot:next
-enable_adb:reboot
-execute_script_on_the_phone:ignorerc:pre_install.sh
-install_magisk_in_data_adb_only:noreboot:copy_apk:use_apk
-wait_for_access_via_adb:120:kill
-enable_root_access_for_the_shell:reboot
-wait_for_access_via_adb:120:kill
-install_the_magisk_app
-wait_for_access_via_adb:120:kill
-install_archive_file:twrp:reboot
 
-install_magisk_modules:ignorerc:/data/backup/Android/EssentialMagiskModules/twrp-keep.zip
+# the adb daemon sometimes hangs after installing the new image 
+#
+restart_adb_daemon
+
+# create a backup of the initial boot partition in /data/recovery/initial_boot${SLOT_FOR_THIS_TASK}.img
+#
+backup_boot_partition:next
+
+# install TWRP into the boot partition
+#
+install_twrp:noreboot:next
+
+#
+# first install Magisk v25.x into the boot partition; this installation is necessary to
+# enable the access via adb to the phone; the Magisk installation will be overwritten later
+# with Magisk v26 or newer
+#
+install_magisk_in_boot_partition_only:noreboot:next
+
+# enable adb access using Magisk
+#
+enable_adb:reboot
+
+# do first configurations via Android cli commands if necessary
+#
+execute_script_on_the_phone:ignorerc:pre_install.sh
+
+# wait until the new OS is up and running with working adb access
+#
+wait_for_access_via_adb:240
+
+# select the correct TWRP image for the now running OS on the phone
+#
+task_select_twrp_image:ignorerc
+#
+
+# install Magisk in the boot partition
+#
+install_magisk_in_data_adb_only:noreboot:copy_apk:use_apk
+
+wait_for_access_via_adb:120
+
+# enable adb
+#
+enable_root_access_for_the_shell:reboot
+wait_for_access_via_adb:120
+
+# task_enable_single_step_mode
+
+
+#
+# the next step is necessary to install Magisk v26 or newer
+#
+install_magisk_v26_in_boot_partition:active:reboot
+wait_for_access_via_adb:120
+install_the_magisk_app
+
+# customize the OS: install Scripts, Apps, and Magisk Modules
+
+install_archive_file:twrp:reboot:script=/cache/correct_setlinux_for_wifconifg.sh
+enable_disable_abort_on_error:disable
+install_essential_scripts
+execute_script_on_the_phone:ignorerc:/data/develop/android/scripts_on_linux/enable_wlan.sh
+# execute_script:/data/develop/android/scripts_on_linux/install_termux.sh:ignorerc:noreboot
+#install_essential_apps:ignorerc
+#install_essential_magisk_modules:ignorerc
+
+#
+# The variable MICROG_MAGISK_MODULE must be defined before starting the script either in the environment
+# or in the file prepare_phone.conf to install the Magisk Module with MicroG
+#
+#install_magisk_modules:\${MICROG_MAGISK_MODULE}:ignorerc
+#
+#
+# The variable DISABLE_FAKE_STORE_MAGISK_MODULE must be defined before starting the script either in the environment
+# or in the file prepare_phone.conf to install the Magisk Module to Disable the FakeStore
+#
+#install_magisk_modules:\${DISABLE_FAKE_STORE_MAGISK_MODULE}:ignorerc
+#
+
+# The variable NEO_BACKUP_TAR_FILE must be defined before starting the script either in the environment
+# or in the file prepare_phone.conf to copy the tar file to the phone
+#
+install_archive_file:twrp:reboot:script=/cache/correct_setlinux_for_wifconifg.sh
+
+#
+enable_root_access_for_apps:reboot
 execute_script_on_the_phone:ignorerc
+wait_for_access_via_adb
 "
 
 
 # ---------------------------------------------------------------------
 #T# TASK_GROUP_os_twrp_magisk_backup - install the OS into the inactive slot, and install TWRP and Magisk 
 #
+# History
+#
+#  16.03.2025 /bs
+#    task group rewritten
+#
 TASK_GROUP_os_twrp_magisk_bkp="
 enable_disable_abort_on_error:enable
 
-# select the correct TWRP image for the running OS on the phone
+# select the correct TWRP image for the currently running OS on the phone
 #
 select_twrp_image:ignorerc
+#
+
+# install the OS
+#
 boot_phone_from_twrp_image:force
 
 install_os:noreboot:factory_reset
-#boot_phone_from_twrp_image:force
+
+# the adb daemon sometimes hangs after installing the new image 
+#
+restart_adb_daemon
+
+# create a backup of the initial boot partition in /data/recovery/initial_boot${SLOT_FOR_THIS_TASK}.img
+#
+backup_boot_partition:next
+
+# install TWRP into the boot partition
+#
 install_twrp:noreboot:next
+
+#
+# first install Magisk v25.x into the boot partition; this installation is necessary to
+# enable the access via adb to the phone; the Magisk installation will be overwritten later
+# with Magisk v26 or newer
+#
 install_magisk_in_boot_partition_only:noreboot:next
+
+# enable adb access using Magisk
+#
 enable_adb:reboot
+
+# do first configurations via Android cli commands if necessary
+#
 execute_script_on_the_phone:ignorerc:pre_install.sh
+
+# wait until the new OS is up and running with working adb access
+#
+wait_for_access_via_adb:240
+
+# select the correct TWRP image for the now running OS on the phone
+#
+task_select_twrp_image:ignorerc
+#
+
+# install Magisk in the boot partition
+#
 install_magisk_in_data_adb_only:noreboot:copy_apk:use_apk
-wait_for_access_via_adb:120:kill
+
+wait_for_access_via_adb:120
+
+# enable adb
+#
 enable_root_access_for_the_shell:reboot
-wait_for_access_via_adb:120:kill
+wait_for_access_via_adb:120
+
+# task_enable_single_step_mode
+
+
+#
+# the next step is necessary to install Magisk v26 or newer
+#
+install_magisk_v26_in_boot_partition:active:reboot
+wait_for_access_via_adb:120
 install_the_magisk_app
-wait_for_access_via_adb:120:kill
-install_archive_file:twrp:reboot
+
+# customize the OS: install Scripts, Apps, and Magisk Modules
+
+install_archive_file:twrp:reboot:script=/cache/correct_setlinux_for_wifconifg.sh
+enable_disable_abort_on_error:disable
+install_essential_scripts
+execute_script_on_the_phone:ignorerc:/data/develop/android/scripts_on_linux/enable_wlan.sh
+# execute_script:/data/develop/android/scripts_on_linux/install_termux.sh:ignorerc:noreboot
+#install_essential_apps:ignorerc
+#install_essential_magisk_modules:ignorerc
+
+#
+# The variable MICROG_MAGISK_MODULE must be defined before starting the script either in the environment
+# or in the file prepare_phone.conf to install the Magisk Module with MicroG
+#
+#install_magisk_modules:\${MICROG_MAGISK_MODULE}:ignorerc
+#
+#
+# The variable DISABLE_FAKE_STORE_MAGISK_MODULE must be defined before starting the script either in the environment
+# or in the file prepare_phone.conf to install the Magisk Module to Disable the FakeStore
+#
+#install_magisk_modules:\${DISABLE_FAKE_STORE_MAGISK_MODULE}:ignorerc
+#
+
+# The variable NEO_BACKUP_TAR_FILE must be defined before starting the script either in the environment
+# or in the file prepare_phone.conf to copy the tar file to the phone
+#
+install_archive_file:twrp:reboot:script=/cache/correct_setlinux_for_wifconifg.sh
+
+# install Neobackup App
+#
+install_apps:/data/backup/Android/apps/com.machiav3lli.backup_8318.apk
 
 # install the NeoBackup data files
 #
 install_archive_file:\${NEO_BACKUP_TAR_FILE}:ignorerc:script=/sdcard/Download/change_owner_for_neobackup_dir.sh
 
-install_apps:/data/backup/Android/apps/com.machiav3lli.backup_8318.apk 
-
-install_magisk_modules:ignorerc:/data/backup/Android/EssentialMagiskModules/twrp-keep.zip
-
+#
+enable_root_access_for_apps:reboot
 execute_script_on_the_phone:ignorerc
+wait_for_access_via_adb
+"
+
+
+# ---------------------------------------------------------------------
+#T# TASK_GROUP_install_neobackup  - install the NeoBackup App and the NeoBackup backup data files
+#
+# History
+#
+#  16.03.2025 /bs
+#    task group created
+#
+TASK_GROUP_install_neobackup="
+# install Neobackup App
+#
+install_apps:/data/backup/Android/apps/com.machiav3lli.backup_8318.apk
+
+# install the NeoBackup data files
+#
+install_archive_file:\${NEO_BACKUP_TAR_FILE}:ignorerc:script=/sdcard/Download/change_owner_for_neobackup_dir.sh
 "
 
 
@@ -2559,6 +2780,9 @@ function finish_tasks {
     LogMsg "-"
     LogMsg "-" "${SEPARATOR}"
     LogMsg "Tasks executed successfully are:"
+    
+    TASKS_SUCCESSFULLY_CHECKED="$( echo "${TASKS_SUCCESSFULLY_CHECKED}" | tr " " "\n" | sort | uniq )"
+
     for CUR_TASK in ${TASKS_SUCCESSFULLY_CHECKED} ; do
       LogMsg "-" "${CUR_TASK}"
     done
@@ -2566,9 +2790,13 @@ function finish_tasks {
   fi
 
   if [ "${TASKS_WITH_ERRORS}"x != ""x ] ; then
+
     LogMsg "-"
     LogMsg "-" "${SEPARATOR}"
     LogMsg "Tasks executed with errors are:"
+
+    TASKS_WITH_ERRORS="$( echo "${TASKS_WITH_ERRORS}" | tr " " "\n" | sort | uniq )"
+
     for CUR_TASK in ${TASKS_WITH_ERRORS} ; do
       LogMsg "-" "${CUR_TASK}"
     done
@@ -2579,6 +2807,9 @@ function finish_tasks {
     LogMsg "-"
     LogMsg "-" "${SEPARATOR}"
     LogMsg "${NO_TASKS_EXECUTED_WITH_IGNORED_ERROR} task(s) executed with ignored errors:"
+    
+    TASKS_EXECUTED_WITH_IGNORED_ERROR="$( echo "${TASKS_EXECUTED_WITH_IGNORED_ERROR}" | tr " " "\n" | sort | uniq )"
+    
     for CUR_TASK in ${TASKS_EXECUTED_WITH_IGNORED_ERROR} ; do
       LogMsg "-" "${CUR_TASK}"
     done
@@ -2915,6 +3146,9 @@ function execute_script {
   
   typeset CUR_COMMAND=""
   
+  typeset SINGLE_STEP_MESSAGE_OPTIONS=""
+  typeset SINGLE_STEP_MESSAGE=""
+  
   LogMsg "-"
   LogMsg " ---------------------------------------------------------------------- "  
 
@@ -2964,14 +3198,56 @@ function execute_script {
       if [ ${THISRC} = ${__TRUE} ] ; then
         break
       fi
+
+      SINGLE_STEP_MESSAGE=""
+      SINGLE_STEP_MESSAGE_OPTIONS=""
+      
+      if [ "${SINGLE_STEP_MODE}"x != ""x ] ; then
+
+        if [ ${SINGLE_STEP_MODE} = ${__FALSE} ] ; then
+          SINGLE_STEP_MESSAGE="${SINGLE_STEP_MESSAGE}
+Single Step mode is currently disabled"         
+
+          SINGLE_STEP_MESSAGE_OPTIONS="${SINGLE_STEP_MESSAGE_OPTIONS}
+s singlestep     - enable single step mode"
+
+        else
+           SINGLE_STEP_MESSAGE="${SINGLE_STEP_MESSAGE}
+Single Step mode is currently enabled"         
+
+        SINGLE_STEP_MESSAGE_OPTIONS="${SINGLE_STEP_MESSAGE_OPTIONS}
+s singlestep     - disable single step mode"
+
+        fi
+      fi
+      
+      if [ "${ENABLE_SINGLE_STEP_ON_ERROR}"x != ""x ] ; then
+
+        if [ ${ENABLE_SINGLE_STEP_ON_ERROR} = ${__FALSE} ] ; then
+          SINGLE_STEP_MESSAGE="${SINGLE_STEP_MESSAGE}
+Single Step mode on error is currently disabled"         
   
+        SINGLE_STEP_MESSAGE_OPTIONS="${SINGLE_STEP_MESSAGE_OPTIONS}
+e on_error       - enable single step mode after the next task fails"
+
+        else
+          SINGLE_STEP_MESSAGE="${SINGLE_STEP_MESSAGE}
+Single Step mode on error is currently enabled"         
+
+          SINGLE_STEP_MESSAGE_OPTIONS="${SINGLE_STEP_MESSAGE_OPTIONS}
+e on_error       - disable single step mode after the next task fails"
+
+        fi
+      fi
+           
       LogMsg "-" "
 The execution of the script \"${THIS_SCRIPT}\" with the parameter \"${THIS_PARAMETER}\" in the task \"${CUR_TASK#task_*}\" ended with RC=${SCRIPT_RC} 
-
+${SINGLE_STEP_MESSAGE}
 Select wwhat to do next
 
 r y repeat       - Repeat the task
 c cont continue  - continue with the next task
+${SINGLE_STEP_MESSAGE_OPTIONS}
 k kill           - kill the adb daemon
 t twrp           - change the TWRP image to use
 R reset_usb      - reset the USB port for the  phone
@@ -2993,7 +3269,29 @@ quit             - end the script
         TASKS_EXECUTED_WITH_ERRORS="${TASKS_EXECUTED_WITH_ERRORS} ${CUR_TASK#task_*}"
       
         case ${USER_INPUT} in
-        
+
+          s | singlestep )
+            ENABLE_SINGLE_STEP_ON_ERROR=${__FALSE}
+            if [ ${SINGLE_STEP_MODE} = ${__FALSE} ] ; then
+              LogMsg "Enabling single step mode now"
+              SINGLE_STEP_MODE=${__TRUE}
+            else
+              LogMsg "Disabling single step mode now"
+              SINGLE_STEP_MODE=${__FALSE}
+            fi
+            ;;
+          
+          on_error | e )
+            SINGLE_STEP_MODE=${__FALSE}
+            if [ ${ENABLE_SINGLE_STEP_ON_ERROR} = ${__FALSE} ] ; then
+              LogMsg "Enabling single step on error now"
+              ENABLE_SINGLE_STEP_ON_ERROR=${__TRUE}
+            else
+              LogMsg "Disabling single step on error now"
+              ENABLE_SINGLE_STEP_ON_ERROR=${__FALSE}
+            fi
+            ;;
+
           f | format )
             LogMsg "Formating /data ..."
             CUR_OUTPUT="$( ${ADB} ${ADB_OPTIONS} shell twrp format data  2>&1  )"
@@ -3102,7 +3400,7 @@ quit             - end the script
             ;;            
 
           * )
-            LogMsg "Unknown key entered: \"${USER_INPUT}\" "
+            LogMsg "Unknown command entered: \"${USER_INPUT}\" "
             ;;
         esac
       fi
@@ -4484,7 +4782,7 @@ function task_enable_adb {
             LogMsg "*** Rebooting the phone now ...."
             reboot_phone wait 
             if [ $? -ne ${__TRUE} ] ; then
-              LogErrorMsg "Rebooing the phone failed"
+              LogErrorMsg "Rebooting the phone failed"
               THISRC=${__FALSE}
             else
 #
