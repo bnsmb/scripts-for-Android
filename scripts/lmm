@@ -26,6 +26,10 @@
 #      added the parameter --enable, --disable, --remove, --keep, --verbose, --dry-run, module and all
 #      the script now prints a "-" after the status of the Magisk Modules that will be deleted after the next reboot
 #
+#    18.04.2025 v1.2.0 /bs 
+#      increased the field length for the module version to 25
+#      the script is now aborted if an unknown parameter is used
+#
 
 __TRUE=0
 __FALSE=1
@@ -222,6 +226,10 @@ if [ $# -ne 0 ] ; then
         LAST_ACTION=""
         ;;
 
+      --* | -* )
+        die 99 "Unknown parameter found: ${CUR_PARAMETER}"
+        ;;
+        
       * )
         NEW_PARAMETER="${NEW_PARAMETER} ${CUR_PARAMETER}"
         LAST_ACTION=""
@@ -344,7 +352,7 @@ else
   for i in /data/adb/modules/*; do 
     CUR_MODULE_ID="${i##*/}"
   
-    printf "%-30s %-15s %-15s %s\n" \
+    printf "%-30s %-25s %-15s %s\n" \
 "${CUR_MODULE_ID}" \
 "$(  grep version= $i/module.prop 2>/dev/null | cut -f2 -d "=" | tr -s " " )" \
 "$( [ ! -r $i/disable ] && echo "enabled" || echo "disabled" ) $( [ -r $i/remove ] && echo "(-)" || echo "  " )" \
