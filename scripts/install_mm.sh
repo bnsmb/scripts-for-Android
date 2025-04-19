@@ -70,7 +70,9 @@
 #   29.10.2024 v1.2.0 /bs
 #     the script now uses /data/local/tmp or /sdcard/Download for temporary files if /tmp does not exist
 #
-
+#   19.04.2025 v1.2.1 /bs
+#     the script now deletes the temporary test files /sdcard/Download/xxx.$$ 
+#
 # read the script version from the script source code
 #
 SCRIPT_VERSION="$( grep -E "^#.*/bs" $0 | tail -1 | awk '{ print $3 }' )"
@@ -284,6 +286,8 @@ else
   CUR_ID="$( ${ADB_SHELL_COMMAND} touch ${TARGET_DIR}/xxx.$$  )"
   if [ $? != 0 ] ; then
      die 107  "Can not write to the directory \"${TARGET_DIR}\" "
+  else     
+    CUR_OUTPUT="$( ${ADB_SHELL_COMMAND} rm ${TARGET_DIR}/xxx.$$  )"
   fi
 
   CUR_PHONE_MODEL="$( ${ADB_SHELL_COMMAND} getprop ro.product.odm.model 2>/dev/null )"
