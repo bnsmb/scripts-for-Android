@@ -23,6 +23,9 @@
 #  25.02.2025 v1.0.0 /bs
 #   added the variable DEFAULT_TWRP_IMAGE for the default TRWP image that is used if the varialbe TWRP_IMAGE is not defined
 #
+#  13.05.2025 v1.0.1 /bs
+#    added a workaround to the file prop.default from the cpio archive
+#
 #H# Environment variables used if set:
 #H#
 #H#  MAGISKBOOT    - set this variable to the fully qualified namee of the magiskboot executable if it's not available via the PATH variable
@@ -277,6 +280,9 @@ ${MAGISKBOOT} unpack -h "${TWRP_IMAGE}" || \
 TWRP_CMDLINE="$( grep cmdline header | cut -f2- -d"=" )"
 
 ${MAGISKBOOT} cpio ./ramdisk.cpio "extract ./prop.default ./prop.default"
+[ ! -r "./prop.default" ] && \
+  ${MAGISKBOOT} cpio ./ramdisk.cpio "extract prop.default ./prop.default"
+  
 [ ! -r "./prop.default" ] && \
   die 65 "Error extracting the file \"prop.default\" from the TWRP image"
   
