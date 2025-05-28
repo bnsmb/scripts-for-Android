@@ -6,11 +6,12 @@
 #H#  The status of the Magisk Modules that will be deleted after the next reboot is marked with an appended "(*)"
 #H#  The script can also be used to enable, disable, or remove one or more Magisk Modules.
 #H#
-#h#  Usage: lmm [-v|--verbose] [-V|--version] [-H|--noheader] [-r|--reset] [--restore] [--nostatus] [-n|--dry-run] [--list] [--enable] [--disable| [--remove] [--keep] [module]
+#h#  Usage: lmm [var=value] [-h|--help] [-v|--verbose] [-V|--version] [-H|--noheader] [-r|--reset] [--restore] [--nostatus] [-n|--dry-run] [--list] [--enable] [--disable| [--remove] [--keep] [module]
 #h#
 #H#
 #H# Parameter:
 #H# 
+#H#    var=value  set the variable "var" to "value"
 #H#   --help      print the script usage; use the parameter "-v -h" to print the detailed usage help
 #H#   --version   print the script version and exit
 #H#   --verbose   print verbose messages
@@ -84,7 +85,13 @@
 #      added the parameter --restore
 #      added the parameter --list
 #
-
+#    22.05.2025 v2.1.0 /bs
+#      added the parameter "var=value"
+#      the script now prints the name of the status file used to restore the module status
+#
+#    22.05.2025 v2.1.1 /bs
+#      lmm now ignores the environment variable PREFIX if it contains the name of a directory (like in mksh)
+#
 __TRUE=0
 __FALSE=1
 
@@ -347,6 +354,14 @@ if [ $# -ne 0 ] ; then
     
     case ${CUR_PARAMETER}  in
 
+      *=* )
+        LogInfo "Executing now \"${CUR_PARAMETER}\" ..."
+        eval ${CUR_PARAMETER}
+        if [ $? -ne 0 ] ; then
+          die 30 "Error executing \"${CUR_PARAMETER}\" "
+        fi
+        ;;
+
       -V | --version )
          grep  "^#" $0 | grep "/bs"  | awk '{ print $3}' | tail -1      
          exit 0
@@ -432,6 +447,16 @@ if [ $# -ne 0 ] ; then
     LogMsg "${NEW_PARAMETER}"
 
 
+# check for PREFIX definition in mkshrc
+#
+if [ "${PREFIX}"x != ""x ] ; then
+  if [ -d "${PREFIX}" ] ; then
+    LogInfo "PREFIX contains the name of a directory: \"${PREFIX}\" -- now ignoring the variable PREFIX"
+    PREFIX=""
+  fi
+fi
+
+
 # correct the script parameter
 #    
   set -- ${NEW_PARAMETER}   
@@ -479,7 +504,7 @@ if [ $# -ne 0 ] ; then
         if [ ! -r "${LMM_STATUS_FILE}" ] ; then
           LogWarning "The status file     \"${LMM_STATUS_FILE}\" does not exist - can not restore the status of the Magisk modules"
         else
-          LogMsg "Restoring the status of the Magisk modules ..."
+          LogMsg "Restoring the status of the Magisk modules from the file \"${LMM_STATUS_FILE}\" ..."
           
           FILES_TO_DELETE="$( ls ${DIRECTORY_WITH_MAGISK_MODULES}/*/{disable,remove} 2>/dev/null )"
           for CUR_FILE in ${FILES_TO_DELETE} ; do
