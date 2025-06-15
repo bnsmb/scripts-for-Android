@@ -22,11 +22,14 @@
 #
 # History
 #
-#  29.07.2024 /bs
+#  29.07.2024 v1.0.0 /bs
 #   initial release
 #
-#  01.08.2024 /bs
+#  01.08.2024 v1.1.0 /bs
 #   use /sdcard/Download for temporary files if /tmp is not available
+#
+#  15.06.2025 v1.2.0 /bs
+#   the script now resolves symbolic links
 #
 
 __TRUE=0
@@ -103,7 +106,14 @@ for CUR_FILE in ${FILES_TO_CHECK} ; do
   
   LogInfo
   LogInfo "Processing \"${CUR_FILE}\" ..."
-  
+
+  CUR_OUTPUT="$( readlink -f "${CUR_FILE}" )"
+  if [[ ${CUR_OUTPUT} != ${CUR_FILE} ]] ; then
+    LogMsg "\"${CUR_FILE}\" is a symbolic link to ${CUR_OUTPUT} -- Now using the target for the symbolic link \"${CUR_OUTPUT}\" "
+    CUR_FILE="${CUR_OUTPUT}"
+    
+  fi
+    
   CUR_OUTPUT="$( echo "${MOUNTINFO}" | grep  -F " ${CUR_FILE} ####" )"
   if [ $? -eq 2 ] ; then
     LogInfo "# Error using \"${CUR_FILE}\" as parameter for grep:" 
