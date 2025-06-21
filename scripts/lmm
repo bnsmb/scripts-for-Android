@@ -92,6 +92,11 @@
 #    22.05.2025 v2.1.1 /bs
 #      lmm now ignores the environment variable PREFIX if it contains the name of a directory (like in mksh)
 #
+#    22.06.2025 v2.1.2 /bs
+#      lmm now works also for installations with no installed Magisk modules
+#
+#
+#
 __TRUE=0
 __FALSE=1
 
@@ -222,7 +227,8 @@ function list_magisk_modules  {
   for i in ${DIRECTORY_WITH_MAGISK_MODULES}/* ; do 
     
     CUR_MODULE_ID="${i##*/}"
-
+    [[ ${CUR_MODULE_ID} == \* ]] && break
+     
     INSTALL_STATUS="installed"
     if [ -d "${DIRECTORY_WITH_MAGISK_MODULE_UPDATES}/${CUR_MODULE_ID}"  ] ; then
       PRINT_REBOOT_MESSAGE=${__TRUE}
