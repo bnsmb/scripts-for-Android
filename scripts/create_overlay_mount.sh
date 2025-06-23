@@ -83,6 +83,10 @@
 #
 # History
 #   19.06.2025 /bs v1.0.0
+#     initial release
+#
+#   23.06.2025 /bs v1.1.0
+#     /vendor is not in the default directory list anymore
 #
 
 # ----------------------------------------------------------------------
@@ -121,7 +125,7 @@ DEFAULT_BASEDIR="/data/local/tmp/ov"
 
 # directories for which an overlay mount should be created
 #
-DEFAULT_DIRS_TO_OVERLAY="/system_ext /vendor /product  /odm  /system"
+DEFAULT_DIRS_TO_OVERLAY="/system_ext  /product  /odm  /system"
 
 # filesystem for the image file (must be a filesystem that is known by Android and that supports overlay filesystems like ext4 or ext3)
 # use "cat /proc/filesystems" to list the filesystems supported by the running OS)
@@ -171,11 +175,11 @@ PRINT_MORE_DETAILS=${__FALSE}
 
 # defaults for the executables used
 #
-DEFAULT_MOUNT="$( which mount )"
-DEFAULT_UMOUNT="$( which umount )"
-DEFAULT_LOSETUP="$( which losetup )"
-DEFAULT_MKFS=""
-DEFAULT_DD="$( which dd )"
+DEFAULT_MOUNT=$( which mount )
+DEFAULT_UMOUNT=$( which umount )
+DEFAULT_LOSETUP=$( which losetup )
+DEFAULT_MKFS=$( which mkfs )
+DEFAULT_DD=$( which dd )
 
 # ---------------------------------------------------------------------
 
@@ -2198,6 +2202,17 @@ fi
 
 LogInfo " ... parameter processing done"
 
+# ----------------------------------------------------------------------
+# use user defined binary if requested
+#
+
+[ "${LOSETUP}"x = ""x ] && LOSETUP="${DEFAULT_LOSETUP}"
+[ "${MOUNT}"x = ""x ]   && MOUNT="${DEFAULT_MOUNT}"
+[ "${UMOUNT}"x = ""x ]  && UMOUNT="${DEFAULT_UMOUNT}"
+[ "${MKFS}"x = ""x ]    && MKFS="${DEFAULT_MKFS}"
+[ "${DD}"x = ""x ]      && DD="${DEFAULT_DD}"
+
+LogInfoVar LOSETUP MOUNT UMOUNT MKFS DD
 
 
 # ----------------------------------------------------------------------
@@ -2270,20 +2285,6 @@ if [ "${SELINUX_CONTEXT}"x = ""x ] ; then
 else
   LogInfo "Using the filesystem type \"${SELINUX_CONTEXT}\" (variable SELINUX_CONTEXT)"
 fi
-
-
-# ----------------------------------------------------------------------
-# use user defined binary if requested
-#
-
-[ "${LOSETUP}"x = ""x ] && LOSETUP="${DEFAULT_LOSETUP}"
-[ "${MOUNT}"x = ""x ]   && MOUNT="${DEFAULT_MOUNT}"
-[ "${UMOUNT}"x = ""x ]  && UMOUNT="${DEFAULT_UMOUNT}"
-[ "${MKFS}"x = ""x ]    && MKFS="${DEFAULT_MKFS}"
-[ "${DD}"x = ""x ]      && DD="${DEFAULT_DD}"
-
-
-LogInfoVar LOSETUP MOUNT UMOUNT MKFS DD
 
 # ---------------------------------------------------------------------
 # retrieve the list of directories currently mounted on an overlay filesystem
