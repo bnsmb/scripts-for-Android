@@ -21,7 +21,7 @@
 #H#
 #H# The actions "vars" and "help" only print help messages.
 #H#
-#H# If the variable DIRS_TO_OVERLAY is empty the script uses the hardcoded default value for this variable; that is: /system_ext /vendor /product  /odm  /system
+#H# If the variable DIRS_TO_OVERLAY is empty the script uses the hardcoded default value for this variable; that is: /system_ext  /product  /odm  /system
 #H#
 #H# "directory#" must be either "default", "none", or the fully qualified directory name of a directory.
 #H# The value "none" deletes the current list of directories in the variable DIRS_TO_OVERLAY; the value "default" adds the default directories to the list
@@ -88,6 +88,13 @@
 #   23.06.2025 /bs v1.1.0
 #     /vendor is not in the default directory list anymore
 #
+#   25.06.2025 /bs v1.2.0
+#     the default mount point is now /dev/ov
+#     the script now remounts sub directories in the directories for which overlay mounts are created
+#     the script now refuses to create an overlay mount for a directory if there are already overlay mounts for sub directories in place
+#     added more messages in verbose mode
+#     LogInfoVar is now a alias
+#
 
 # ----------------------------------------------------------------------
 
@@ -121,7 +128,7 @@ DEFAULT_IMAGE_FILE="/data/local/tmp/image001"
 # base directory for the directories necessary for the overlay mounts
 # (the virtual disk is mounted on this directory)
 #
-DEFAULT_BASEDIR="/data/local/tmp/ov"
+DEFAULT_BASEDIR="/dev/ov"
 
 # directories for which an overlay mount should be created
 #
@@ -198,6 +205,18 @@ DEFAULT_DD=$( which dd )
   NO_OVERLAY_MOUNTS_NOT_CREATED=0
 
 # ---------------------------------------------------------------------
+# aliase
+
+# enable aliase in bash
+#
+if [ "${BASH_VERSION}"x != ""x ] ; then
+  shopt -s expand_aliases
+fi
+
+alias LogInfoVar='f() { [[ ${__FUNCTION} = "" ]] && __FUNCTION=main ; [[ ${VERBOSE} != 0 ]] && return; varname="$1"; eval "echo \"INFO: in $__FUNCTION:  $varname ist \${$varname}\" >&2"; unset -f f; } ;  f'
+
+
+# ---------------------------------------------------------------------
 # functions
 
 # ---------------------------------------------------------------------
@@ -206,6 +225,8 @@ DEFAULT_DD=$( which dd )
 # Usage: LogMsg [message]
 #
 function LogMsg {
+  typeset __FUNCTION="LogMsg"
+  
   typeset THISMSG="$@"
 
   echo "${THISMSG}"
@@ -222,6 +243,8 @@ function LogMsg {
 # ${__FALSE} if the message was not written
 #
 function LogInfo { 
+  typeset __FUNCTION="LogInfo"
+
   [[ ${VERBOSE} == ${__TRUE} ]] && LogMsg "INFO: $@" >&2 || return ${__FALSE}
 }
 
@@ -231,6 +254,8 @@ function LogInfo {
 # Usage: LogWarning [message]
 #
 function LogWarning {
+  typeset __FUNCTION="LogWarning"
+
   LogMsg "WARNING: $@" >&2
 }
 
@@ -241,43 +266,11 @@ function LogWarning {
 # Usage: LogError [message]
 #
 function LogError {
+  typeset __FUNCTION="LogError"
+
   LogMsg "ERROR: $@" >&2
 }
 
-
-# ---------------------------------------------------------------------
-# LogInfoVar - write a the contents of a variable to STDERR if VERBOSE is ${__TRUE}
-#
-# Usage: LogInfoVar [var]  ["# commment"] [...]
-#
-# The function returns ${__TRUE} if the message was written and
-# ${__FALSE} if the message was not written
-#
-function LogInfoVar { 
-  typeset THISRC=${__FALSE}
-  
-  typeset VAR_VALUE=""
-  typeset VAR_NAME=""
-  typeset VAR_COMMENT=""
-
-  if [[ ${VERBOSE} == ${__TRUE} ]] ; then
-    while [ $# -ne 0 ] ; do
-      VAR_NAME="$1"
-      shift
-      VAR_COMMENT=""
-      if [[ $1 == \#* ]] ; then
-        VAR_COMMENT="$1"
-        shift
-      fi
-      eval VAR_VALUE="\$${VAR_NAME}"
-      LogMsg "INFO: ${VAR_NAME} is \"${VAR_VALUE}\" ${VAR_COMMENT}" >&2
-    done
-
-    THISRC=${__TRUE}
-  fi
-
-  return ${THISRC}
-}
 
 # ---------------------------------------------------------------------
 # die - end the program
@@ -289,6 +282,8 @@ function LogInfoVar {
 #   n/a
 #
 function die {
+  typeset __FUNCTION="die"
+
   typeset THISRC="$1"
 
   [ "${THISRC}"x = ""x ] && THISRC=0
@@ -320,6 +315,8 @@ function die {
 #   the directory name is written to STDOUT
 #
 function create_dir_name_for_the_overlay_filesystem {
+  typeset __FUNCTION="create_dir_name_for_the_overlay_filesystem"
+
   [ $# -eq 1 ] && echo "$( echo "$1" | cut -c2- | tr "/" "#" )"
 }
 
@@ -336,6 +333,8 @@ function create_dir_name_for_the_overlay_filesystem {
 #   the device name is written to STDOUT
 #
 function get_mount_device {
+  typeset __FUNCTION="get_mount_device"
+
   [ $# -eq 1 ] && df -h "$1" 2>/dev/null | tail -1 | tr "\t" " " |  cut -f1 -d " " 
 }
 
@@ -353,6 +352,8 @@ function get_mount_device {
 #   the name of the mountpoint is written to STDOUT
 #
 function get_mount_point {
+  typeset __FUNCTION="get_mount_point"
+
   typeset CUR_FILE="$1"
   typeset CUR_SUBDIR="$2"
 
@@ -368,7 +369,9 @@ function get_mount_point {
 
   echo "${CUR_MOUNT_DIR}"
 
-  LogInfoVar FILENAME CUR_MOUNT_DIR
+  LogInfoVar CUR_SUBDIR 
+  LogInfoVar FILENAME 
+  LogInfoVar CUR_MOUNT_DIR
 }
 
 
@@ -390,6 +393,8 @@ function get_mount_point {
 # If the global variable EXTERNAL_USE is ${__TRUE} the function prints the filename and details.
 # 
 function get_file_overlay {
+  typeset __FUNCTION="get_file_overlay"
+
   typeset THISRC=${__FALSE}
 
   typeset UPPERDIR="${BASEDIR}/upper"
@@ -415,6 +420,9 @@ function get_file_overlay {
     
       CUR_MOUNT_POINT="$( get_mount_point "${TESTFILE}" "upper"  )"
            
+      LogInfoVar TESTFILE
+      LogInfoVar CUR_MOUNT_POINT
+      
       if [ "${CUR_MOUNT_POINT}"x != ""x ] ; then
         echo "${CUR_MOUNTS}" | grep "upperdir=${CUR_MOUNT_POINT}," >/dev/null
         if [ $? -eq 0 ]  ; then    
@@ -429,6 +437,10 @@ function get_file_overlay {
 
       while true ; do
         
+        LogInfoVar TESTFILE
+        LogInfoVar NEW_DIR_NAME
+        LogInfoVar NEW_FILE_NAME
+
         NEW_DIR_NAME="${TESTFILE%%/*}"
         NEW_FILE_NAME="${TESTFILE#*/}"
 
@@ -436,11 +448,19 @@ function get_file_overlay {
         
         TESTFILE="${NEW_DIR_NAME}#${NEW_FILE_NAME}"
 
+        LogInfoVar TESTFILE
+
         CUR_MOUNT_POINT="$( get_mount_point "${UPPERDIR}/${TESTFILE}" "upper"  )"
+
+        LogInfoVar CUR_MOUNT_POINT
+
         if [ "${CUR_MOUNT_POINT}"x != ""x ] ; then
           echo "${CUR_MOUNTS}" | grep "upperdir=${CUR_MOUNT_POINT}," >/dev/null
           if [ $? -eq 0 ] ; then
             TESTFILE="${UPPERDIR}/${TESTFILE}"
+
+            LogInfoVar TESTFILE
+            
             THISRC=${__TRUE}
             break
           fi
@@ -528,6 +548,8 @@ function get_file_overlay {
 # If there is an overlay mount for the directory the returncode is less then 3.
 #
 function retrieve_overlay_filesystem_backend {
+  typeset __FUNCTION="retrieve_overlay_filesystem_backend"
+
   THISRC=1
 
   typeset CUR_DIR="$1"
@@ -559,7 +581,8 @@ function retrieve_overlay_filesystem_backend {
     THISRC=9  
   fi
  
-  LogInfoVar CUR_BACKEND_DIR  CUR_BACKEND_DISK
+  LogInfoVar CUR_BACKEND_DIR  
+  LogInfoVar CUR_BACKEND_DISK
   
   return ${THISRC}
 }
@@ -578,6 +601,8 @@ function retrieve_overlay_filesystem_backend {
 # currently mounted
 #
 function is_directory_mounted {
+  typeset __FUNCTION="is_directory_mounted"
+
   THISRC=${__FALSE}
 
   typeset CUR_DIR=""
@@ -630,6 +655,8 @@ function is_directory_mounted {
 #   ${__FALSE} - error
 #
 function set_permissions {
+  typeset __FUNCTION="set_permissions"
+
   typeset SOURCE_DIR=""
   typeset TARGET_DIR=""
   
@@ -680,7 +707,10 @@ function set_permissions {
 
   fi
 
-  LogInfoVar SOURCE_DIR TARGET_DIR CUR_PERMISSIONS CUR_OWNER
+  LogInfoVar SOURCE_DIR 
+  LogInfoVar TARGET_DIR 
+  LogInfoVar CUR_PERMISSIONS 
+  LogInfoVar CUR_OWNER
   
   return ${THISRC}  
 }
@@ -698,6 +728,8 @@ function set_permissions {
 #   ${__FALSE} - error
 #
 function set_selinux_context {
+  typeset __FUNCTION="set_selinux_context"
+
   typeset SOURCE_DIR=""
   typeset TARGET_DIR=""
   typeset CUR_SELINUX_CONTEXT=""
@@ -761,7 +793,9 @@ function set_selinux_context {
 
   fi
 
-  LogInfoVar SOURCE_DIR TARGET_DIR CUR_SELINUX_CONTEXT
+  LogInfoVar SOURCE_DIR 
+  LogInfoVar TARGET_DIR 
+  LogInfoVar CUR_SELINUX_CONTEXT
 
   return ${THISRC}
 }
@@ -775,14 +809,17 @@ function set_selinux_context {
 # parameter:
 #
 #   dir# is the directory to create; use "dir:permissions" to define the permissions for the directory
+#   the default permissions for a directory are 755
 #
 # returns:
 #   0 - all directories could be created
 #   1 - one or more directories could not be created
 #
-# If the directory was created the functions add the name to the global variable DIRECTORIES_CREATED
+# The function adds the name of each directory created to the global variable DIRECTORIES_CREATED
 #
 function create_directory {
+  typeset __FUNCTION="create_directory"
+
   typeset THISRC=0
 
   typeset NEW_DIR=""
@@ -802,7 +839,8 @@ function create_directory {
       NEW_DIR="${NEW_DIR%:*}"
     fi
 
-    LogInfoVar PERMISSIONS NEW_DIR
+    LogInfoVar PERMISSIONS 
+    LogInfoVar NEW_DIR
     
     if [ ! -d "${NEW_DIR}" ] ; then
       LogMsg "Creating the directory \"${NEW_DIR}\" ..."
@@ -841,6 +879,8 @@ function create_directory {
 #   4 - the binary to format the disk does not exist
 #
 function format_virtual_disk {
+  typeset __FUNCTION="format_virtual_disk"
+
   typeset THISRC=0
 
   typeset CUR_IMAGE_FILE="$1"
@@ -902,6 +942,8 @@ function format_virtual_disk {
 #   3 - the binary dd does not exist
 #
 function create_disk_image {
+  typeset __FUNCTION="create_disk_image"
+
   typeset THISRC=0
 
   typeset CUR_IMAGE_FILE="$1"
@@ -954,6 +996,8 @@ function create_disk_image {
 #   in case of an error the script is aborted
 #
 function mount_virtual_disk {
+  typeset __FUNCTION="mount_virtual_disk"
+
   typeset THISRC=${__TRUE}
 
   typeset IMAGE_FILE_CREATED=${__FALSE}
@@ -1051,6 +1095,8 @@ function mount_virtual_disk {
 #   in case of an error the script is aborted
 #
 function create_overlay_directory_tree {
+  typeset __FUNCTION="create_overlay_directory_tree"
+
   typeset THISRC=${__TRUE}
 
 # correct the SELinux context for the directory lost+found (the directory is created by mkfs)
@@ -1095,6 +1141,8 @@ function create_overlay_directory_tree {
 #   ${__FALSE} - write access is not okay for one or more overlay mounts
 #
 function test_overlay_mounts {
+  typeset __FUNCTION="test_overlay_mounts"
+
   typeset THISRC=${__TRUE}
 
   typeset CUR_DIR=""
@@ -1152,6 +1200,8 @@ function test_overlay_mounts {
 #   ${__FALSE} - no overlay mounts found
 #
 function list_overlay_mounts {
+  typeset __FUNCTION="list_overlay_mounts"
+
   typeset THISRC=${__TRUE}
 
   typeset CUR_DIR=""
@@ -1213,6 +1263,8 @@ function list_overlay_mounts {
 #   ${__FALSE} - list failed for one or more directories
 #
 function list_file_changes {
+  typeset __FUNCTION="list_file_changes"
+
   typeset THISRC=${__TRUE}
 
   typeset CUR_DIR=""
@@ -1280,6 +1332,8 @@ function list_file_changes {
 #   ${__FALSE} - undo failed for one or more directories
 #
 function undo_file_changes {
+  typeset __FUNCTION="undo_file_changes"
+
   typeset THISRC=${__TRUE}
 
   typeset CUR_DIR=""
@@ -1321,6 +1375,8 @@ function undo_file_changes {
 #   ${__FALSE} - umounting of one or more mounts failed
 #
 function umount_overlay_mounts {
+  typeset __FUNCTION="umount_overlay_mounts"
+
   typeset THISRC=${__TRUE}
 
   typeset CUR_DIR=""
@@ -1332,7 +1388,10 @@ function umount_overlay_mounts {
   typeset DIRECTORY_LIST2=""
 
   typeset TEMPRC=0
-  
+
+  typeset SUB_MOUNT_POINTS=""
+  typeset CUR_SUB_MOUNT=""
+
 # the function create_list_of_mounted_overlays sets the global variables
 #   CUR_OVERLAY_FILESYSTEMS
 #   ALL_OVERLAY_MOUNTS
@@ -1372,7 +1431,31 @@ function umount_overlay_mounts {
     LogMsg "Umounting the bind mounts ..."
     for CUR_DIR in ${DIRECTORY_LIST} ; do
 
-      LogMsg "Umounting \"${CUR_DIR}\" ..."
+#
+# retrieve the list of mount points in the directory
+#
+      SUB_MOUNT_POINTS="$( mount | grep " ${CUR_DIR}/" | grep "^/dev/block/sd" | tr "\t" " " | tr -s " " | cut -f3 -d  " " | sort | uniq )"
+
+      LogInfoVar SUB_MOUNT_POINTS
+
+      if [ "${SUB_MOUNT_POINTS}"x != ""x ] ; then
+        LogMsg "Umounting the mounted sub directories ..."
+
+        for CUR_SUB_MOUNT in ${SUB_MOUNT_POINTS} ; do
+          LogMsg "Umounting \"${CUR_SUB_MOUNT}\" ..."
+
+          [[ ${VERBOSE} = ${__TRUE} ]] && set -x       
+          ${UMOUNT} ${CUR_SUB_MOUNT}
+          TEMPRC=$?
+          [[ ${VERBOSE} = ${__TRUE} && "${TRACE}"x = ""x ]] && set +x 
+
+          if [ ${TEMPRC} != 0 ] ;then
+            LogError "Error umounting \"${CUR_SUB_MOUNT}\" "
+          fi
+        done
+      fi
+      
+      LogMsg "Umounting the bind mount  \"${CUR_DIR}\" ..."
 
       [[ ${VERBOSE} = ${__TRUE} ]] && set -x 
       ${UMOUNT} "${CUR_DIR}" 
@@ -1435,6 +1518,8 @@ function umount_overlay_mounts {
 #   ${__FALSE} - remounting of one or more mounts failed
 #
 function remount_overlay_mounts {
+  typeset __FUNCTION="remount_overlay_mounts"
+
   typeset THISRC=${__TRUE}
 
   typeset CUR_DIR=""
@@ -1517,6 +1602,8 @@ function remount_overlay_mounts {
 #   ${__FALSE} - restoring one or more files or directories failed
 #
 function restore_files {
+  typeset __FUNCTION="restore_files"
+
   typeset THISRC=${__TRUE}
 
   typeset CUR_ENTRY=""
@@ -1615,6 +1702,8 @@ function restore_files {
 #   ${__FALSE} -- error
 #
 function clean_mount_config {
+  typeset __FUNCTION="clean_mount_config"
+
   THISRC=${__FALSE}
 
   typeset CUR_DIR=""
@@ -1659,9 +1748,41 @@ function clean_mount_config {
 #   in case of an error the script is aborted
 #
 function create_overlay_mounts {
+  typeset __FUNCTION="create_overlay_mounts"
 
+
+  typeset THISMSG=""
+  
   typeset CUR_DEVICE=""
   typeset LINK_TARGET=""
+  typeset CUR_DIR=""
+    
+  typeset CUR_MOUNT_POINT=""
+
+  typeset SUB_MOUNT_POINTS=""
+  typeset CUR_SUB_MOUNT_DEVICE=""
+  typeset CUR_SUB_MOUNT_FILESYSTEM_TYPE=""
+  typeset CUR_SUB_MOUNT_OPTIONS=""
+
+  typeset DIRECTORY_OKAY=${__TRUE}
+  typeset OVERLAY_ALREADY_IN_PLACE=${__FALSE}
+  
+  typeset CUR_OVERLAY_MOUNTS=""
+
+# these are global variables:
+#
+#  OVERLAY_MOUNTS_CREATED=""
+#  NO_OVERLAY_MOUNTS_CREATED=0
+#
+#  OVERLAY_MOUNTS_ALREADY_CREATED=""
+#  NO_OVERLAY_MOUNTS_ALREADY_CREATED=0
+#
+#  DIRECTORIES_MISSING=""
+#  NO_OF_DIRECTORIES_MISSING=0
+#
+#  OVERLAY_MOUNTS_NOT_CREATED=""
+#  NO_OVERLAY_MOUNTS_NOT_CREATED=0
+#
   
   for CUR_DIR in ${DIRS_TO_OVERLAY} ; do
 
@@ -1671,6 +1792,8 @@ function create_overlay_mounts {
     if [[ ${CUR_DIR} == / ]] ; then
       LogError "overlay mounts for \"/\" are not allowed"
 
+# change the global variables
+#
       DIRECTORIES_MISSING="${DIRECTORIES_MISSING}
   ${CUR_DIR}"
       (( NO_OF_DIRECTORIES_MISSING = NO_OF_DIRECTORIES_MISSING + 1 ))
@@ -1688,23 +1811,29 @@ function create_overlay_mounts {
 
     if [ ! -r "${CUR_DIR}" ] ; then
       LogError "The directory \"${CUR_DIR}\" does NOT exist -- ignored"
+      THISMSG="# directory does not exist"
       DIRECTORY_OKAY=${__FALSE}
     elif [ -L "${CUR_DIR}" ] ; then
       LINK_TARGET="$( readlink "${CUR_DIR}" )"
       LogError "\"${CUR_DIR}\" is a symbolic link for \"${LINK_TARGET}\" -- ignored"
+      THISMSG="# this is a symbolic link"
       DIRECTORY_OKAY=${__FALSE}
     elif [ -f "${CUR_DIR}" ] ; then
       LogError "\"${CUR_DIR}\" is a file -- ignored"
+      THISMSG="# this is a file "
       DIRECTORY_OKAY=${__FALSE}
     elif [ ! -d "${CUR_DIR}" ] ; then
       LogError "\"${CUR_DIR}\" is not a directory -- ignored"
+      THISMSG="# this is not a directory"
       DIRECTORY_OKAY=${__FALSE}
     fi 
 
     if [ ${DIRECTORY_OKAY} = ${__FALSE} ] ; then
- 
+#
+# change the global variables
+# 
       DIRECTORIES_MISSING="${DIRECTORIES_MISSING}
-  ${CUR_DIR}"
+  ${CUR_DIR} ${THISMSG}"
       (( NO_OF_DIRECTORIES_MISSING = NO_OF_DIRECTORIES_MISSING + 1 ))
 
       continue
@@ -1712,10 +1841,14 @@ function create_overlay_mounts {
 
     OVERLAY_ALREADY_IN_PLACE=${__FALSE}
 
+#
+# check if there is already an overlay mount for this directory
+#
     CUR_DEVICE="$( df -h "${CUR_DIR}" |  grep "^overlay" )"
     [ "${CUR_DEVICE}"x != ""x ] && CUR_DEVICE="/${CUR_DEVICE#*/}"
-    
-# short infos
+#    
+# print short infos
+#
     if [ ${PRINT_MORE_DETAILS} != ${__TRUE} ] ; then
       if [ "${CUR_DEVICE}"x != ""x ] ; then
         THISMSG="There is already an overlay mount for the directory \"${CUR_DIR}\" in place "
@@ -1723,8 +1856,9 @@ function create_overlay_mounts {
       fi
     else
 #
-# detailed infos
+# print detailed infos
 #    
+
       THISMSG="There is already an overlay mount for the directory \"${CUR_DIR}\" in place"
 
       retrieve_overlay_filesystem_backend "${CUR_DIR}"
@@ -1746,9 +1880,24 @@ function create_overlay_mounts {
       OVERLAY_ALREADY_IN_PLACE=${__TRUE}
     fi
 
+# 
+# check if there are one or more overlay mounts for sub directries in this directory
+#
+    if [ ${OVERLAY_ALREADY_IN_PLACE} != ${__TRUE} ] ; then          
+      CUR_OVERLAY_MOUNTS="$( mount  | grep "^overlay" | grep "${CUR_DIR}/" | grep -v "/merged/" | cut -f3 -d " "  | tr "\n" " "  )"
+      if [ "${CUR_OVERLAY_MOUNTS}"x != ""x ] ; then
+        LogError "There are already overlay mounts in place for sub directories in \"${CUR_DIR}\" : " "${CUR_OVERLAY_MOUNTS}"
+
+        OVERLAY_ALREADY_IN_PLACE=${__TRUE}
+      fi                  
+    fi
+
+
     if [ ${OVERLAY_ALREADY_IN_PLACE} = ${__TRUE} ] ; then          
       LogMsg "${THISMSG}"
-
+#
+# change the global variables
+#
       OVERLAY_MOUNTS_ALREADY_CREATED="${OVERLAY_MOUNTS_ALREADY_CREATED}
   ${CUR_DIR}"
       (( NO_OVERLAY_MOUNTS_ALREADY_CREATED = NO_OVERLAY_MOUNTS_ALREADY_CREATED + 1 ))
@@ -1756,11 +1905,15 @@ function create_overlay_mounts {
  
     fi
 
-
-#    OVERLAY_SUBDIR="/$( echo "${CUR_DIR}" | cut -c2- | tr "/" "#" )"
+#
+# there is no overlay mount in place for this directory --> create the overlay mount
+#
 
     OVERLAY_SUBDIR="/$( create_dir_name_for_the_overlay_filesystem "${CUR_DIR}" )"
 
+#
+# DIRECTORIES_CREATED is a global variable: the function create_directory adds the name of the directories created to this variable
+#
     DIRECTORIES_CREATED=""
 
     create_directory "${BASEDIR}/upper${OVERLAY_SUBDIR}" && \
@@ -1784,7 +1937,14 @@ function create_overlay_mounts {
     LogInfo "The overlay directory used for the directory \"${CUR_DIR}\" is  " && \
       ls -ldZ "${BASEDIR}/merged${OVERLAY_SUBDIR}"
 
+#
+# retrieve the list of mount points in the directory (we must remount them later after creating the bind mount)
+#
+    SUB_MOUNT_POINTS="$( mount | grep " ${CUR_DIR}/" | grep "^/dev/block/sd" | tr "\t" " " | tr -s " " | cut -f3 -d  " " | sort | uniq )"
 
+# 
+# create the overlay mount
+#
     [[ ${VERBOSE} = ${__TRUE} ]] && set -x 
     ${MOUNT} -t overlay overlay -o "lowerdir=${CUR_DIR},upperdir=${BASEDIR}/upper${OVERLAY_SUBDIR},workdir=${BASEDIR}/work${OVERLAY_SUBDIR}" "${BASEDIR}/merged${OVERLAY_SUBDIR}"
     TEMPRC=$?
@@ -1805,6 +1965,9 @@ ${CUR_DIR}"
       continue
     fi
 
+#
+# create the bind mount
+#
     LogMsg "Creating the bind mount \"${CUR_DIR}\"..."
  
     [[ ${VERBOSE} = ${__TRUE}  ]] && set -x 
@@ -1814,7 +1977,9 @@ ${CUR_DIR}"
 
     if [ ${TEMPRC} -ne 0 ] ; then
       LogError "Error creating the bind mount for \"${CUR_DIR}\" "
-
+#
+# change the global variables
+#
       OVERLAY_MOUNTS_NOT_CREATED="${OVERLAY_MOUNTS_NOT_CREATED}
 ${CUR_DIR}"
       (( NO_OVERLAY_MOUNTS_NOT_CREATED = NO_OVERLAY_MOUNTS_NOT_CREATED + 1 ))
@@ -1822,6 +1987,35 @@ ${CUR_DIR}"
       continue
     fi
 
+# 
+# remount mount points in the directory if there are any
+#
+    for CUR_MOUNT_POINT in ${SUB_MOUNT_POINTS} ; do
+      LogMsg "Remounting the mount point \"${CUR_MOUNT_POINT}\" ... "
+      CUR_LINE="$( grep " ${CUR_MOUNT_POINT} " /proc/mounts | tr "\t" " " | tr -s " " )"
+      if [ "${CUR_LINE}"x = ""x ] ; then
+        LogWarning "No config for \"${CUR_MOUNT_POINT}\" in \"/proc/mounts\" found"
+        continue
+      fi
+      
+      CUR_SUB_MOUNT_DEVICE="$( echo "${CUR_LINE}" | cut -f1 -d " " )"
+      CUR_SUB_MOUNT_FILESYSTEM_TYPE="$( echo "${CUR_LINE}" | cut -f3 -d " " )"
+      CUR_SUB_MOUNT_OPTIONS="$( echo "${CUR_LINE}" | cut -f4 -d " " )"
+
+      [[ ${VERBOSE} = ${__TRUE} ]] && set -x 
+      
+      mount -t "${CUR_SUB_MOUNT_FILESYSTEM_TYPE}" -o "${CUR_SUB_MOUNT_OPTIONS}" "${CUR_SUB_MOUNT_DEVICE}" "${CUR_MOUNT_POINT}"
+      TEMPRC=$?
+      [[ ${VERBOSE} = ${__TRUE} && "${TRACE}"x = ""x ]] && set +x 
+
+      if [ ${TEMPRC} -ne 0 ] ; then
+        LogError "Error mounting  \"${CUR_MOUNT_POINT}\" to  \"${CUR_SUB_MOUNT_DEVICE}\"  "
+      fi
+    done
+
+#
+# check the file permissions in the bind mount
+#
     LogMsg "Checking the overlay mount for \"${CUR_DIR}\" ..."
     ls -ltr "${CUR_DIR}" | grep -- "----------"  2>/dev/null >/dev/null 
     if [ $? -eq 0 ] ; then
@@ -1830,7 +2024,9 @@ ${CUR_DIR}"
 
     LogInfo "The permissions for the directory \"${CUR_DIR}\" are now  " && \
       LogMsg "$( ls -ldZ "${CUR_DIR}" 2>&1 )"
-
+#
+# change the global variables
+#
     OVERLAY_MOUNTS_CREATED="${OVERLAY_MOUNTS_CREATED}
   ${CUR_DIR}"
       (( NO_OVERLAY_MOUNTS_CREATED = NO_OVERLAY_MOUNTS_CREATED + 1 ))
@@ -1852,6 +2048,8 @@ ${CUR_DIR}"
 #   The global variable ALL_OVERLAY_MOUNTS contains the list of all overlay mounts
 #
 function create_list_of_mounted_overlays {
+  typeset __FUNCTION="create_list_of_mounted_overlays"
+
   typeset THISRC=${__FALSE}
 
   typeset CUR_DIR=""
@@ -1914,8 +2112,12 @@ ${CUR_DIR}"
 # returns:
 #   0
 #
-function print_summary {
+# the variables used in this function are all global variables
 #
+function print_summary {
+  typeset __FUNCTION="print_summary"
+
+
   LogMsg
   LogMsg "Summary:"
   LogMsg "--------"
@@ -1955,6 +2157,8 @@ function print_summary {
 #   0
 #
 function print_environment_variables {
+  typeset __FUNCTION="print_environment_variables"
+
 
   typeset  NAME_FIELD_LENGTH=10
   typeset CUR_VAR=""
@@ -1963,7 +2167,9 @@ function print_environment_variables {
   echo "Supported environment variables:"
   echo
 
-
+#
+# calculate the size of the field for the variable name
+#
   for CUR_VAR in ${ENVIRONMENT_VARIABLES} ; do
     [ ${#CUR_VAR} -gt ${NAME_FIELD_LENGTH} ] && NAME_FIELD_LENGTH="${#CUR_VAR}"
   done
@@ -2186,8 +2392,8 @@ if [ $# -ne 0 ] ; then
   done
 fi
 
-
-# default action is to print the usage help
+#
+# default action if there is no directory in the parameter is to print the usage help
 #
 
 if [ "${ACTION}"x = ""x ] ; then
@@ -2203,7 +2409,7 @@ fi
 LogInfo " ... parameter processing done"
 
 # ----------------------------------------------------------------------
-# use user defined binary if requested
+# use user defined binaries only if the variables are defined
 #
 
 [ "${LOSETUP}"x = ""x ] && LOSETUP="${DEFAULT_LOSETUP}"
@@ -2212,11 +2418,14 @@ LogInfo " ... parameter processing done"
 [ "${MKFS}"x = ""x ]    && MKFS="${DEFAULT_MKFS}"
 [ "${DD}"x = ""x ]      && DD="${DEFAULT_DD}"
 
-LogInfoVar LOSETUP MOUNT UMOUNT MKFS DD
-
+LogInfoVar LOSETUP 
+LogInfoVar MOUNT 
+LogInfoVar UMOUNT 
+LogInfoVar MKFS 
+LogInfoVar DD
 
 # ----------------------------------------------------------------------
-# use default values if necessary
+# use default values for the variables if necessary
 
 UMOUNT_WAIT_TIME="${UMOUNT_WAIT_TIME:=${DEFAULT_UMOUNT_WAIT_TIME}}"
 
@@ -2283,7 +2492,7 @@ if [ "${SELINUX_CONTEXT}"x = ""x ] ; then
 
   LogInfo "Using the default SELinux context \"${SELINUX_CONTEXT}\" (variable SELINUX_CONTEXT)"
 else
-  LogInfo "Using the filesystem type \"${SELINUX_CONTEXT}\" (variable SELINUX_CONTEXT)"
+  LogInfo "Using the SELinux context \"${SELINUX_CONTEXT}\" (variable SELINUX_CONTEXT)"
 fi
 
 # ---------------------------------------------------------------------
