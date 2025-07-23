@@ -109,6 +109,7 @@
 #S#    FASTBOOT_OPTIONS
 #S#    ADB_OPTIONS
 #S#    ADB_PORT
+#S#    RESTART_BOOT_LOADER
 #S#
 #S#    CHECK_ONLY
 #S#    PRINT_STATUS
@@ -230,13 +231,15 @@
 #H# Usage
 #H#
 #h#    boot_phone_from_twrp.sh [-h|help|-H] [serial=#sn|s=#sn] [wait=n] [password=password] [decrypt] [usb_reset|no_usb_reset] 
-#h#                            [force|noforce] [reboot|noreboot] [checkonly|check] [reset_usb_only] [status]
+#h#                            [force|noforce] [reboot|noreboot] [checkonly|check] [reset_usb_only] [restart_bootloader] [status]
 #h#                            [twrp|Android|android|recovery|bootloader|sideload|fastboot|safemode|twrp_image_file] 
 #h#
 #H# All parameter are optional;  without a parameter the script boots the phone from the TWRP image.
 #H#
 #H# Use the parameter "help" or "-H" to print the detailed usage help; use the parameter "-h" to print only the short usage help
 #H#
+#H# Use the parameter "restart_bootloader" to restart the bootloader before booting the phone from the TWRP image
+#H# 
 #H# Use the parameter "serial=#sn" to define the serialnumber of the phone to process. This parameter is only necessary if there
 #H# are more then one phones connected via USB and the environment variable SERIAL_NUMBER is not set.
 #H#
@@ -573,6 +576,25 @@
 #   12.03.2025 v3.2.4.0 /bs #VERSION
 #      added support for /e/ 2.9-t
 #
+#   22.03.2025 v3.2.5.0 /bs #VERSION
+#      added support for self compiled LineageOS 22.x images
+#
+#   19.04.2025 v3.2.6.0 /bs #VERSION
+#      added support for the official build for /e/ 2.9-t
+#
+#   06.06.2025 v3.2.7.0 /bs #VERSION
+#      added support for the official build for /e/ 3.0-t
+#
+#   13.07.2025 v3.2.8.0 /bs #VERSION
+#      added support for the official build for /e/ 3.0.1-t and /e/ 3.0.4-t
+#
+#   23.07.2025 v3.2.9.0 /bs #VERSION
+#      added the parameter "restart_bootloader"
+#      added the variable RESTART_BOOT_LOADER
+#      added support for the official build for /e/ 3.0.4-a15 (= Android 15)
+#      added support for LineageOS 22.2 (= Android 15)
+#
+
 # Author
 #   Bernd.Schemmer (at) gmx.de
 #   Homepage: http://bnsmb.de
@@ -599,8 +621,9 @@
 #    ROM                    Version
 #    --------------------------------------------------------
 #    ASUS Android           12, 13 
-#    OmniROM                12, 13, 14, 15
-#    /e/                    1.21,  2.0-t, 2.4.1-t, 2.5-t, 2.6.3-t, 2.7-t, 2.8-t (2.x = Android 13), 2.9-t (my private image)
+#    OmniROM                12, 13, 14, 15, 16
+#    /e/                    1.21,  2.0-t, 2.4.1-t, 2.5-t, 2.6.3-t, 2.7-t, 2.8-t, 2.9-t, 3.0-t (2.x = Android 13)
+#    /e/                    3.0.4-a15  (= Android 15)
 #    StatixXOS              7,x (Android 14)
 #    LineageOS              20 (Android 13), 21 (Android 14), 22 (Android 15)
 #    LMODroid               4.2 (Android 13)
@@ -697,6 +720,10 @@ FORCE_BOOT_INTO_TWRP_IMAGE=${FORCE_BOOT_INTO_TWRP_IMAGE:=${__FALSE}}
 #
 FORCE_REBOOT_INTO_TWRP_IMAGE=${FORCE_REBOOT_INTO_TWRP_IMAGE:=${__FALSE}}
 
+# reboot the bootloader before booting from the TWRP image
+#
+RESTART_BOOT_LOADER=${__FALSE}
+
 # only check the current status of the phone if set to ${__TRUE} (parameter checkonly or check)
 #
 CHECK_ONLY=${CHECK_ONLY:=${__FALSE}}
@@ -708,6 +735,7 @@ PRINT_STATUS=${PRINT_STATUS:=${__FALSE}}
 # only reset the USB port
 #
 ONLY_RESET_THE_USB_PORT=${__FALSE}
+
 
 # general options for the adb command; -d : only use devices connected via USB
 #
@@ -850,21 +878,33 @@ UL-ASUS* :  ${DEFAULT_TWRP_IMAGE} :  ASUS Android
 #
 LMODroid* : /data/backup/ASUS_ZENFONE8/LMODroid/twrp_LMODroid-4.2-20240429-RELEASE-sake.img : LMODroid :
 #
-
-e-2.8-UNOFFICIAL* : /data/backup/ASUS_ZENFONE8/e_local/twrp_e-2.8-current.img : /e/ 2.8 unofficial
+e-2.8-UNOFFICIAL* : /data/backup/ASUS_ZENFONE8/e_local/twr_e-2.8-current.img : /e/ 2.8 unofficial
 e-2.9-UNOFFICIAL* : /data/backup/ASUS_ZENFONE8/e_local/twrp_e-2.9-current.img : /e/ 2.9 unofficial
 #
-e-1.21*   : /data/backup/ASUS_ZENFONE8/e/e-1.21t/twrp_recovery-e-1.21-t-20240325389105-dev-sake.img : /e/ 1.21
-e-2.0*    : /data/backup/ASUS_ZENFONE8/e/e-2.0t/twrp_recovery-e-2.0-t-20240514401453-dev-sake.img : /e/ 2.0
-e-2.5*    : /data/backup/ASUS_ZENFONE8/e/e-2.5/twrp-e-2.5-t-20241108446630-community-sake.img : /e/ 2.5
-e-2.6*    : /data/backup/ASUS_ZENFONE8/e/e-2.6.3/twrp-e-2.6.3-t-20241217455572-community-sake.img : /e/ 2.6
-e-2.7*    : /data/backup/ASUS_ZENFONE8/e/e-2.7/twrp-e-2.7-t-20250112460975-community-sake.img : /e/ 2.7
-e-2.8*    : /data/backup/ASUS_ZENFONE8/e/e-2.8/twrp-e-2.8-t-20250219470166-community-sake.img : /e/ 2.8
+e-1.21*      : /data/backup/ASUS_ZENFONE8/e/e-1.21t/twrp_recovery-e-1.21-t-20240325389105-dev-sake.img : /e/ 1.21
+e-2.0*       : /data/backup/ASUS_ZENFONE8/e/e-2.0t/twrp_recovery-e-2.0-t-20240514401453-dev-sake.img : /e/ 2.0
+e-2.5*       : /data/backup/ASUS_ZENFONE8/e/e-2.5/twrp-e-2.5-t-20241108446630-community-sake.img : /e/ 2.5
+e-2.6*       : /data/backup/ASUS_ZENFONE8/e/e-2.6.3/twrp-e-2.6.3-t-20241217455572-community-sake.img : /e/ 2.6
+e-2.7*       : /data/backup/ASUS_ZENFONE8/e/e-2.7/twrp-e-2.7-t-20250112460975-community-sake.img : /e/ 2.7
+e-2.8*       : /data/backup/ASUS_ZENFONE8/e/e-2.8/twrp-e-2.8-t-20250219470166-community-sake.img : /e/ 2.8
+e-2.9*       : /data/backup/ASUS_ZENFONE8/e/e-2.9/twrp-e-2.9-t-20250322478412-community-sake.img : /e/ 2.9
+#
+e-3.0.1*     : /data/backup/ASUS_ZENFONE8/e/e-3.0.1/twrp-e-3.0.1-t-20250607498934-community-sake.img : /e/ 3.0.1
+#
+e-3.0.4-a15* : /data/backup/ASUS_ZENFONE8/e/e-3.0.4-a15/orangefox_e-3.0.4-a15-20250712508365-community-sake.img :  /e/ 3.0.4-a15
+#
+e-3.0.4*     : /data/backup/ASUS_ZENFONE8/e/e-3.0.4/twrp_e-3.0.4-t-20250710507809-community-sake.img : /e/ 3.0.4
+#
+e-3.0*       : /data/backup/ASUS_ZENFONE8/e/e-3.0/twrp-e-3.0-t-20250529496537-community-sake.img : /e/ 3.0
+#
+lineage-22*UNOFFICIAL* : /data/backup/ASUS_ZENFONE8/Lineage-22-local/twrp_lineage-22.2-20250408-UNOFFICIAL-sake.img ; LineageOS 22.x (local)
 #
 lineage-20.0-20240716-nightly-sake-signed.zip : /data/backup/ASUS_ZENFONE8/Lineage-20/2024-07-16/twrp_lineage-20.0-20240716-nightly-sake-signed.img : LineageOS 20.0
 lineage-20* : /data/backup/ASUS_ZENFONE8/Lineage-20/twrp_lineage-20.0-20240528-nightly-sake-signed.img : LineageOS 20.x
 lineage-21* : /data/backup/ASUS_ZENFONE8/Lineage-21/twrp_3.7.0_12-1-I006D_for_lineageOS21-20240220-sake.img : LineageOS 21.x
-lineage-22*  : /data/backup/ASUS_ZENFONE8/Lineage-22/2025-02-21/twrp_recovery_SAKE-2025-02-21-ksu-signed-FULL.img : LineageOS 22.x
+#
+lineage-22* : /data/backup/ASUS_ZENFONE8/Lineage-22-original/2025-07-15/orangefox_lineage-22.2-20250715-nightly-sake-signed.img : LineageOS 22.x
+#
 sake-* : /data/backup/ASUS_ZENFONE8/Lineage-21/twrp_3.7.0_12-1-I006D_for_lineageOS21-20240220-sake.img : LineageOS 21.x
 #
 statix_sake-20240106-14-v7.1-UPSIDEDOWNCAKE.zip : /data/backup/ASUS_ZENFONE8/Statix/20240106/twrp_statix_sake-20240106-14-v7.1-UPSIDEDOWNCAKE.img : StatixOS
@@ -892,10 +932,13 @@ if [ "${TWRP_IMAGES_FOR_THE_RUNNING_OS}"x = ""x ] ; then
   TWRP_IMAGES_FOR_THE_RUNNING_OS="
 #
 vendor.asus.build.ext.version : * : ${DEFAULT_TWRP_IMAGE} :  ASUS Android
+#
+ro.lineage.version : 22.*-UNOFFICIAL-sake : /data/backup/ASUS_ZENFONE8/Lineage-22-local/twrp_lineage-22.2-20250408-UNOFFICIAL-sake.img : LineageOS 22.2 (local)
+#
 ro.lineage.build.version : 20.0 : /data/backup/ASUS_ZENFONE8/Lineage-20/2024-07-16/twrp_lineage-20.0-20240716-nightly-sake-signed.img : LineageOS 
 ro.lineage.build.version : 20* : /data/backup/ASUS_ZENFONE8/Lineage-20/twrp_lineage-20.0-20240528-nightly-sake-signed.img : LineageOS 
 ro.lineage.build.version : 21* : /data/backup/ASUS_ZENFONE8/Lineage-21/twrp_3.7.0_12-1-I006D_for_lineageOS21-20240220-sake.img : LineageOS 
-ro.lineage.build.version : 22* : /data/backup/ASUS_ZENFONE8/Lineage-22/2025-02-21/twrp_recovery_SAKE-2025-02-21-ksu-signed-FULL.img : LineageOS 22.x
+ro.lineage.build.version : 22.2 : /data/backup/ASUS_ZENFONE8/Lineage-22-original/2025-07-15/orangefox_lineage-22.2-20250715-nightly-sake-signed.img  : LineageOS 22.x
 #
 ro.statix.version : v7.1-*-20240106 : /data/backup/ASUS_ZENFONE8/Statix/20240106/twrp_statix_sake-20240106-14-v7.1-UPSIDEDOWNCAKE.img : StatixOS 
 ro.statix.version : v7.10-*-20240712 : /data/backup/ASUS_ZENFONE8/Statix/20240712/twrp_statix_sake-20240712-14-v7.10-UNOFFICIAL.zip : StatixOS
@@ -913,8 +956,14 @@ ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.20241108.113816 r
 ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.20241217.174531 release-keys : /data/backup/ASUS_ZENFONE8/e/e-2.6.3/twrp-e-2.6.3-t-20241217455572-community-sake.img : /e/ 2.6
 ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.20250112.044158 release-keys : /data/backup/ASUS_ZENFONE8/e/e-2.7/twrp-e-2.7-t-20250112460975-community-sake.img : /e/ 2.7
 ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.20250219.225052 release-keys : /data/backup/ASUS_ZENFONE8/e/e-2.8/twrp-e-2.8-t-20250219470166-community-sake.img : /e/ 2.8
+ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.20250322.023704 release-keys : /data/backup/ASUS_ZENFONE8/e/e-2.9/twrp-e-2.9-t-20250322478412-community-sake.img : /e/ 2.9
+ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.20250607* release-keys : /data/backup/ASUS_ZENFONE8/e/e-3.0.1/twrp-e-3.0.1-t-20250607498934-community-sake.img : /e/ 3.0.1
+ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.20250710* release-keys : /data/backup/ASUS_ZENFONE8/e/e-3.0.4/twrp-e-3.0.4-t-20250710507809-community-sake.img : /e/ 3.0.4
+ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.20250529* release-keys : /data/backup/ASUS_ZENFONE8/e/e-3.0/twrp-e-3.0-t-20250529496537-community-sake.img : /e/ 3.0
+ro.build.description : e_sake-user 15 BP1A.250505.005 eng.root release-keys : /data/backup/ASUS_ZENFONE8/e/e-3.0.4-a15/orangefox_e-3.0.4-a15-20250712508365-community-sake.img :  /e/ 3.0.4-a15
 "
 fi
+
 
 
 # ---------------------------------------------------------------------
@@ -4734,6 +4783,11 @@ function boot_phone_from_the_TWRP_image {
 #  
     LogMsg "The phone is booted into the bootloader "
 
+    if [ ${RESTART_BOOT_LOADER}x = ${__TRUE}x ] ; then
+      LogMsg "Reloading the boot loader ..."
+      ${SUDO_PREFIX} ${FASTBOOT} ${FASTBOOT_OPTIONS} reboot bootloader
+    fi
+    
     LogMsg "Booting the phone from the TWRP image \"${CUR_TWRP_IMAGE}\" now  ..."
 
     ${SUDO_PREFIX} ${FASTBOOT} ${FASTBOOT_OPTIONS} boot "${CUR_TWRP_IMAGE}"
@@ -5169,6 +5223,11 @@ if [ ${RUNNING_AS_STANDALONE_SCRIPT} = ${__TRUE} ] ; then
       usb_reset | reset_usb )
         RESET_THE_USB_PORT=${__TRUE}
         ;;   
+
+
+      restart_bootloader )
+        RESTART_BOOT_LOADER=${__TRUE}
+        ;;
 
       no_usb_reset | no_reset_usb )
         RESET_THE_USB_PORT=${__FALSE}

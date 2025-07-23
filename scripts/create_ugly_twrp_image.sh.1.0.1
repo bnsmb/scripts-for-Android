@@ -9,13 +9,11 @@
 #H#
 #H# boot_partition_image_file - image file with a boot partition on the PC to be used for the TWRP image
 #H#
-#H# noprop - do not copy the properties from the running OS on the phone connected via usb
+#H# noprop - do not copy the properties from the running OS
 #H#
 #H# This script must run on PC running the Linux OS; a working TWRP image for the phone is required and access via adb to the phone 
 #H# is required if the script should copy the boot partition for the TWRP image from the phone or change the properties in the ramdisk
 #H# for the new TWRP image
-#H# The script supports TWRP images with compressed cpio archives for the ramdisk; all compression formats supported by magisboot
-#H# are supported. If the decompressing the cpio archive does not work, try the script with the parameter "-p".
 #H# 
 #
 # History
@@ -28,14 +26,6 @@
 #  13.05.2025 v1.0.1 /bs
 #    added a workaround to the file prop.default from the cpio archive
 #
-#  04.06.2025 v2.0.0-beta /bs
-#    the script now uses the magiskboot command "cpio <archve> exists <filename>" to check the filename for the file "prop.default" in the
-#      cpio file from the TWRP image
-#    the script now supports TWRP images with compressed cpio archives for the ramdisk; all compression formats supported by magisboot
-#      are supported
-#    the script now does not do anything with the cpio archive from the TWRP image if the parameter "-p" is used
-#
-
 #H# Environment variables used if set:
 #H#
 #H#  MAGISKBOOT    - set this variable to the fully qualified namee of the magiskboot executable if it's not available via the PATH variable
@@ -121,7 +111,7 @@ if [ ${SHOW_USAGE} = ${__TRUE} ] ; then
    exit 5
 fi
 
-# properties for the TWRP image - the values for these properties are copied to the TWRP image if they exist in OS running on the phone connected via usb
+# properties for the TWRP image - the values for these properties are copied to the TWRP image if they exist in running OS
 #
 PROPERTIES_TO_COPY_TO_THE_TWRP_IMAGE="
 ro.lineage.build.version
@@ -242,7 +232,7 @@ if [ "${CUR_BOOT_IMAGE_FILE}"x = ""x ] ; then
 
   CUR_OUTPUT="$( ${ADB} ${ADB_OPTIONS} shell ${PREFIX} id -un )"
   if [ "${CUR_OUTPUT}"x != "root"x ] ; then
-    die 35 "root access missing -- the scripts needs adb access as root user to copy the boot partition from the phone"
+    die 35 "root access missing -- the scripts needs adb access as root user to copy the boot  partition from the phone"
   fi
 
 fi
@@ -289,61 +279,16 @@ ${MAGISKBOOT} unpack -h "${TWRP_IMAGE}" || \
 #
 TWRP_CMDLINE="$( grep cmdline header | cut -f2- -d"=" )"
 
-RAMDISK_COMPRESSION_FORMAT=""
-
-RAMDISK_FILE_TYPE="$( file ./ramdisk.cpio | cut -f2- -d ":" )"
-
-echo "The type of the ramdisk cpio archive in the TWRP image is \"${RAMDISK_FILE_TYPE}\" "
-
-if [ ${COPY_PROPERTIES} = ${__TRUE} ] ; then
-
-  echo "${RAMDISK_FILE_TYPE}" | grep " cpio " >/dev/null
-  if [ $? -eq 0 ] ; then
-    echo "The ramdisk cpio archive in the TWRP image is not compressed"
-
-    RAMDISK_COMPRESSION_FORMAT=""
-
-  else
-    echo "The ramdisk cpio archive in the TWRP image is compressed"
-
-    echo "Decompressing the ramdisk cpio archive now ..."
-
-#  
-# Note: "magiskboot decompress ramdisk.cpio" with only one parameter does only works for files with the correct extension
-#
-    CUR_OUTPUT="$( mv ./ramdisk.cpio ./ramdisk.cpio.compressed &&  ${MAGISKBOOT} decompress ./ramdisk.cpio.compressed ./ramdisk.cpio 2>&1 )"  
-    TEMPRC=$?
- 
-    if [ ${TEMPRC} != 0 ] ; then
-      echo "${CUR_OUTPUT}"
-      die 66 "Error uncompressing the ramdisk cpio archive (try executing the script with the parameter \"-p\")"
-    fi
-
-
-    RAMDISK_COMPRESSION_FORMAT="$( echo "${CUR_OUTPUT#*:}" | tr -d "[] " )"
-
-    echo "The ramdisk cpio archive is compressed with the format \"${RAMDISK_COMPRESSION_FORMAT}\" "
-
-    echo "The temporary format of the ramdisk cpio archive is now "
-    file ./ramdisk.cpio
-
-  fi
-
-  \rm -f "./prop.default" 2>/dev/null
+${MAGISKBOOT} cpio ./ramdisk.cpio "extract ./prop.default ./prop.default"
+[ ! -r "./prop.default" ] && \
+  ${MAGISKBOOT} cpio ./ramdisk.cpio "extract prop.default ./prop.default"
   
-  ${MAGISKBOOT} cpio ./ramdisk.cpio "exists ./prop.default" 2>/dev/null
-  if [ $? -eq 0 ] ; then
-    ${MAGISKBOOT} cpio ./ramdisk.cpio "extract ./prop.default ./prop.default"
-  else
-    ${MAGISKBOOT} cpio ./ramdisk.cpio "exists prop.default" 2>/dev/null
-    if [ $? -eq 0 ] ; then  
-      ${MAGISKBOOT} cpio ./ramdisk.cpio "extract prop.default ./prop.default"
-    fi
-  fi
-
-  [ ! -r "./prop.default" ] && \
-    die 65 "Error extracting the file \"prop.default\" from the TWRP image"
-
+[ ! -r "./prop.default" ] && \
+  die 65 "Error extracting the file \"prop.default\" from the TWRP image"
+  
+  
+if [ ${COPY_PROPERTIES} = ${__TRUE} ] ; then
+  
   PROPERTIES_CHANGED=${__FALSE}
   
   cp "./prop.default" "./prop.default.$$.org"
@@ -353,7 +298,7 @@ if [ ${COPY_PROPERTIES} = ${__TRUE} ] ; then
     CUR_OS_VALUE="$( ${ADB} ${ADB_OPTIONS} shell getprop ${CUR_PROP} | cut -f2- -d"=" )"
     
     if [ "${CUR_OS_VALUE}"x = ""x ] ; then  
-      echo "The property \"${CUR_PROP}\" is not defined in the OS running on the phone connected via adb"
+      echo "The property \"${CUR_PROP}\" is not defined in the running OS"
       continue
     fi
   
@@ -389,25 +334,6 @@ else
   echo "Not changing the properties in the ramdisk for the TWRP image as requested via parameter"  
 fi
 
-# Update 04.06.2025 /bs : Check for a compressed ramdisk cpio file
-
-# compress the ramdisk cpio file again if necessary
-
-if [ "${RAMDISK_COMPRESSION_FORMAT}"x != ""x ] ; then
-  
-  echo "Compressing the ramdisk cpio archive again with the compression method \"${RAMDISK_COMPRESSION_FORMAT}\" "
-  echo "This may take a while; please be patient ...."
-  
-  CUR_OUTPUT="$( mv ./ramdisk.cpio ./ramdisk.cpio.uncompressed &&  ${MAGISKBOOT} compress=${RAMDISK_COMPRESSION_FORMAT} ./ramdisk.cpio.uncompressed ./ramdisk.cpio 2>&1 )" 
-  TEMPRC=$?
-    
-  if [ ${TEMPRC} != 0 ] ; then
-    echo "${CUR_OUTPUT}"
-    die 67 "Error compressing the ramdisk cpio archive (try executing the script with the parameter \"-p\") "
-  fi
-fi
-
-  
 cd "${IMG_DIR}"
 
 cp "${TWRP_DIR}/ramdisk.cpio" "${IMG_DIR}/ramdisk.cpio"  || \

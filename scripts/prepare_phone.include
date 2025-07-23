@@ -800,7 +800,7 @@ enable_adb_in_ramdisk:ignorerc
 install_essential_scripts
 execute_script_on_the_phone:ignorerc:/data/develop/android/scripts_on_linux/enable_wlan.sh
 
-execute_script:/data/develop/android/scripts_on_linux/install_termux.sh:ignorerc:noreboot
+# execute_script:/data/develop/android/scripts_on_linux/install_termux.sh:ignorerc:noreboot
 
 # use a separate directory for the apps to install for non-OmniROM ROMs 
 #
@@ -1461,6 +1461,13 @@ install_archive_file:\${NEO_BACKUP_TAR_FILE}:ignorerc:script=/sdcard/Download/ch
 
 
 # ---------------------------------------------------------------------
+#T# TASK_GROUP_install_termux - install Termux and the tar archive with the termux filesystem
+#
+TASK_GROUP_install_termux="
+execute_script:/data/develop/android/scripts_on_linux/install_termux.sh:ignorerc:noreboot
+"
+
+# ---------------------------------------------------------------------
 #T# TASK_GROUP_update_os_w_Magisk25  - update the OS; install TWRP and Magisk v25 into the boot partition for the new OS
 #
 TASK_GROUP_update_os_w_Magisk25="
@@ -1534,6 +1541,7 @@ install_ASUS_raw_image
 boot_phone_from_twrp_image:force
 
 install_magisk_in_boot_partition_only:noreboot:_a
+boot_phone_from_twrp_image:force
 enable_adb:reboot:_a
 install_magisk_in_data_adb_only:noreboot:copy_apk:use_apk
 wait_for_access_via_adb:120:kill
@@ -13054,8 +13062,7 @@ function task_install_archive_file {
           PRINT_TASK_USAGE=${__TRUE}
           THISRC=${__FALSE}
           CONT=${__FALSE}
-        fi
-set +x        
+        fi  
         ;;
      esac
   done
@@ -17665,7 +17672,6 @@ ${CUR_COMMAND_HINTS}"
 
   return ${THISRC}
 }
-
 
 # ----------------------------------------------------------------------
 # task_enable_disable_abort_on_error
