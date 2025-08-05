@@ -28,12 +28,18 @@
 #  13.05.2025 v1.0.1 /bs
 #    added a workaround to the file prop.default from the cpio archive
 #
-#  04.06.2025 v2.0.0-beta /bs
+#  06.06.2025 v2.0.0 /bs
 #    the script now uses the magiskboot command "cpio <archve> exists <filename>" to check the filename for the file "prop.default" in the
 #      cpio file from the TWRP image
 #    the script now supports TWRP images with compressed cpio archives for the ramdisk; all compression formats supported by magisboot
 #      are supported
 #    the script now does not do anything with the cpio archive from the TWRP image if the parameter "-p" is used
+#
+#  08.06.2025 v2.1.0 /bs
+#    the script is now aborted if there is no ramdisk.cpio file in the used TWRP image
+#
+#  09.06.2025 v2.2.0 /bs
+#    the script is now aborted if there is no kernel file in the used boot image
 #
 
 #H# Environment variables used if set:
@@ -276,14 +282,23 @@ echo "Unpacking the image file \"${CUR_BOOT_IMAGE_FILE}/\" ..."
 
 ${MAGISKBOOT} unpack -h "${CUR_BOOT_IMAGE_FILE}" || \
   die 50 "Error unpacking the image file \"${CUR_BOOT_IMAGE_FILE}\" "
+
+[ ! -r ramdisk.cpio ] && echo "WARNING: No ramdisk.cpio file found in the boot image \"${CUR_BOOT_IMAGE_FILE}\"  "
+
+[ ! -r kernel ] && die 58 "No kernel file found in the boot image \"${CUR_BOOT_IMAGE_FILE}\"  "
   
 mkdir twrp && cd twrp || \
   die 55 "Can not create the temporary directory \"${PWD}/twrp\" "
+
 
 TWRP_DIR="${PWD}"
 
 ${MAGISKBOOT} unpack -h "${TWRP_IMAGE}" || \
   die 60 "Error unpacking the TWRP image file \"${TWRP_IMAGE}\" "
+
+[ ! -r kernel ] && echo "WARNING: No kernel file found in the TWRP image \"${CUR_BOOT_IMAGE_FILE}\"  "
+
+[ ! -r ramdisk.cpio ] && die 57 "No ramdisk.cpio file found in the TWRP image \"${CUR_BOOT_IMAGE_FILE}\"  "
 
 # read the cmdline for the TWRP image
 #
