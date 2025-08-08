@@ -935,7 +935,7 @@ omni* : ${DEFAULT_TWRP_IMAGE} : OmniROM
 #
 crDroidAndroid-15.0-2025*-sake-v11.7*.zip : /data/backup/ASUS_ZENFONE8/crdroid/orangefox_crDroidAndroid-15.0-20250803-sake-v11.7.img : crDroid 11.7
 #
-EvolutionX-15.0-*-sake-10.7-Unofficial.zip : /data/backup/ASUS_ZENFONE8/evolutionX/orangefox_EvolutionX-15.0-20250804-sake-10.7-Unofficial.img : EvolutionX 15.0
+EvolutionX-15.0-*-sake-10.7-*Unofficial*.zip : /data/backup/ASUS_ZENFONE8/evolutionX/orangefox_EvolutionX-15.0-20250804-sake-10.7-Unofficial.img : EvolutionX 15.0
 "
 fi
 
