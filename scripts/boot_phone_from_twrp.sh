@@ -608,7 +608,7 @@
 #      added support for EvolutionX 10.7 without GMS
 #
 #   08.08.2025 v3.2.9.5 /bs #VERSION
-#      the function decrypt_data now checks if the directory /data/media/0/Download/ exists 
+#      the function wait_for_the_adb_daemon now checks for the property "sys.usb.config" ( the property "sys.usb.state" seems not to exist in all CustomROMs)
 #
 
 # Author
@@ -1621,7 +1621,9 @@ function wait_for_the_adb_daemon {
 
 #    USB_READY_STATE="$( ${ADB} ${ADB_OPTIONS} shell getprop sys.usb.ffs.mtp.ready 2>/dev/null )"
 
-    USB_READY_STATE="$( ${ADB} ${ADB_OPTIONS} shell getprop sys.usb.state 2>/dev/null )"
+# ???    USB_READY_STATE="$( ${ADB} ${ADB_OPTIONS} shell getprop sys.usb.state 2>/dev/null )"
+    
+    USB_READY_STATE="$( ${ADB} ${ADB_OPTIONS} shell getprop sys.usb.config 2>/dev/null )"
     if [ "${USB_READY_STATE}"x = ""x ] ; then
       sleep ${INTERVALL}
       printf "."
@@ -3248,8 +3250,7 @@ function decrypt_data  {
   
 # check if the data partition is encrypted
 #  
-# TESTDIR="/sdcard/Download"
-  TESTDIR="/data/media/0/Download/"
+  TESTDIR="/sdcard/Download"
   
   if [ ${THISRC} = ${__TRUE} -a ${CONT} = ${__TRUE} ] ; then 
     wait_until_data_is_mounted 20 
@@ -3301,6 +3302,8 @@ function decrypt_data  {
 #
 # the files in /data are not encrypted
 #  
+      LogMsg "The data partition is not encrypted"
+
       DATA_IS_ENCRYPTED=${__FALSE}
       CONT=${__FALSE}
     else
