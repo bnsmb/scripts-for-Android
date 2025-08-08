@@ -22,7 +22,7 @@ fi
 
 
 if [ "${PRODCUT_SYSTEM_NAME}"x != "lineage_sake"x ]  ; then
-  echo "The OS on the phone is not the LineageOS -- doing nothing else"
+  echo "The OS on the phone is not the LineageOS"
 else
   echo "Configuring initial settings for the LineageOS ..."
 
@@ -45,13 +45,16 @@ else
 # --------------------------------------------------------------------  
 fi
 
-# disable the LineageOS setup if installed
+# disable the setup wizzards if installed
 #
 
-SETUP_WIZZARD="$( pm list packages | grep "setupwizard$"  | cut -f2 -d ":"  )"
-if [ "${SETUP_WIZZARD}"x != ""x ] ; then
-  echo "Disabling the setup wizzard \"${SETUP_WIZZARD}\" now ..."
-  pm disable-user --user 0 "${SETUP_WIZZARD}" 
+SETUP_WIZZARDS="$( pm list packages | grep "setupwizard$"  | cut -f2 -d ":"  )"
+if [ "${SETUP_WIZZARDS}"x != ""x ] ; then
+
+  for CUR_WIZZARD in ${SETUP_WIZZARDS} ; do	
+    echo "Disabling the setup wizzard \"${CUR_WIZZARD}\" now ..."
+    pm disable-user --user 0 "${CUR_WIZZARD}" 
+  done
 else
   echo "OK, no setup wizzard found"
 fi
