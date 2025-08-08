@@ -17,6 +17,10 @@
 #  30.04.2024 v1.0.3.0 /bs #VERSION
 #    the script returned ${__TRUE} even if the final reboot failed -- fixed
 #
+#  08.08.2025 v1.0.4.0 /bs #VERSION
+#    the script did not select the correct TWRP image in all cases --fixed
+#
+
 # This script can be used to enable root access via Magisk by adding the necessary entries to the sqlite database used by Magisk
 #
 # The script will boot the phone from an TWRP image and add the necessary entries in an adb session in TWRP to the sqlite database from Magisk.
@@ -427,9 +431,9 @@ fi
 
 LogMsg "Will enable the root access via Magisk for these UIDs: ${LIST_OF_APP_UIDS}"
 
-# reboot the script from the TWRP image
+# reboot the script from the correct TWRP image
 #
-boot_phone_from_the_TWRP_image || die 110 "Can not boot the phone from the TWRP image"
+boot_phone_from_the_TWRP_image "${TEMP_TWRP_IMAGE_TO_USE}" || die 110 "Can not boot the phone from the TWRP image"
 
 
 MAGISK_HELPER_SCRIPT_ON_THE_PHONE="/cache/${CUR_MAGISK_DB_HELPER_SCRIPT##*/}"
