@@ -181,6 +181,10 @@ ENABLE_SINGLE_STEP_ON_ERROR=${__TRUE}
 #H#     the script now prints the list of tasks that were completed with errors that were ignored
 #H#     added code to enable or disable single step mode in the dialog used after one of the scripts failed
 #H#
+#H#  08.08.2025 /bs
+#H#     added the option "S" or "status" to force the script to reread the phone status to the menue that is printed when a task failed
+#H#     the script now rereads the phone status when the user selects "c" or "r" in the menue printed after a task failed
+#H#
 
 
 # global variables
@@ -694,6 +698,11 @@ install_essential_magisk_modules:/data/backup/Android/Test_EssentialMagiskModule
 # install_essential_apps:/data/backup/Android/Essential_Apps_for_ASUS_Android
 # install_essential_magisk_modules:ignorerc
 
+
+# install the config Data files for the OrangeFox recovery
+#
+install_archive_file:/data/backup/Android/OrangeFox_data_files.tar:noreboot:script=/sdcard/Fox/orange_fox_config.sh
+
 # install the NeoBackup data files
 #
 install_archive_file:\${NEO_BACKUP_TAR_FILE}:ignorerc:script=/sdcard/Download/change_owner_for_neobackup_dir.sh
@@ -810,6 +819,11 @@ install_essential_magisk_modules:/data/backup/Android/Test_EssentialMagiskModule
 # install_essential_apps:/data/backup/Android/Essential_Apps_for_ASUS_Android
 # install_essential_magisk_modules:ignorerc
 
+# install the config Data files for the OrangeFox recovery
+#
+install_archive_file:/data/backup/Android/OrangeFox_data_files.tar:noreboot:script=/sdcard/Fox/orange_fox_config.sh
+
+
 # install the NeoBackup data files
 #
 install_archive_file:\${NEO_BACKUP_TAR_FILE}:ignorerc:script=/sdcard/Download/change_owner_for_neobackup_dir.sh
@@ -924,6 +938,10 @@ execute_script:/data/develop/android/scripts_on_linux/install_termux.sh:ignorerc
 # install Neobackup App
 #
 install_apps:/data/backup/Android/apps/com.machiav3lli.backup_8318.apk
+
+# install the config Data files for the OrangeFox recovery
+#
+install_archive_file:/data/backup/Android/OrangeFox_data_files.tar:noreboot:script=/sdcard/Fox/orange_fox_config.sh
 
 # install the NeoBackup data files
 #
@@ -1110,6 +1128,10 @@ enable_disable_abort_on_error:disable
 
 execute_script_on_the_phone:ignorerc:/data/develop/android/scripts_on_linux/enable_wlan.sh
 
+# install the config Data files for the OrangeFox recovery
+#
+install_archive_file:/data/backup/Android/OrangeFox_data_files.tar:noreboot:script=/sdcard/Fox/orange_fox_config.sh
+
 # Access via adb is working now and we do not need root access anymore -- we do not need Magisk anymore
 #
 restore_boot_partition:twrp:noreboot
@@ -1144,6 +1166,11 @@ select_twrp_image:ignorerc
 boot_phone_from_twrp_image
 
 install_os:noreboot:sideload:factory_reset:reboot
+
+# install the config Data files for the OrangeFox recovery
+#
+install_archive_file:/data/backup/Android/OrangeFox_data_files.tar:noreboot:script=/sdcard/Fox/orange_fox_config.sh
+
 "
 
 # ---------------------------------------------------------------------
@@ -1157,6 +1184,11 @@ select_twrp_image:ignorerc
 boot_phone_from_twrp_image
 
 install_os:noreboot:factory_reset:reboot
+
+# install the config Data files for the OrangeFox recovery
+#
+install_archive_file:/data/backup/Android/OrangeFox_data_files.tar:noreboot:script=/sdcard/Fox/orange_fox_config.sh
+
 "
 
 
@@ -1548,6 +1580,15 @@ wait_for_access_via_adb:120:kill
 enable_root_access_for_the_shell:reboot
 wait_for_access_via_adb:120:kill
 install_the_magisk_app
+"
+
+# ---------------------------------------------------------------------
+#T# TASK_GROUP_configure_orangefox - copy the OrangeFox config files to the phone
+#
+TASK_GROUP_configure_orangefox="
+# install the config Data files for the OrangeFox recovery
+#
+install_archive_file:/data/backup/Android/OrangeFox_data_files.tar:noreboot:script=/sdcard/Fox/orange_fox_config.sh
 "
 
 # ---------------------------------------------------------------------
@@ -3261,6 +3302,7 @@ t twrp           - change the TWRP image to use
 R reset_usb      - reset the USB port for the  phone
 f format         - format /data
 m mount          - mount /data
+S status         - retrieve, update, and print the phone status
 shell            - open a shell
 !cmd             - execute the command \"cmd\"
 
@@ -3334,18 +3376,25 @@ quit             - end the script
             LogMsg "-" "${CUR_OUTPUT}"
             LogMsg "-"
             ;;
-            
+
+          S | status )
+            LogMsg "Retrieving the status of the phone ..."
+            retrieve_phone_status
+            print_phone_status
+            ;;
+
           r  | repeat | "" )
+            retrieve_phone_status
             DO_IT=${__TRUE}
             ;;
     
           c | C | continue | cont ) 
+            retrieve_phone_status
             THISRC=0
             break
             ;;
           
           R | reset_usb )
-
             LogMsg "The list of known adb devices is now:"
             CUR_OUTPUT="$( adb devices 2>&1 )"
             LogMsg "-"
