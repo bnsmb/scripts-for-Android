@@ -602,7 +602,13 @@
 #      added support for DrDroid 11.7
 #
 #   04.08.2025 v3.2.9.3 /bs #VERSION
-#      added support for EvolutionX 15.0
+#      added support for EvolutionX 10.7 (= Android 15)
+#
+#   05.08.2025 v3.2.9.4 /bs #VERSION
+#      added support for EvolutionX 10.7 without GMS
+#
+#   08.08.2025 v3.2.9.5 /bs #VERSION
+#      the function decrypt_data now checks if the directory /data/media/0/Download/ exists 
 #
 
 # Author
@@ -984,7 +990,7 @@ ro.build.description : e_sake-user 15 BP1A.250505.005 eng.* : /data/backup/ASUS_
 #
 ro.crdroid.build.version : 11.7  : /data/backup/ASUS_ZENFONE8/crdroid/orangefox_crDroidAndroid-15.0-20250803-sake-v11.7.img : crDroid 11.7
 #
-ro.evolution.build.version: EvolutionX-15.0-*-sake-10.7-Unofficial : /data/backup/ASUS_ZENFONE8/evolutionX/orangefox_EvolutionX-15.0-20250804-sake-10.7-Unofficial.img : EvolutionX 15.0
+ro.evolution.build.version : EvolutionX-15.0-*-sake-10.7-*Unofficial : /data/backup/ASUS_ZENFONE8/evolutionX/orangefox_EvolutionX-15.0-20250804-sake-10.7-Unofficial.img : EvolutionX 15.0
 #
 "
 fi
@@ -3242,8 +3248,9 @@ function decrypt_data  {
   
 # check if the data partition is encrypted
 #  
-  TESTDIR="/sdcard/Download"
-
+# TESTDIR="/sdcard/Download"
+  TESTDIR="/data/media/0/Download/"
+  
   if [ ${THISRC} = ${__TRUE} -a ${CONT} = ${__TRUE} ] ; then 
     wait_until_data_is_mounted 20 
     if [ $? -ne ${__TRUE} ] ; then
