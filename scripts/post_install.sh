@@ -365,6 +365,21 @@ else
   fi
 fi
 
+# disable the setup wizards if installed
+#
+
+SETUP_WIZARDS="$( pm list packages | grep "setupwizard$"  | cut -f2 -d ":"  )"
+if [ "${SETUP_WIZARDS}"x != ""x ] ; then
+
+  for CUR_WIZARD in ${SETUP_WIZARDS} ; do
+    echo "Disabling the setup wizard \"${CUR_WIZARD}\" now ..."
+    pm disable-user --user 0 "${CUR_WIZARD}"
+  done
+else
+  echo "OK, no setup wizard found"
+fi
+
+
 #
 # this settings kills the adb sessions
 #

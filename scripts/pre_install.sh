@@ -45,18 +45,4 @@ else
 # --------------------------------------------------------------------  
 fi
 
-# disable the setup wizzards if installed
-#
-
-SETUP_WIZZARDS="$( pm list packages | grep "setupwizard$"  | cut -f2 -d ":"  )"
-if [ "${SETUP_WIZZARDS}"x != ""x ] ; then
-
-  for CUR_WIZZARD in ${SETUP_WIZZARDS} ; do	
-    echo "Disabling the setup wizzard \"${CUR_WIZZARD}\" now ..."
-    pm disable-user --user 0 "${CUR_WIZZARD}" 
-  done
-else
-  echo "OK, no setup wizzard found"
-fi
-
 exit 0
