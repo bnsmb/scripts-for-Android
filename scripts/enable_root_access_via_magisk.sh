@@ -22,6 +22,8 @@
 #H#   Magisk 27.0
 #H#   Magisk 28.0
 #H#   Magisk 28.1
+#H#   Magisk 29.0
+#H#   Magisk 30.1
 #H# 
 #H# The format of the database entries for other Magisk versions may be different.
 #H# Therefor to use it for databases created by other Magisk versions use the parameter "-f"
@@ -68,6 +70,9 @@
 #    enabled support for Magisk v28.0
 #  09.02.2025 v1.7.0.0
 #    enabled support for Magisk v28.1
+#  08.08.2025 v1.8.0.0
+#    enabled support for Magisk v29.0 and v30.1
+#    added the parameter "-type f" to the find command to search for the sqlite3 executable (-> ignore directories with the name "sqlite3")
 #
 # Author
 #   Bernd.Schemmer (at) gmx.de
@@ -104,7 +109,7 @@ __FALSE=1
 #
 # list of Magisk versions tested
 #
-KNOWN_MAGISK_VERSIONS=" 24.2 24.3 25.1 25.2 26.1 26.2 26.3 26.4 27.0 28.0 28.1"
+KNOWN_MAGISK_VERSIONS=" 24.2 24.3 25.1 25.2 26.1 26.2 26.3 26.4 27.0 28.0 28.1 29.0 30.1 "
 
 # default value for the parameter -f
 #
@@ -683,12 +688,12 @@ if [ ${THISRC} = ${__TRUE} -a ${CONT} = ${__TRUE} ] ; then
   
   if [ "${SQLITE3}"x = ""x ] ; then
     LogMsg "Searching the sqlite3 binary in /data/adb/ ..."
-    SQLITE3="$( find /data/adb/ -name sqlite3 -executable | head -1 )"
+    SQLITE3="$( find /data/adb/ -name sqlite3 -type f -executable | head -1 )"
   fi
 
   if [ "${SQLITE3}"x = ""x ] ; then
     LogMsg "Searching the sqlite3 binary in /sdcard/Download/ ..."
-    SQLITE3="$( find /sdcard/Download/ -name sqlite3 -executable | head -1 )"
+    SQLITE3="$( find /sdcard/Download/  -name sqlite3 -type f -executable | head -1 )"
   fi
 
   if [ "${SQLITE3}"x != ""x ] ; then
