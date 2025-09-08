@@ -95,7 +95,9 @@
 #    22.06.2025 v2.1.2 /bs
 #      lmm now works also for installations with no installed Magisk modules
 #
-#
+#    08.09.2025 v2.2.0 /bs
+#      lmm now also handles modules with missing module.prop file
+#      lmm now also handles module.prop files in DOS format
 #
 __TRUE=0
 __FALSE=1
@@ -219,6 +221,10 @@ function die  {
 function list_magisk_modules  {
   typeset THISRC=0
 
+  typeset MODULE_PROP_CONTENTS=""
+  typeset MODULE_VERSION=""
+  typeset MODULE_NAME=""
+
   if [ ${NO_HEADER} != ${__TRUE} ] ; then
     printf "%-30s %-25s %-15s %-15s %s\n" "Module ID" "Module Version" "Module status" "Install Status" "Module Description"
     printf "-----------------------------------------------------------------------------------------------------------\n"
@@ -242,13 +248,20 @@ function list_magisk_modules  {
       INSTALL_STATUS="remove"
 
     fi
-     
+
+    MODULE_PROP_CONTENTS="$( cat $i/module.prop 2>/dev/null | dos2unix )"
+    MODULE_VERSION="$( echo "${MODULE_PROP_CONTENTS}" | grep version= | cut -f2 -d "=" | tr -s " " )"
+    MODULE_NAME="$( echo "${MODULE_PROP_CONTENTS}" | grep name= | cut -f2 -d "=" | tr -s " " )"
+
+    MODULE_NAME="${MODULE_NAME:=WARNING: no module.prop file for this module found}"
+    MODULE_VERSION="${MODULE_VERSION:=???}"
+        
     printf "%-30s %-25s %-15s %-15s %s\n" \
 "${CUR_MODULE_ID}" \
-"$(  grep version= $i/module.prop 2>/dev/null | cut -f2 -d "=" | tr -s " " )" \
+"${MODULE_VERSION}" \
 "$( [ ! -r $i/disable ] && echo "enabled" || echo "disabled" ) $( [ -r $i/remove ] && echo "(-)" || echo "  " )" \
 "${INSTALL_STATUS}" \
-"$(  grep name= $i/module.prop 2>/dev/null | cut -f2 -d "=" | tr -s " " )" \
+"${MODULE_NAME}"
      
   done   
   printf "\n"
