@@ -841,7 +841,9 @@ execute_script_on_the_phone:ignorerc
 # History
 #   16.05.2024 
 #    task group rewritten
-
+#  10.09.2025
+#    added the task "install_magisk_modules:/data/backup/Android/EssentialMagiskModules/myscripts.zip"
+#  
 TASK_GROUP_os_twrp_magisk_backup_sideload="# 
   
 enable_disable_abort_on_error:enable
@@ -934,6 +936,8 @@ execute_script:/data/develop/android/scripts_on_linux/install_termux.sh:ignorerc
 
 # install_essential_apps:/data/backup/Android/Essential_Apps_for_ASUS_Android
 # install_essential_magisk_modules:ignorerc
+
+install_magisk_modules:/data/backup/Android/EssentialMagiskModules/myscripts.zip
 
 # install Neobackup App
 #
@@ -1244,7 +1248,9 @@ execute_script_on_the_phone:ignorerc
 #
 #  16.03.2025 /bs
 #    task group rewritten
-#
+#  10.09.2025
+#    added the task "install_magisk_modules:/data/backup/Android/EssentialMagiskModules/myscripts.zip"
+#  #
 TASK_GROUP_os_twrp_magisk="
 enable_disable_abort_on_error:enable
 
@@ -1339,6 +1345,8 @@ execute_script_on_the_phone:ignorerc:/data/develop/android/scripts_on_linux/enab
 #install_magisk_modules:\${DISABLE_FAKE_STORE_MAGISK_MODULE}:ignorerc
 #
 
+install_magisk_modules:/data/backup/Android/EssentialMagiskModules/myscripts.zip
+
 # The variable NEO_BACKUP_TAR_FILE must be defined before starting the script either in the environment
 # or in the file prepare_phone.conf to copy the tar file to the phone
 #
@@ -1358,7 +1366,9 @@ wait_for_access_via_adb
 #
 #  16.03.2025 /bs
 #    task group rewritten
-#
+#  10.09.2025
+#    added the task "install_magisk_modules:/data/backup/Android/EssentialMagiskModules/myscripts.zip"
+#  #
 TASK_GROUP_os_twrp_magisk_bkp="
 enable_disable_abort_on_error:enable
 
@@ -1439,6 +1449,8 @@ execute_script_on_the_phone:ignorerc:/data/develop/android/scripts_on_linux/enab
 # execute_script:/data/develop/android/scripts_on_linux/install_termux.sh:ignorerc:noreboot
 #install_essential_apps:ignorerc
 #install_essential_magisk_modules:ignorerc
+
+install_magisk_modules:/data/backup/Android/EssentialMagiskModules/myscripts.zip
 
 #
 # The variable MICROG_MAGISK_MODULE must be defined before starting the script either in the environment

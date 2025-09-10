@@ -610,7 +610,9 @@
 #   08.08.2025 v3.2.9.5 /bs #VERSION
 #      the function wait_for_the_adb_daemon now checks for the property "sys.usb.config" ( the property "sys.usb.state" seems not to exist in all CustomROMs)
 #
-
+#   21.08.2025 v3.2.9.6 /bs #VERSION
+#      the check value for /e/ 3.0.1-t is now more relaxed
+#
 # Author
 #   Bernd.Schemmer (at) gmx.de
 #   Homepage: http://bnsmb.de
@@ -916,7 +918,6 @@ e-3.0.4*     : /data/backup/ASUS_ZENFONE8/e/e-3.0.4/twrp_e-3.0.4-t-2025071050780
 #
 e-3.0*       : /data/backup/ASUS_ZENFONE8/e/e-3.0/twrp-e-3.0-t-20250529496537-community-sake.img : /e/ 3.0
 #
-lineage-22*UNOFFICIAL* : /data/backup/ASUS_ZENFONE8/Lineage-22-local/twrp_lineage-22.2-20250408-UNOFFICIAL-sake.img ; LineageOS 22.x (local)
 #
 lineage-20.0-20240716-nightly-sake-signed.zip : /data/backup/ASUS_ZENFONE8/Lineage-20/2024-07-16/twrp_lineage-20.0-20240716-nightly-sake-signed.img : LineageOS 20.0
 lineage-20* : /data/backup/ASUS_ZENFONE8/Lineage-20/twrp_lineage-20.0-20240528-nightly-sake-signed.img : LineageOS 20.x
@@ -956,13 +957,13 @@ if [ "${TWRP_IMAGES_FOR_THE_RUNNING_OS}"x = ""x ] ; then
 #
 vendor.asus.build.ext.version : * : ${DEFAULT_TWRP_IMAGE} :  ASUS Android
 #
-ro.lineage.version : 22.*-UNOFFICIAL-sake : /data/backup/ASUS_ZENFONE8/Lineage-22-local/twrp_lineage-22.2-20250408-UNOFFICIAL-sake.img : LineageOS 22.2 (local)
 #
 ro.lineage.build.version : 20.0 : /data/backup/ASUS_ZENFONE8/Lineage-20/2024-07-16/twrp_lineage-20.0-20240716-nightly-sake-signed.img : LineageOS 
 ro.lineage.build.version : 20* : /data/backup/ASUS_ZENFONE8/Lineage-20/twrp_lineage-20.0-20240528-nightly-sake-signed.img : LineageOS 
 ro.lineage.build.version : 21* : /data/backup/ASUS_ZENFONE8/Lineage-21/twrp_3.7.0_12-1-I006D_for_lineageOS21-20240220-sake.img : LineageOS 
 
 ro.lineage.version : 22.2-2025*-UNOFFICIAL-sake : /data/backup/ASUS_ZENFONE8/Lineage-22-original-local/orangefox_lineage-22.2-20250801-UNOFFICIAL-sake.img : LineagaeOS 22.2 self compiled
+ro.lineage.version : 22.*-UNOFFICIAL-sake : /data/backup/ASUS_ZENFONE8/Lineage-22-local/twrp_lineage-22.2-20250408-UNOFFICIAL-sake.img : LineageOS 22.2 (local)
 
 ro.lineage.build.version : 22.2 : /data/backup/ASUS_ZENFONE8/Lineage-22-original/2025-07-15/orangefox_lineage-22.2-20250715-nightly-sake-signed.img  : LineageOS 22.x
 #
@@ -983,7 +984,7 @@ ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.20241217.174531 r
 ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.20250112.044158 release-keys : /data/backup/ASUS_ZENFONE8/e/e-2.7/twrp-e-2.7-t-20250112460975-community-sake.img : /e/ 2.7
 ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.20250219.225052 release-keys : /data/backup/ASUS_ZENFONE8/e/e-2.8/twrp-e-2.8-t-20250219470166-community-sake.img : /e/ 2.8
 ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.20250322.023704 release-keys : /data/backup/ASUS_ZENFONE8/e/e-2.9/twrp-e-2.9-t-20250322478412-community-sake.img : /e/ 2.9
-ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.20250607* release-keys : /data/backup/ASUS_ZENFONE8/e/e-3.0.1/twrp-e-3.0.1-t-20250607498934-community-sake.img : /e/ 3.0.1
+ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.202506* release-keys : /data/backup/ASUS_ZENFONE8/e/e-3.0.1/twrp-e-3.0.1-t-20250607498934-community-sake.img : /e/ 3.0.1
 ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.20250710* release-keys : /data/backup/ASUS_ZENFONE8/e/e-3.0.4/twrp-e-3.0.4-t-20250710507809-community-sake.img : /e/ 3.0.4
 ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.20250529* release-keys : /data/backup/ASUS_ZENFONE8/e/e-3.0/twrp-e-3.0-t-20250529496537-community-sake.img : /e/ 3.0
 ro.build.description : e_sake-user 15 BP1A.250505.005 eng.* : /data/backup/ASUS_ZENFONE8/e/e-3.0.4-a15/orangefox_e-3.0.4-a15-20250712508365-community-sake.img :  /e/ 3.0.4-a15
