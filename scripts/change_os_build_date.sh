@@ -385,7 +385,7 @@ fi
 RESETPROP="$( which resetprop )"
 
 if [ "${RESETPROP}"x = ""x ] ; then
-  die 105 "Executable \"resetprop\" not found -- is Magisk installed?"
+  die 107 "Executable \"resetprop\" not found -- is Magisk installed?"
 fi
 
 # ---------------------------------------------------------------------
@@ -395,19 +395,19 @@ fi
 IMAGE_FILE_USED=${__FALSE}
 
 if [ "${NEW_DATE}"x = ""x -a ${VIEW_ONLY} != ${__TRUE} ] ; then
-  die 110 "The parameter for the new date is missing"
+  die 109 "The parameter for the new date is missing"
 fi
   
 if ! isNumber "${NEW_DATE}" ; then
   if [ ! -r "${NEW_DATE}" ] ; then
-    die 120 "\"${NEW_DATE}\" is neither a number nor a file name"
+    die 111 "\"${NEW_DATE}\" is neither a number nor a file name"
   else
     LogMsg "Reading the new date from the file \"${NEW_DATE}\" ..."
     TEST_DATE="$( unzip -p "${NEW_DATE}" META-INF/com/android/metadata | grep post-timestamp= | cut -f2 -d "=" )"
     if [ $? -ne 0 ] ; then 
-      die 130 "Error reading the file \"${NEW_DATE}\" "
+      die 113 "Error reading the file \"${NEW_DATE}\" "
     elif [ "${TEST_DATE}"x = ""x ] ; then
-      die 130 "The file \"${NEW_DATE}\" is not a valid OS image"
+      die 115 "The file \"${NEW_DATE}\" is not a valid OS image"
     else
       IMAGE_FILE_USED=${__TRUE}
       OS_IMAGE_FILE="${NEW_DATE}"
@@ -424,7 +424,7 @@ LogMsg "Retrieving the list of date properties in the running OS ..."
 GET_DATE_UTC_PROPERTIES="$( ${GETPROP} | grep date.utc |   tr -d "[]" | cut -f1 -d ":" )"
 
 if [ "${GET_DATE_UTC_PROPERTIES}"x = ""x ]  ; then
-  die 110 "No date properties found"
+  die 117 "No date properties found"
 fi
 
 LogMsg "The current values of the date properties are:" 
