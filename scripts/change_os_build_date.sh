@@ -444,7 +444,7 @@ if [ ${VIEW_ONLY} != ${__TRUE} ] ; then
   LogMsg "Changing the value for the date properties to \"${NEW_DATE}\" ( $( date -u -d   @${NEW_DATE} ) ) ..."
 
   for CUR_PROP in ${GET_DATE_UTC_PROPERTIES} ; do 
-    ${RESETPROP} "${CUR_PROP}" "${NEW_DATE}"
+    ${PREFIX} ${RESETPROP} "${CUR_PROP}" "${NEW_DATE}"
   done
 
   LogMsg "The values of the date properties are now:" 
