@@ -2,7 +2,7 @@
 #h#
 #h# change_os_build_date.sh #VERSION# - change the properties for the build date of the running OS
 #h#
-#h# Usage: change_os_build_date.sh  [-h|--help] [-H] [-d|--dryrun] [-v|--verbose] [-V|--version] [var=value] [-l|--list] [new_date|os_image_file]
+#h# Usage: change_os_build_date.sh  [-h|--help] [-H] [-d|--dryrun] [-v|--verbose] [-V|--version] [var=value] [-l|--list] [new_date|os_image_file|logcat]
 #h#
 #H# Known parameter:
 #H# 
@@ -15,6 +15,7 @@
 #H# -l               only print the current values
 #H# new_date         new build date (this value is the number of seconds since 1970)
 #H# os_image_file    ZIP file with an OS image for the phone
+#H# logcat           use the date found in the last error message from the update_engine in the logcat
 #H#
 #H# Return codes:
 #H#
@@ -36,6 +37,9 @@
 # History
 #   15.09.2025 /bs v1.0.0
 #     initial release
+#   16.09.2025 /bs v1.1.0
+#     added the parameter logcat
+#    
 #
 
 # ----------------------------------------------------------------------
@@ -230,6 +234,155 @@ function isNumber {
   return ${__FALSE}
 }
 
+
+# ----------------------------------------------------------------------
+# print_date_values
+#
+# print the current values for the date properties
+#
+# usage: print_date_values [message]
+#
+# returns: ${__TRUE} 
+#
+function print_date_values {
+  typeset THISRC=${__TRUE}
+  
+  typeset THIS_MSG="$*"
+  
+  if [ "${THIS_MSG}"x != ""x ] ; then
+    LogMsg "${THIS_MSG}"
+    LogMsg ""
+  fi
+
+  for CUR_PROP in ${GET_DATE_UTC_PROPERTIES} ; do 
+    LogMsg "${CUR_PROP} : $( ${GETPROP} ${CUR_PROP}  )"
+  done
+  LogMsg   
+
+  return ${THISRC}
+}
+
+
+# ----------------------------------------------------------------------
+# read_date_from_logcat
+#
+# read the required date from the logcat messages
+#
+# usage: read_date_from_logcat [result_var]
+#
+# parameter:
+#   result_var - name of the global variable for the date found in the logcat messags
+#
+# returns: ${__TRUE} - found a date in the logcat messages
+#          ${__FALSE} - no date found in the logcat messages
+#
+function read_date_from_logcat {
+  typeset THISRC=${__FALSE}
+  
+  typeset RESULT_VAR="$1"
+
+  typeset LOGCAT_LINES_WITH_ERRORS=""
+  typeset LOGCAT_LINE=""
+
+  if [ "${RESULT_VAR}"x != ""x ] ; then
+    unset ${RESULT_VAR}
+  fi  
+
+  LogMsg "Searching the new date in the logcat messages ..."
+     
+  LOGCAT_LINES_WITH_ERRORS="$( logcat -d | grep update_engine | grep  -E "Timestamp check failed with ErrorCode::kPayloadTimestampError:|is newer than the maximum timestamp in the manifest"  )"
+
+  LogInfo "Error messages from the update_engine found in the logcat messages are: " && \
+    LogMsg && \
+    LogMsg "${LOGCAT_LINES_WITH_ERRORS}" && \
+    LogMsg
+    
+  LOGCAT_LINE="$( echo "${LOGCAT_LINES_WITH_ERRORS}" | tail -1  )"
+  if [ "${LOGCAT_LINE}"x = ""x ] ; then
+    LogMsg "No update_engine error message regarding wrong timestamps found in the logcat messages"
+  else
+    LogMsg "Found this error message in the logcat messages:"
+    LogMsg
+    LogMsg "${LOGCAT_LINE}"
+
+    if  [[ ${LOGCAT_LINE} == *Update\ timestamp* ]]; then
+      TEST_DATE="$( echo "${LOGCAT_LINE}" | sed -e "s/.*Update timestamp: //g" -e "s/[[:space:]]//g"  )"
+    else
+      TEST_DATE="$( echo "${LOGCAT_LINE}" | sed "s/.*is newer than the maximum timestamp in the manifest//g" | tr -d " ()" )"
+    fi
+    
+    if [ "${TEST_DATE}"x = ""x ] ; then
+      LogError "No timestamp found in the error message from logcat messages"
+    elif ! isNumber "${TEST_DATE}" ; then
+      LogError "The timestamp found in the error message from logcat \"${TEST_DATE}\" is not a number"
+    else
+      LogMsg
+      LogMsg "The date value in the logcat messages is: ${TEST_DATE} "
+    
+      if [ "${RESULT_VAR}"x != ""x ] ; then
+        eval ${RESULT_VAR}="${TEST_DATE}"
+      fi
+      THISRC=${__TRUE}
+    fi
+  
+  fi
+  
+  return ${THISRC}
+}
+
+# ----------------------------------------------------------------------
+# read_date_from_image_file
+#
+# read the required date from the ZIP file with the OS image
+#
+# usage: read_date_from_image_file [zipfile] [result_var]
+#
+# parameter:
+#   zipfile    - name of the ZIP file
+#   result_var - name of the global variable for the date found in the logcat messags
+#
+# returns: ${__TRUE} - found a date in the zip file
+#          ${__FALSE} - no date found in zip file
+#
+function read_date_from_image_file {
+  typeset THISRC=${__FALSE}
+  
+  typeset THIS_FILE="$1"
+  typeset RESULT_VAR="$2"
+
+  typeset THIS_DATE=""
+  
+  if [ "$THIS_FILE}"x != ""x ] ; then
+    LogMsg "Reading the new date from the image file \"${THIS_FILE}\" ..."
+    if [ -r "${THIS_FILE}" ] ; then
+      THIS_DATE="$( unzip -p "${THIS_FILE}" META-INF/com/android/metadata | grep post-timestamp= | cut -f2 -d "=" )"
+      if [ $? -ne 0 ] ; then 
+        LogError "Error reading the metadata from the file \"${THIS_FILE}\" "
+      elif [ "${THIS_DATE}"x = ""x ] ; then
+        LogError "The file \"${THIS_FILE}\" is not a valid OS image"
+      elif ! isNumber "${THIS_DATE}" ; then
+        LogError "The timestamp found in the file \"${THIS_DATE}\" is not a number"
+      else
+        LogMsg
+        LogMsg "The date value in the file \"${THIS_FILE}\" is : \"${THIS_DATE}\" "        
+        if [ "${RESULT_VAR}"x != ""x ] ; then
+          eval ${RESULT_VAR}="${THIS_DATE}"
+        fi
+        THISRC=${__TRUE}
+      fi  
+    else
+      LogError "The file \"${THIS_FILE}\" does not exist"
+    fi
+  else
+    LogError "read_date_from_logcat: Filename missing"
+  fi
+  
+  return ${THISRC}
+}
+  
+# ---------------------------------------------------------------------
+# main function
+
 # ----------------------------------------------------------------------
 # install the trap handler
 #
@@ -249,8 +402,6 @@ fi
 
 # ---------------------------------------------------------------------
 
-# ---------------------------------------------------------------------
-# main function
 
 
 # ---------------------------------------------------------------------
@@ -309,18 +460,18 @@ while [ $# -ne 0 ] ; do
       die 0
       ;;
 
-    -l|--list )
+    -l | --list )
       VIEW_ONLY=${__TRUE}
       ;;
 
     --* | -* )
-      die 17 "Unknown option found in the parameter: \"${CUR_PARAMETER}\")"
+      die 17 "Unknown option found in the parameter: \"${CUR_PARAMETER}\" "
       ;;
 
     
     *  )
       if [ "${NEW_DATE}"x != ""x ]  ; then
-        die 19 "Unknown parameter found: \"${CUR_PARAMETER}\")"
+        die 19 "Unknown parameter found: \"${CUR_PARAMETER}\" "
       else 
         NEW_DATE="${CUR_PARAMETER}"
       fi
@@ -328,15 +479,6 @@ while [ $# -ne 0 ] ; do
 
   esac
 done
-
-
-# ---------------------------------------------------------------------
-
-if [ "${PREFIX}"x != ""x ] ; then
-  LogMsg ""
-  LogMsg "*** The script is running in dry-run mode: PREFIX is \"${PREFIX}\" "
-  LogMsg ""
-fi
 
 # ---------------------------------------------------------------------
 
@@ -376,6 +518,16 @@ if [ "${THIS_USER}"x != "root"x ] ; then
   fi
 fi
 
+# ---------------------------------------------------------------------
+
+if [ "${PREFIX}"x != ""x ] ; then
+  LogMsg ""
+  LogMsg "*** The script is running in dry-run mode: PREFIX is \"${PREFIX}\" "
+  LogMsg ""
+fi
+
+# ---------------------------------------------------------------------
+
 GETPROP="$( which getprop )"
 
 if [ "${GETPROP}"x = ""x ] ; then
@@ -389,57 +541,70 @@ if [ "${RESETPROP}"x = ""x ] ; then
 fi
 
 # ---------------------------------------------------------------------
-# check the parameter
-#
-
-IMAGE_FILE_USED=${__FALSE}
-
-if [ "${NEW_DATE}"x = ""x -a ${VIEW_ONLY} != ${__TRUE} ] ; then
-  die 109 "The parameter for the new date is missing"
-fi
-  
-if ! isNumber "${NEW_DATE}" ; then
-  if [ ! -r "${NEW_DATE}" ] ; then
-    die 111 "\"${NEW_DATE}\" is neither a number nor a file name"
-  else
-    LogMsg "Reading the new date from the file \"${NEW_DATE}\" ..."
-    TEST_DATE="$( unzip -p "${NEW_DATE}" META-INF/com/android/metadata | grep post-timestamp= | cut -f2 -d "=" )"
-    if [ $? -ne 0 ] ; then 
-      die 113 "Error reading the file \"${NEW_DATE}\" "
-    elif [ "${TEST_DATE}"x = ""x ] ; then
-      die 115 "The file \"${NEW_DATE}\" is not a valid OS image"
-    else
-      IMAGE_FILE_USED=${__TRUE}
-      OS_IMAGE_FILE="${NEW_DATE}"
-
-      NEW_DATE="${TEST_DATE}"
-    fi
-  fi
-fi
-
-LogMsg "Using tne new date \"${NEW_DATE}\""
 
 LogMsg "Retrieving the list of date properties in the running OS ..."
 
 GET_DATE_UTC_PROPERTIES="$( ${GETPROP} | grep date.utc |   tr -d "[]" | cut -f1 -d ":" )"
 
 if [ "${GET_DATE_UTC_PROPERTIES}"x = ""x ]  ; then
-  die 117 "No date properties found"
+  die 109 "No date properties found"
 fi
 
-LogMsg "The current values of the date properties are:" 
-LogMsg 
-for CUR_PROP in ${GET_DATE_UTC_PROPERTIES} ; do 
-  LogMsg "${CUR_PROP} : $( ${GETPROP} ${CUR_PROP}  )"
-done
-LogMsg 
+# ---------------------------------------------------------------------
+# check the parameter
+#
+IMAGE_FILE_USED=${__FALSE}
+
+print_date_values "The current values of the date properties are:" 
 
 OS_BUILD_DATE="$( ${GETPROP} ro.build.date.utc )"
 if [ "${OS_BUILD_DATE}"x != ""x ] ; then
   LogMsg "The build date of the running OS is \"${OS_BUILD_DATE}\" ( $( date -u -d   @${OS_BUILD_DATE} ) )"
 fi
 
-if [ ${VIEW_ONLY} != ${__TRUE} ] ; then
+if [ "${NEW_DATE}"x = ""x ] ; then
+  if [ ${VIEW_ONLY} != ${__TRUE} ] ; then
+    die 111 "The parameter for the new date is missing"
+  else 
+    die 0
+  fi
+fi
+
+if [ "${NEW_DATE}"x = "logcat"x ] ; then
+  read_date_from_logcat NEW_DATE
+  if [ $? -ne ${__TRUE} ] ; then
+    die 113 "No update_engine error message regarding wrong timestamps found in the logcat"
+  fi  
+  
+elif isNumber "${NEW_DATE}" ; then
+  :
+  
+elif [ -r "${NEW_DATE}" ] ; then
+  OS_IMAGE_FILE="${NEW_DATE}"
+  read_date_from_image_file "${OS_IMAGE_FILE}" NEW_DATE
+  if [ $? -ne ${__TRUE} ] ; then    
+    die 115 "No date found in the file \"${OS_IMAGE_FILE}\" "
+  fi  
+else
+  die 117 "\"${NEW_DATE}\" is neither a number nor the name of an existing file"
+fi
+
+
+if [ ${VIEW_ONLY} = ${__TRUE} ] ; then
+  LogMsg "Tne maximum value for the date properties is ${NEW_DATE} ( $( date -u -d   @${NEW_DATE} ) )"
+
+  if [ "${OS_BUILD_DATE}"x != ""x  -a  "${NEW_DATE}"x != ""x  ] ; then
+    LogMsg
+    (( DIFF = NEW_DATE - OS_BUILD_DATE ))
+    if [ ${DIFF} -ge 0 ] ; then
+      LogMsg "OK, the installation of the image file should work without changing the date properties"
+    else
+      LogMsg "The installation of the image file requires new values for the date properties"
+    fi
+  fi
+else  
+
+  LogMsg "Using tne new date \"${NEW_DATE}\""
 
   LogMsg "Changing the value for the date properties to \"${NEW_DATE}\" ( $( date -u -d   @${NEW_DATE} ) ) ..."
 
@@ -447,25 +612,7 @@ if [ ${VIEW_ONLY} != ${__TRUE} ] ; then
     ${PREFIX} ${RESETPROP} "${CUR_PROP}" "${NEW_DATE}"
   done
 
-  LogMsg "The values of the date properties are now:" 
-  LogMsg 
-  for CUR_PROP in ${GET_DATE_UTC_PROPERTIES} ; do 
-    LogMsg "${CUR_PROP} : $( ${GETPROP} ${CUR_PROP}  )"
-  done
-  LogMsg 
-else
-
-  if [ ${IMAGE_FILE_USED} = ${__TRUE} ] ; then
-    if [ "${OS_BUILD_DATE}"x != ""x  -a  "${NEW_DATE}"x != ""x  ] ; then
-      LogMsg
-      (( DIFF = NEW_DATE - OS_BUILD_DATE ))
-      if [ ${DIFF} -ge 0 ] ; then
-        LogMsg "OK, the installation of the image file \"${OS_IMAGE_FILE}\" should work without changing the date properties"
-      else
-        LogMsg "The installation of the image file \"${OS_IMAGE_FILE}\" requires new values for the date properties"
-      fi
-    fi
-  fi
+  print_date_values "The values of the date properties are now:" 
   
 fi
 
