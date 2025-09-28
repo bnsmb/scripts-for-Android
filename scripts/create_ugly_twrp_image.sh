@@ -1,7 +1,7 @@
 #h#
 #h# create_ugly_twrp_image.sh - "create" an TWRP image for an Android OS version not supporting TWRP (e.g an OS based on Lineage 20.x or newer)
 #h#
-#h# Usage:  create_ugly_twrp_image.sh [-h] [-v] [boot_partition|boot_partition_image_file] [noprop|-p]
+#h# Usage:  create_ugly_twrp_image.sh [-h] [-v] [boot_partition|boot_partition_image_file] [fox] [noprop|-p]
 #h#
 #H# Parameter:
 #H#
@@ -11,6 +11,9 @@
 #H#
 #H# noprop - do not copy the properties from the running OS on the phone connected via usb
 #H#
+#H# fox - use the OrangeFox recovery instead of TWRP; the name of the file with the OrangeFox recovery is hardcoded in the script 
+#H#   "/data/backup/ASUS_ZENFONE8/OrangeFox/OrangeFox_Recovery.img"
+#H# 
 #H# This script must run on PC running the Linux OS; a working TWRP image for the phone is required and access via adb to the phone 
 #H# is required if the script should copy the boot partition for the TWRP image from the phone or change the properties in the ramdisk
 #H# for the new TWRP image
@@ -40,6 +43,10 @@
 #
 #  09.06.2025 v2.2.0 /bs
 #    the script is now aborted if there is no kernel file in the used boot image
+#
+#  28.09.2025 v2.3.0 /bs
+#    added the parameter "fox"
+#    the script now prints a message if the parameter for the boot image file does not exist locally
 #
 
 #H# Environment variables used if set:
@@ -103,6 +110,10 @@ while [ $# -ne 0 ] ; do
   
    -v | --verbose )
      VERBOSE=${__TRUE}
+     ;;
+
+   lineageos | orangefox | fox  )
+     TWRP_IMAGE="/data/backup/ASUS_ZENFONE8/OrangeFox/OrangeFox_Recovery.img"
      ;;
 
    * )        
@@ -218,6 +229,7 @@ if [ "${BOOT_PARTITION_PARAMETER}"x != ""x ] ; then
     echo "Using the boot image file \"${CUR_BOOT_IMAGE_FILE}\" to create the TWRP image"
 
   elif [[ "${BOOT_PARTITION_PARAMETER}" != /dev/* ]] ; then
+    echo "The file \"${BOOT_PARTITION_PARAMETER}\" does not exist locally -- assuming this is a partition on the phone"
     CUR_BOOT_PARTITION="/dev/block/by-name/${BOOT_PARTITION_PARAMETER}"
   else
     CUR_BOOT_PARTITION="${BOOT_PARTITION_PARAMETER}"  
