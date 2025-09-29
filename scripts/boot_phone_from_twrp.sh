@@ -613,6 +613,12 @@
 #   21.08.2025 v3.2.9.6 /bs #VERSION
 #      the check value for /e/ 3.0.1-t is now more relaxed
 #
+#   26.09.2025 v3.2.9.7 /bs #VERSION#
+#      added support for LineageOS 22.2 with MicroG
+#
+#   29.09.2025 v3.2.9.8 /bs #VERSION#
+#      added support for LMODroid 6.2
+#
 # Author
 #   Bernd.Schemmer (at) gmx.de
 #   Homepage: http://bnsmb.de
@@ -642,10 +648,10 @@
 #    ASUS Android           12, 13 
 #    OmniROM                12, 13, 14, 15, 16 (the OmniROM version is also the Android version)
 #    /e/                    1.21, 2.0-t, 2.4.1-t, 2.5-t, 2.6.3-t, 2.7-t, 2.8-t, 2.9-t, 3.0-t (2.x and 3.0-t = Android 13)
-#    /e/                    3.0.4-a15  (= Android 15)
+#    /e/                    3.0.4-a15, 3.1.1-a15  (-a15 = Android 15)
 #    StatixXOS              7,x (Android 14)
 #    LineageOS              20 (Android 13), 21 (Android 14), 22 (Android 15)
-#    LMODroid               4.2 (Android 13)
+#    LMODroid               4.2 (Android 13), 6.2 (Anroid 15)
 #    EvolutionX             15.0 (Android 15)
 #    crDroid                11.7 (Android 15)
 #
@@ -897,7 +903,8 @@ if [ "${TWRP_IMAGES_FOR_IMAGE_FILES}"x = ""x ] ; then
 #
 UL-ASUS* :  ${DEFAULT_TWRP_IMAGE} :  ASUS Android 
 #
-LMODroid* : /data/backup/ASUS_ZENFONE8/LMODroid/twrp_LMODroid-4.2-20240429-RELEASE-sake.img : LMODroid :
+LMODroid-6.2-* : /data/backup/ASUS_ZENFONE8/LMODroid/2025-09-29/OrangeFox_LMODroid-6.2-20250920-RELEASE-sake.img : LMODroid 6.2
+LMODroid* : /data/backup/ASUS_ZENFONE8/LMODroid/twrp_LMODroid-4.2-20240429-RELEASE-sake.img : LMODroid : LMODroid 4.2
 #
 e-2.8-UNOFFICIAL* : /data/backup/ASUS_ZENFONE8/e_local/twr_e-2.8-current.img : /e/ 2.8 unofficial
 e-2.9-UNOFFICIAL* : /data/backup/ASUS_ZENFONE8/e_local/twrp_e-2.9-current.img : /e/ 2.9 unofficial
@@ -918,12 +925,17 @@ e-3.0.4*     : /data/backup/ASUS_ZENFONE8/e/e-3.0.4/twrp_e-3.0.4-t-2025071050780
 #
 e-3.0*       : /data/backup/ASUS_ZENFONE8/e/e-3.0/twrp-e-3.0-t-20250529496537-community-sake.img : /e/ 3.0
 #
+e-3.1.1-a15* : /data/backup/ASUS_ZENFONE8/e/e-3.1.1-a15/orangefox_e-3.1.1-a15-20250829521742-community-sake.img : /e/ 3.1.1
 #
 lineage-20.0-20240716-nightly-sake-signed.zip : /data/backup/ASUS_ZENFONE8/Lineage-20/2024-07-16/twrp_lineage-20.0-20240716-nightly-sake-signed.img : LineageOS 20.0
 lineage-20* : /data/backup/ASUS_ZENFONE8/Lineage-20/twrp_lineage-20.0-20240528-nightly-sake-signed.img : LineageOS 20.x
 lineage-21* : /data/backup/ASUS_ZENFONE8/Lineage-21/twrp_3.7.0_12-1-I006D_for_lineageOS21-20240220-sake.img : LineageOS 21.x
 #
-lineage-22.2-2025*-UNOFFICIAL-sake.zio : /data/backup/ASUS_ZENFONE8/Lineage-22-original-local/orangefox_lineage-22.2-20250801-UNOFFICIAL-sake.img : LineagaeOS 22.2 self compiled
+lineage-22.2-2025*-UNOFFICIAL-sake.zip : /data/backup/ASUS_ZENFONE8/Lineage-22-original-local/orangefox_lineage-22.2-20250801-UNOFFICIAL-sake.img : LineageOS 22.2 self compiled
+#
+lineage-22.2-20250823-microG-sake.zip : /data/backup/ASUS_ZENFONE8/Lineage-22_with_MicroG/2025-08-23/OrangeFox_lineage-22.2-20250823-microG-sake-boot.img : LineageOS 22.2 with MicroG
+lineage-22.2-20250925-microG-sake.zip : /data/backup/ASUS_ZENFONE8/Lineage-22_with_MicroG/2025-09-25/OrangeFox_lineage-22.2-20250925-microG-sake-boot.img : LineageOS 22.2 with MicroG
+#
 lineage-22* : /data/backup/ASUS_ZENFONE8/Lineage-22-original/2025-07-15/orangefox_lineage-22.2-20250715-nightly-sake-signed.img : LineageOS 22.x
 #
 sake-* : /data/backup/ASUS_ZENFONE8/Lineage-21/twrp_3.7.0_12-1-I006D_for_lineageOS21-20240220-sake.img : LineageOS 21.x
@@ -961,17 +973,22 @@ vendor.asus.build.ext.version : * : ${DEFAULT_TWRP_IMAGE} :  ASUS Android
 ro.lineage.build.version : 20.0 : /data/backup/ASUS_ZENFONE8/Lineage-20/2024-07-16/twrp_lineage-20.0-20240716-nightly-sake-signed.img : LineageOS 
 ro.lineage.build.version : 20* : /data/backup/ASUS_ZENFONE8/Lineage-20/twrp_lineage-20.0-20240528-nightly-sake-signed.img : LineageOS 
 ro.lineage.build.version : 21* : /data/backup/ASUS_ZENFONE8/Lineage-21/twrp_3.7.0_12-1-I006D_for_lineageOS21-20240220-sake.img : LineageOS 
-
+#
 ro.lineage.version : 22.2-2025*-UNOFFICIAL-sake : /data/backup/ASUS_ZENFONE8/Lineage-22-original-local/orangefox_lineage-22.2-20250801-UNOFFICIAL-sake.img : LineagaeOS 22.2 self compiled
+#
+ro.lineage.version : 22.2-20250823-microG-sake : /data/backup/ASUS_ZENFONE8/Lineage-22_with_MicroG/2025-08-23/OrangeFox_lineage-22.2-20250823-microG-sake-boot.img : LineageOS 22.2 with MicroG
+ro.lineage.version : 22.2-20250925-microG-sake : /data/backup/ASUS_ZENFONE8/Lineage-22_with_MicroG/2025-09-25/OrangeFox_lineage-22.2-20250925-microG-sake-boot.img : LineageOS 22.2 with MicroG
+#
 ro.lineage.version : 22.*-UNOFFICIAL-sake : /data/backup/ASUS_ZENFONE8/Lineage-22-local/twrp_lineage-22.2-20250408-UNOFFICIAL-sake.img : LineageOS 22.2 (local)
-
+#
 ro.lineage.build.version : 22.2 : /data/backup/ASUS_ZENFONE8/Lineage-22-original/2025-07-15/orangefox_lineage-22.2-20250715-nightly-sake-signed.img  : LineageOS 22.x
 #
 ro.statix.version : v7.1-*-20240106 : /data/backup/ASUS_ZENFONE8/Statix/20240106/twrp_statix_sake-20240106-14-v7.1-UPSIDEDOWNCAKE.img : StatixOS 
 ro.statix.version : v7.10-*-20240712 : /data/backup/ASUS_ZENFONE8/Statix/20240712/twrp_statix_sake-20240712-14-v7.10-UNOFFICIAL.zip : StatixOS
 ro.statix.version : * : /data/backup/ASUS_ZENFONE8/Statix/20240712/twrp_statix_sake-20240712-14-v7.10-UNOFFICIAL.zip : StatixOS
 #
-ro.lmodroid.build_name : LMODroid-4.2-20240429-RELEASE-sake : /data/backup/ASUS_ZENFONE8/LMODroid/twrp_LMODroid-4.2-20240429-RELEASE-sake.img : LMODroid
+ro.lmodroid.build_name : LMODroid-6.2-* : /data/backup/ASUS_ZENFONE8/LMODroid/2025-09-29/OrangeFox_LMODroid-6.2-20250920-RELEASE-sake.img : LMODroid 6.2
+ro.lmodroid.build_name : LMODroid-4.2-20240429-RELEASE-sake : /data/backup/ASUS_ZENFONE8/LMODroid/twrp_LMODroid-4.2-20240429-RELEASE-sake.img : LMODroid 4.2
 ro.omni.version : * : ${DEFAULT_TWRP_IMAGE} : OmniROM
 #
 ro.modversion : 2.8-t-202503*-UNOFFICIAL-sake : /data/backup/ASUS_ZENFONE8/e_local/twrp_e-2.8-current.img : /e/ 2.8 unofficial
@@ -988,6 +1005,7 @@ ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.202506* release-k
 ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.20250710* release-keys : /data/backup/ASUS_ZENFONE8/e/e-3.0.4/twrp-e-3.0.4-t-20250710507809-community-sake.img : /e/ 3.0.4
 ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.20250529* release-keys : /data/backup/ASUS_ZENFONE8/e/e-3.0/twrp-e-3.0-t-20250529496537-community-sake.img : /e/ 3.0
 ro.build.description : e_sake-user 15 BP1A.250505.005 eng.* : /data/backup/ASUS_ZENFONE8/e/e-3.0.4-a15/orangefox_e-3.0.4-a15-20250712508365-community-sake.img :  /e/ 3.0.4-a15
+ro.build.description : e_sake-user 15 BP1A.250505.005 eng.* : /data/backup/ASUS_ZENFONE8/e/e-3.1.1-a15/orangefox_e-3.1.1-a15-20250829521742-community-sake.img : /e/ 3.1.1
 #
 ro.crdroid.build.version : 11.7  : /data/backup/ASUS_ZENFONE8/crdroid/orangefox_crDroidAndroid-15.0-20250803-sake-v11.7.img : crDroid 11.7
 #
