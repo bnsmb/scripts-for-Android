@@ -1,4 +1,15 @@
-mkdir -p /cache/logs
-rm -rf /cache/logs/*
+# 
+# the script keeps the last 10 logcat files in /cache/logs
+#
+#
 
-/system/bin/logcat -r 102400 -n 9 -v threadtime -f /cache/logs/log >/cache/logs/info.log 2>/cache/logs/err.log &
+mkdir -p /cache/logs
+
+for i in 8 7 6 5 4 3 2 1 0 ; do
+  let j=i+1
+  [ -r /cache/logs/log.$i ] && mv  /cache/logs/log.$i /cache/logs/log.$j
+done
+
+[ -r /cache/logs/log ] && mv /cache/logs/log /cache/logs/log.0
+
+/system/bin/logcat -r 102400 -n 9  -f /cache/logs/log >/cache/logs/info.log 2>/cache/logs/err.log &
