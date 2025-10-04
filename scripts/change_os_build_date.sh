@@ -2,20 +2,24 @@
 #h#
 #h# change_os_build_date.sh #VERSION# - change the properties for the build date of the running OS
 #h#
-#h# Usage: change_os_build_date.sh  [-h|--help] [-H] [-d|--dryrun] [-v|--verbose] [-V|--version] [var=value] [-l|--list] [new_date|os_image_file|logcat]
+#h# Usage: change_os_build_date.sh  [-h|--help] [-H] [-d|--dryrun] [-v|--verbose] [-V|--version] [var=value] [-l|--list] [--spl|--spl=[date|file|logcat]] [new_date|os_image_file|logcat]
 #h#
 #H# Known parameter:
 #H# 
-#H# -h               print the short usage help
-#H# -H               print the detailed usage help
-#H# -d               run the script in dry-run mode
-#H# -v               print more messages
-#H# -V               print the script version and exit
-#H# var=value        set the variable "var" to the value "value"
-#H# -l               only print the current values
-#H# new_date         new build date (this value is the number of seconds since 1970)
-#H# os_image_file    ZIP file with an OS image for the phone
-#H# logcat           use the date found in the last error message from the update_engine in the logcat
+#H# -h                   print the short usage help
+#H# -H                   print the detailed usage help
+#H# -d                   run the script in dry-run mode
+#H# -v                   print more messages
+#H# -V                   print the script version and exit
+#H# var=value            set the variable "var" to the value "value"
+#H# -l                   only print the current values
+#H# --spl=[value]        correct the SPL (Security Patch Level) in the OS; the format for the "value" is either "yyyy-mm-dd"
+#H#                      or "file" = read the SPL from the OS image file; 
+#H#                      or "logcat" = read the SPL from the last error message from the update_engine in the logcat
+#H# --spl                correct the SPL in the OS using the SPL from the file or from the logcat (depending on the other parameter)
+#H# new_date             new build date (this value is the number of seconds since 1970)
+#H# os_image_file        ZIP file with an OS image for the phone
+#H# logcat               use the date found in the last error message from the update_engine in the logcat
 #H#
 #H# Return codes:
 #H#
@@ -39,7 +43,9 @@
 #     initial release
 #   16.09.2025 /bs v1.1.0
 #     added the parameter logcat
-#    
+#   30.09.2025 /bs v1.2.0
+#     added code to also change the SPL
+#     added the parameters --spl and --spl=value
 #
 
 # ----------------------------------------------------------------------
@@ -248,17 +254,28 @@ function print_date_values {
   typeset THISRC=${__TRUE}
   
   typeset THIS_MSG="$*"
+  typeset CUR_PROP=""
   
   if [ "${THIS_MSG}"x != ""x ] ; then
     LogMsg "${THIS_MSG}"
     LogMsg ""
   fi
 
-  for CUR_PROP in ${GET_DATE_UTC_PROPERTIES} ; do 
+  for CUR_PROP in ${GET_DATE_UTC_PROPERTIES}  ; do 
     LogMsg "${CUR_PROP} : $( ${GETPROP} ${CUR_PROP}  )"
   done
   LogMsg   
 
+  CUR_PROP="ro.build.version.security_patch"
+
+  if [ "${THIS_MSG}"x != ""x ] ; then
+    LogMsg "The current SPL is: "
+  fi
+  
+  LogMsg "${CUR_PROP} : $( ${GETPROP} ${CUR_PROP}  )"
+  LogMsg   
+
+   
   return ${THISRC}
 }
 
@@ -335,7 +352,7 @@ function read_date_from_logcat {
 #
 # read the required date from the ZIP file with the OS image
 #
-# usage: read_date_from_image_file [zipfile] [result_var]
+# usage: read_date_from_image_file [zipfile] [result_var] [result_var_for_spl]
 #
 # parameter:
 #   zipfile    - name of the ZIP file
@@ -346,30 +363,52 @@ function read_date_from_logcat {
 #
 function read_date_from_image_file {
   typeset THISRC=${__FALSE}
-  
+
   typeset THIS_FILE="$1"
   typeset RESULT_VAR="$2"
-
-  typeset THIS_DATE=""
+  typeset RESULT_VAR_FOR_SPL="$3"
   
+  typeset THIS_DATE=""
+  typeset THIS_SPL=""
+
+  typeset THIS_METADATA=""
+        
   if [ "$THIS_FILE}"x != ""x ] ; then
     LogMsg "Reading the new date from the image file \"${THIS_FILE}\" ..."
     if [ -r "${THIS_FILE}" ] ; then
-      THIS_DATE="$( unzip -p "${THIS_FILE}" META-INF/com/android/metadata | grep post-timestamp= | cut -f2 -d "=" )"
-      if [ $? -ne 0 ] ; then 
+
+      THIS_METADATA="$( unzip -p "${THIS_FILE}" META-INF/com/android/metadata )"
+      if [ "${THIS_METADATA}"x = ""x ] ; then
         LogError "Error reading the metadata from the file \"${THIS_FILE}\" "
-      elif [ "${THIS_DATE}"x = ""x ] ; then
-        LogError "The file \"${THIS_FILE}\" is not a valid OS image"
-      elif ! isNumber "${THIS_DATE}" ; then
-        LogError "The timestamp found in the file \"${THIS_DATE}\" is not a number"
       else
-        LogMsg
-        LogMsg "The date value in the file \"${THIS_FILE}\" is : \"${THIS_DATE}\" "        
-        if [ "${RESULT_VAR}"x != ""x ] ; then
-          eval ${RESULT_VAR}="${THIS_DATE}"
-        fi
-        THISRC=${__TRUE}
-      fi  
+      
+        THIS_SPL="$( echo "${THIS_METADATA}" | grep post-security-patch-level= | cut -f2 -d"=" )"
+   
+        THIS_DATE="$( echo "${THIS_METADATA}" | grep post-timestamp= | cut -f2 -d "=" )"
+        
+        if [ "${THIS_DATE}"x = ""x ] ; then
+          LogError "The file \"${THIS_FILE}\" is not a valid OS image"
+        elif ! isNumber "${THIS_DATE}" ; then
+          LogError "The timestamp found in the file \"${THIS_DATE}\" is not a number"
+        else
+          LogMsg
+          
+          LogMsg "The date value in the file \"${THIS_FILE}\" is : \"${THIS_DATE}\" "      
+          if [ "${THIS_SPL}"x != ""x ] ; then
+            LogMsg "The SPL (Security patch level) in the file \"${THIS_FILE}\" is : \"${THIS_SPL}\" "      
+          fi  
+          
+          if [ "${RESULT_VAR}"x != ""x ] ; then
+            eval ${RESULT_VAR}="${THIS_DATE}"
+          fi
+
+          if [ "${THIS_SPL}"x != ""x ] ; then
+            eval ${RESULT_VAR_FOR_SPL}="${THIS_SPL}"
+          fi
+
+          THISRC=${__TRUE}
+        fi  
+      fi
     else
       LogError "The file \"${THIS_FILE}\" does not exist"
     fi
@@ -421,6 +460,9 @@ NEW_DATE=""
 
 VIEW_ONLY=${__FALSE}
 
+CHANGE_SPL=${__FALSE}
+NEW_SPL=""
+
 while [ $# -ne 0 ] ; do
   CUR_PARAMETER="$1"
   shift
@@ -442,6 +484,14 @@ while [ $# -ne 0 ] ; do
       PREFIX="echo"
       ;;
 
+    --spl )
+      CHANGE_SPL=${__TRUE}
+      ;;
+
+    --spl=* )
+      CHANGE_SPL=${__TRUE}
+      NEW_SPL="${CUR_PARAMETER#*=}"    
+      ;;
 
     *=* )
       LogInfo "Executing now \"${CUR_PARAMETER}\" ..."
@@ -468,7 +518,7 @@ while [ $# -ne 0 ] ; do
       die 17 "Unknown option found in the parameter: \"${CUR_PARAMETER}\" "
       ;;
 
-    
+       
     *  )
       if [ "${NEW_DATE}"x != ""x ]  ; then
         die 19 "Unknown parameter found: \"${CUR_PARAMETER}\" "
@@ -555,6 +605,26 @@ fi
 #
 IMAGE_FILE_USED=${__FALSE}
 
+if [ ${CHANGE_SPL} = ${__TRUE} ] ; then
+  case ${NEW_SPL} in 
+    logcat | file )
+      :
+      ;;
+
+   ????-??-?? )
+      :
+      ;;
+
+   "" )
+      :
+      ;;
+
+    * )
+      die 110 "The value for the parameter \"--spl\" is invalid: \"${NEW_SPL}\" "
+      ;;
+  esac
+fi
+
 print_date_values "The current values of the date properties are:" 
 
 OS_BUILD_DATE="$( ${GETPROP} ro.build.date.utc )"
@@ -575,22 +645,27 @@ if [ "${NEW_DATE}"x = "logcat"x ] ; then
   if [ $? -ne ${__TRUE} ] ; then
     die 113 "No update_engine error message regarding wrong timestamps found in the logcat"
   fi  
+  [ "${NEW_SPL}"x = ""x ] &&  NEW_SPL="logcat"    
   
 elif isNumber "${NEW_DATE}" ; then
   :
   
 elif [ -r "${NEW_DATE}" ] ; then
   OS_IMAGE_FILE="${NEW_DATE}"
-  read_date_from_image_file "${OS_IMAGE_FILE}" NEW_DATE
+  LogMsg
+  read_date_from_image_file "${OS_IMAGE_FILE}" NEW_DATE SPL_IN_ZIP_FILE
   if [ $? -ne ${__TRUE} ] ; then    
     die 115 "No date found in the file \"${OS_IMAGE_FILE}\" "
   fi  
+  [ "${NEW_SPL}"x = ""x ] &&  NEW_SPL="file"    
+  
 else
   die 117 "\"${NEW_DATE}\" is neither a number nor the name of an existing file"
 fi
 
 
 if [ ${VIEW_ONLY} = ${__TRUE} ] ; then
+  LogMsg 
   LogMsg "Tne maximum value for the date properties is ${NEW_DATE} ( $( date -u -d   @${NEW_DATE} ) )"
 
   if [ "${OS_BUILD_DATE}"x != ""x  -a  "${NEW_DATE}"x != ""x  ] ; then
@@ -604,14 +679,46 @@ if [ ${VIEW_ONLY} = ${__TRUE} ] ; then
   fi
 else  
 
-  LogMsg "Using tne new date \"${NEW_DATE}\""
-
+  LogMsg 
+  LogMsg "Using the new date \"${NEW_DATE}\""
+  LogMsg
   LogMsg "Changing the value for the date properties to \"${NEW_DATE}\" ( $( date -u -d   @${NEW_DATE} ) ) ..."
 
   for CUR_PROP in ${GET_DATE_UTC_PROPERTIES} ; do 
     ${PREFIX} ${RESETPROP} "${CUR_PROP}" "${NEW_DATE}"
   done
+ 
+  if [ ${CHANGE_SPL} = ${__TRUE} ] ; then
+   
+    if [ "${NEW_SPL}"x = "file"x ] ; then 
+      if [ "${SPL_IN_ZIP_FILE}"x != ""x ] ; then
+        NEW_SPL="${SPL_IN_ZIP_FILE}"
+      else
+        LogError "No value for the SPL found in the file \"${OS_IMAGE_FILE}\""
+      fi
+    elif [ "${NEW_SPL}"x = "logcat"x ] ; then 
 
+      CUR_LINE="$( logcat -d | grep "Target build SPL" | tail -1 )"
+      if [ "${CUR_LINE}"x != ""x ] ; then
+        CUR_LINE="${CUR_LINE#*Target build SPL}"
+        CUR_LINE="${CUR_LINE%is older than*}"
+        if [ "${CUR_LINE}"x = ""x ] ; then
+          LogError "WARNING: Invalid SPL downgrade message found in logcat - use the parameter \"--spl=date\" "
+          NEW_SPL=""
+        fi
+      else      
+         LogError "WARNING: No SPL downgrade message found in logcat  - use the parameter \"--spl=date\" "
+         NEW_SPL=""
+      fi
+    fi
+
+    if [ "${NEW_SPL}"x != ""x ] ; then 
+      LogMsg "Changing the current SPL to \"${NEW_SPL}\" ..."
+      ${PREFIX} ${RESETPROP} "ro.build.version.security_patch" "${NEW_SPL}"
+    fi     
+  fi
+
+  LogMsg
   print_date_values "The values of the date properties are now:" 
   
 fi
