@@ -942,7 +942,7 @@ sake-* : /data/backup/ASUS_ZENFONE8/Lineage-21/twrp_3.7.0_12-1-I006D_for_lineage
 #
 statix_sake-20240106-14-v7.1-UPSIDEDOWNCAKE.zip : /data/backup/ASUS_ZENFONE8/Statix/20240106/twrp_statix_sake-20240106-14-v7.1-UPSIDEDOWNCAKE.img : StatixOS
 statix_sake-20231224-14-v7.1-UPSIDEDOWNCAKE.zip : /data/backup/ASUS_ZENFONE8/Statix/20231229/twrp_statix_sake-20231224-14-v7.1-UPSIDEDOWNCAKE.img : StatixOS
-statix_sake-20240712-14-v7.10-UNOFFICIAL.zip : /data/backup/ASUS_ZENFONE8/Statix/20240712/twrp_statix_sake-20240712-14-v7.10-UNOFFICIAL.zip : StatiXOS
+statix_sake-20240712-14-v7.10-UNOFFICIAL.zip : /data/backup/ASUS_ZENFONE8/Statix/20240712/twrp_statix_sake-20240712-14-v7.10-UNOFFICIAL.img : StatiXOS
 #
 omni* : ${DEFAULT_TWRP_IMAGE} : OmniROM
 #
@@ -974,18 +974,19 @@ ro.lineage.build.version : 20.0 : /data/backup/ASUS_ZENFONE8/Lineage-20/2024-07-
 ro.lineage.build.version : 20* : /data/backup/ASUS_ZENFONE8/Lineage-20/twrp_lineage-20.0-20240528-nightly-sake-signed.img : LineageOS 
 ro.lineage.build.version : 21* : /data/backup/ASUS_ZENFONE8/Lineage-21/twrp_3.7.0_12-1-I006D_for_lineageOS21-20240220-sake.img : LineageOS 
 #
+ro.lineage.version : 22.2-20250823-microG-sake : /data/backup/ASUS_ZENFONE8/Lineage-22_with_MicroG/2025-08-23/OrangeFox_lineage-22.2-20250823-microG-sake-boot.img : LineageOS 22.2 with MicroG
+ro.lineage.version : 22.2-20250529-UNOFFICIAL-sake : /data/backup/ASUS_ZENFONE8/Lineage-22-local/orangefox_lineage-22.2-20250529-UNOFFICIAL-sake.img : LineageOS 22.2
 ro.lineage.version : 22.2-2025*-UNOFFICIAL-sake : /data/backup/ASUS_ZENFONE8/Lineage-22-original-local/orangefox_lineage-22.2-20250801-UNOFFICIAL-sake.img : LineagaeOS 22.2 self compiled
 #
-ro.lineage.version : 22.2-20250823-microG-sake : /data/backup/ASUS_ZENFONE8/Lineage-22_with_MicroG/2025-08-23/OrangeFox_lineage-22.2-20250823-microG-sake-boot.img : LineageOS 22.2 with MicroG
-ro.lineage.version : 22.2-20250925-microG-sake : /data/backup/ASUS_ZENFONE8/Lineage-22_with_MicroG/2025-09-25/OrangeFox_lineage-22.2-20250925-microG-sake-boot.img : LineageOS 22.2 with MicroG
 #
+ro.lineage.version : 22.2-20250529-UNOFFICIAL-sake : /data/backup/ASUS_ZENFONE8/Lineage-22-local/orangefox_lineage-22.2-20250529-UNOFFICIAL-sake.zip : LineageOS 22.2
 ro.lineage.version : 22.*-UNOFFICIAL-sake : /data/backup/ASUS_ZENFONE8/Lineage-22-local/twrp_lineage-22.2-20250408-UNOFFICIAL-sake.img : LineageOS 22.2 (local)
 #
 ro.lineage.build.version : 22.2 : /data/backup/ASUS_ZENFONE8/Lineage-22-original/2025-07-15/orangefox_lineage-22.2-20250715-nightly-sake-signed.img  : LineageOS 22.x
 #
 ro.statix.version : v7.1-*-20240106 : /data/backup/ASUS_ZENFONE8/Statix/20240106/twrp_statix_sake-20240106-14-v7.1-UPSIDEDOWNCAKE.img : StatixOS 
-ro.statix.version : v7.10-*-20240712 : /data/backup/ASUS_ZENFONE8/Statix/20240712/twrp_statix_sake-20240712-14-v7.10-UNOFFICIAL.zip : StatixOS
-ro.statix.version : * : /data/backup/ASUS_ZENFONE8/Statix/20240712/twrp_statix_sake-20240712-14-v7.10-UNOFFICIAL.zip : StatixOS
+ro.statix.version : v7.10-*-20240712 : /data/backup/ASUS_ZENFONE8/Statix/20240712/twrp_statix_sake-20240712-14-v7.10-UNOFFICIAL.img : StatixOS
+ro.statix.version : * : /data/backup/ASUS_ZENFONE8/Statix/20240712/twrp_statix_sake-20240712-14-v7.10-UNOFFICIAL.img : StatixOS
 #
 ro.lmodroid.build_name : LMODroid-6.2-* : /data/backup/ASUS_ZENFONE8/LMODroid/2025-09-29/OrangeFox_LMODroid-6.2-20250920-RELEASE-sake.img : LMODroid 6.2
 ro.lmodroid.build_name : LMODroid-4.2-20240429-RELEASE-sake : /data/backup/ASUS_ZENFONE8/LMODroid/twrp_LMODroid-4.2-20240429-RELEASE-sake.img : LMODroid 4.2
@@ -2447,13 +2448,14 @@ function get_twrp_image_for_the_installed_OS {
         LogInfo "Writing the contents of the variable \"TWRP_IMAGES_FOR_IMAGE_FILES\" to the temporary file \"${TMPFILE}\" ..."
 
         echo "${TWRP_IMAGES_FOR_THE_RUNNING_OS}" | ${EGREP} -v "^$|^#" >"${TMPFILE}"
- 
+
         LogInfo "Processing the contents of the temporary file \"${TMPFILE}\" ..."
 
         while read LINE ; do
 
           CUR_LINE="${LINE}"
 
+          LogInfo " ----------------------------------------------------------------------"
           LogInfo "Processing the line \"${CUR_LINE}\" ..."
 
           CUR_PROPERTY_NAME=${CUR_LINE%%:*}
@@ -2505,6 +2507,8 @@ function get_twrp_image_for_the_installed_OS {
  
           if [ "${PROPERTY_VALUE_IN_THE_RUNNING_OS}"x != ""x ] ; then
             if [[ ${PROPERTY_VALUE_IN_THE_RUNNING_OS} == ${CUR_PROPERTY_VALUE} ]] ; then
+              LogInfo "This line matches"
+            
               LogMsg "The running OS on the phone is ${CUR_ROM_NAME} (Android ${CURRENT_INSTALLED_ROM_VERSION}) ${CUR_ROM_DESC}"
               CURRENT_INSTALLED_ROM="${CUR_ROM_NAME}"
               TEMP_TWRP_IMAGE_TO_USE="${CUR_TWRP_IMAGE}"
