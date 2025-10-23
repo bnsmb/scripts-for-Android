@@ -3,7 +3,7 @@
 #h#
 #h# create_overlay_mount.sh <VERSION> - create one or more overlay mounts on a device running a rooted Android OS
 #h#
-#h# Usage:  create_overlay_mount.sh [-h|--help] [--version] [--verbose|-v] [--noselinux] [--selinux] [--initdisk|--format] [--details] [--short] [--active] [var=value] 
+#h# Usage:  create_overlay_mount.sh [-h|--help] [--version] [--verbose|-v] [--noselinux] [--selinux] [--initdisk|--format] [--details] [--short] [--active] [--nomagisk] [var=value] 
 #h#                                 [help] [vars] [list] [test] [get] [undo] [diff] [get] [restore] [clean] [mount_only] [mount] [umount] [remount] [directory0] [... directory#] [default]
 #h#
 #H# The parameter that neither start with a "-" or "/" nor contain a "=" are the action parameter that determine what is to be done. 
@@ -25,7 +25,7 @@
 #H#
 #H# "directory#" must be either "default", "none", or the fully qualified directory name of a directory.
 #H# The value "none" deletes the current list of directories in the variable DIRS_TO_OVERLAY; the value "default" adds the default directories to the list
-#H# of directories.. The parameter can be used more than once.
+#H# of directories. The parameter can be used more than once.
 #H# 
 #H# The known option parameter are:
 #H# 
@@ -37,7 +37,14 @@
 #H#              Without this option the script never formats an existing virtual disk.
 #H# --details    print more details
 #H# --short      print only the important information
-#H# --active     the tasks diff, get, and undo should work only on the currently mounted overlay filesystesm
+#H# --active     the tasks diff, get, and undo should work only on the currently mounted overlay filesystems
+#H# --nomagisk   do not create temporary bind mounts for the Magisk binaries; without this parameter the script creates temporary
+#H#              bind mounts for the executables magisk, su, and resetprop if Magisk is installed and the bind mount 
+#H#              should be created for the directory "/system".
+#H#              The bind mounts are created in the directory "/data/local/tmp"; to use another directory for the bind mounts set the environment variable
+#H#              BIND_MOUNT_TARGET_DIR="<directory_name>"
+#H#              To create bind mounts for additional files before creating the overlay mount for "/system", add the filenames to the variable FILES_TO_KEEP 
+#H#              (see below for details); the files must exist and bind mounts for directories are not supported.
 #H#
 #H# The known action parameter are:
 #H#
@@ -64,10 +71,24 @@
 #H# Other supported parameter:
 #H#
 #H# var=value sets the variable "var" to the value "value"
+#H# 
+#H#
+#H# The number of filenames in the variable FILES_TO_KEEP is not limited; the filenames must be separated by whitespaces or commas.
+#H# 
+#H# The filenames in the variable FILES_TO_KEEP are interpreted by the script using these rules:
+#H#
+#H# - filenames without a slash are searched in the directory "/system/bin", e.g.  bash -> /system/bin/bash
+#H# 
+#H# - filenames starting with "bin/" are searched in the directory "/system", e.g.  bin/sh -> /system/bin/sh
+#H# 
+#H# - filenames starting with "./" are searched in the directory "/system", e.g.  ./etc/ssh/sshd_config  -> /system/./etc/ssh/sshd_config
+#H# 
+#H# - fully qualified names are searched in "/",  e.g /system_ext/bin/rsync -> /system_ext/bin/rsync
+#H# 
 #H#
 #H# Notes
 #H#  
-#H# Set the variable TRACE to any value before starting script execute it with "set -x"
+#H# Set the variable TRACE to any value before starting the script to execute it with "set -x"
 #H#
 #H# The detailed documentation for the script can be found here:
 #H#
@@ -76,7 +97,7 @@
 #
 # Tested with
 #
-#    Android 13, 14, and 15
+#    Android 13, 14, 15, and 16
 #
 # Author
 #   Bernd Schemmer (bernd dot schemmer at gmx dot de)
@@ -95,7 +116,13 @@
 #     added more messages in verbose mode
 #     LogInfoVar is now a alias
 #
-
+#   22.10.2025 /bs v1.3.0
+#     added code to create bind mounts for the Magisk binaries before an overlay mount for /system is created
+#     added support for additional bind mounts and the environment variables FILES_TO_KEEP and BIND_MOUNT_TARGET_DIR
+#     added the parameter --nomagisk
+#     correct some typos in the comments and messages
+#     the parameter "var=value" now supports values with whitespaces
+#
 # ----------------------------------------------------------------------
 
 __TRUE=0
@@ -188,6 +215,18 @@ DEFAULT_LOSETUP=$( which losetup )
 DEFAULT_MKFS=$( which mkfs )
 DEFAULT_DD=$( which dd )
 
+# list of Magisk binaries for which a bind mount should be created automatically before creating the overlay mount for /system
+#
+MAGISK_BINARIES=" magisk su resetprop"
+
+# list of additional files for which a bind mount should be created before creating the overlay mount for /system
+#
+DEFAULT_FILES_TO_KEEP=""
+
+# directory for the bind mounts 
+#
+DEFAULT_BIND_MOUNT_TARGET_DIR="/data/local/tmp"
+
 # ---------------------------------------------------------------------
 
 # init the variables for the summary messages
@@ -213,7 +252,7 @@ if [ "${BASH_VERSION}"x != ""x ] ; then
   shopt -s expand_aliases
 fi
 
-alias LogInfoVar='f() { [[ ${__FUNCTION} = "" ]] && __FUNCTION=main ; [[ ${VERBOSE} != 0 ]] && return; varname="$1"; eval "echo \"INFO: in $__FUNCTION:  $varname ist \${$varname}\" >&2"; unset -f f; } ;  f'
+alias LogInfoVar='f() { [[ ${__FUNCTION} = "" ]] && __FUNCTION=main ; [[ ${VERBOSE} != 0 ]] && return; varname="$1"; eval "echo \"INFO: in $__FUNCTION:  $varname is \${$varname}\" >&2"; unset -f f; } ;  f'
 
 
 # ---------------------------------------------------------------------
@@ -1769,6 +1808,12 @@ function create_overlay_mounts {
   
   typeset CUR_OVERLAY_MOUNTS=""
 
+  typeset CUR_PROG=""
+  typeset CUR_SOURCE=""
+  typeset MOUNT_TARGET=""
+  typeset CUR_SUB_DIR=""
+  typeset CUR_TARGET_SIZE=0
+  
 # these are global variables:
 #
 #  OVERLAY_MOUNTS_CREATED=""
@@ -1806,6 +1851,67 @@ function create_overlay_mounts {
 
 # remove trailing /
     [[ ${CUR_DIR} == */ ]] && CUR_DIR="${CUR_DIR%*/}"
+
+# check for overlay mounts for /system 
+#    
+    if [[ ${CUR_DIR} == /system ]] ; then
+
+# check if magisk is installed
+#
+      if [ -x /system/bin/magisk ] ; then         
+        if [ ${IGNORE_MAGISK} = ${__TRUE} ] ; then
+          LogMsg "INFO: Magisk is installed but no temporary copies of the Magisk executables created on request"
+        else
+          LogMsg ""
+          LogMsg "Magisk is installed - creating temporary copies of the Magisk executables ..."
+          FILES_TO_KEEP="${FILES_TO_KEEP} ${MAGISK_BINARIES}"
+        fi
+      fi
+
+
+# list of files for which a bind mount should be created
+#   
+      FILES_TO_KEEP="$( echo "${FILES_TO_KEEP}" | tr "," " " )"
+      
+      for CUR_PROG in ${FILES_TO_KEEP} ; do
+
+        if [[ ${CUR_PROG} != */* ]] ; then
+          CUR_SOURCE="/system/bin/${CUR_PROG}"
+        elif [[ ${CUR_PROG} == bin/* ]]  ; then
+          CUR_SOURCE="/system/${CUR_PROG}"
+        elif [[ ${CUR_PROG} = /* ]]  ; then
+          CUR_SOURCE="${CUR_PROG}"                
+        elif [[ ${CUR_PROG} = ./* ]]  ; then
+          CUR_SOURCE="/system/${CUR_PROG}"
+        else   
+          CUR_SOURCE="${CUR_PROG}"                
+        fi
+           
+        if [  -d "${CUR_SOURCE}" ] ; then
+          LogError "\"${CUR_SOURCE}\" is a directory -- directories are not supported"
+        elif [ ! -r "${CUR_SOURCE}" ] ; then
+          LogWarning "The file \"${CUR_SOURCE}\" does not exist -- can not create a bind mount"
+        else
+          MOUNT_TARGET="${BIND_MOUNT_TARGET_DIR}${CUR_SOURCE}"
+
+          if [ ! -r "${MOUNT_TARGET}" ] ; then
+            CUR_SUB_DIR="${MOUNT_TARGET%/*}"
+            [ ! -d "${CUR_SUB_DIR}" ] && mkdir -p "${CUR_SUB_DIR}"          
+            touch "${MOUNT_TARGET}"
+          fi
+          CUR_TARGET_SIZE="$(  stat -c%s "${MOUNT_TARGET}" )"
+          if [ "${CUR_TARGET_SIZE}"x != "0"x ] ; then          
+            LogMsg "The temporary flie \"${MOUNT_TARGET}\" already exists"
+          else
+            LogMsg "Creating the temporary file \"${MOUNT_TARGET}\" ..."
+            mount -o bind "${CUR_SOURCE}" "${MOUNT_TARGET}"
+          fi
+        fi
+      done
+      LogMsg ""
+
+    fi
+
 
     DIRECTORY_OKAY=${__TRUE}
 
@@ -2163,6 +2269,8 @@ function print_environment_variables {
   typeset  NAME_FIELD_LENGTH=10
   typeset CUR_VAR=""
 
+  typeset CUR_ENVIRONMENT_VARIABLES="$( echo "${ENVIRONMENT_VARIABLES}" | sort )"
+  
   echo
   echo "Supported environment variables:"
   echo
@@ -2170,14 +2278,14 @@ function print_environment_variables {
 #
 # calculate the size of the field for the variable name
 #
-  for CUR_VAR in ${ENVIRONMENT_VARIABLES} ; do
+  for CUR_VAR in ${CUR_ENVIRONMENT_VARIABLES} ; do
     [ ${#CUR_VAR} -gt ${NAME_FIELD_LENGTH} ] && NAME_FIELD_LENGTH="${#CUR_VAR}"
   done
 
   let NAME_FIELD_LENGTH=NAME_FIELD_LENGTH+5
   printf "%-${NAME_FIELD_LENGTH}s %s\n" "Name" "Default Value"
   printf "%-${NAME_FIELD_LENGTH}s %s\n" "----" "-------------"
-  for CUR_VAR in ${ENVIRONMENT_VARIABLES} ; do
+  for CUR_VAR in ${CUR_ENVIRONMENT_VARIABLES} ; do
     printf "%-${NAME_FIELD_LENGTH}s %s\n" "${CUR_VAR}" "$( eval echo "\$DEFAULT_${CUR_VAR}" )"
   done
 
@@ -2231,6 +2339,8 @@ EXTERNAL_USE=${__FALSE}
 
 PROCESS_ONLY_MOUNTED_OVERLAY_FILESYSTEMS=${__FALSE}
 
+IGNORE_MAGISK=${__FALSE}
+
 if [ $# -ne 0 ] ; then
 
   LogInfo "Processing the parameter ..."
@@ -2262,6 +2372,10 @@ if [ $# -ne 0 ] ; then
         PROCESS_ONLY_MOUNTED_OVERLAY_FILESYSTEMS=${__TRUE}
         ;;
 
+     --nomagisk )
+        IGNORE_MAGISK=${__TRUE}
+        ;;
+
      --details )
         PRINT_MORE_DETAILS=${__TRUE}
         ;;
@@ -2272,7 +2386,9 @@ if [ $# -ne 0 ] ; then
 
       *=* )
         LogInfo "Executing now \"${CUR_PARAMETER}\" ..."
-        eval ${CUR_PARAMETER}
+        CUR_VAR="${CUR_PARAMETER%%=*}"
+        CUR_VAL="${CUR_PARAMETER#*=}"
+        eval ${CUR_VAR}=\"${CUR_VAL}\"
         if [ $? -ne 0 ] ; then
           die 70 "Error executing \"${CUR_PARAMETER}\" "
         fi
@@ -2327,7 +2443,7 @@ if [ $# -ne 0 ] ; then
         ACTION="remount"
         ;;
 
-       mount_only )
+      mount_only )
         [ "${ACTION}"x != ""x ] && die 101 "Duplicate action parameter found (\"${ACTION}\" and \"${CUR_PARAMETER}\") "
         ACTION="mount_only"
 
@@ -2411,6 +2527,7 @@ LogInfo " ... parameter processing done"
 # ----------------------------------------------------------------------
 # use user defined binaries only if the variables are defined
 #
+[ "${BIND_MOUNT_TARGET_DIR}"x = ""x ] && BIND_MOUNT_TARGET_DIR="${DEFAULT_BIND_MOUNT_TARGET_DIR}"
 
 [ "${LOSETUP}"x = ""x ] && LOSETUP="${DEFAULT_LOSETUP}"
 [ "${MOUNT}"x = ""x ]   && MOUNT="${DEFAULT_MOUNT}"
