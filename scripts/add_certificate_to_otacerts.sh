@@ -26,7 +26,7 @@
 #H#  In dry-run mode everything is done execpt for replacing the file /system/etc/security/otacerts.zip
 #H# Set the environment variable TRACE to any value to run the script with "set -x"
 #H#
-#H# The zip binary is searched in the PATH and, if not found, in /data/local/tmp.
+#H# The scripts supports zip and 7zz to add the certificate to the zip file. The binaries is searched in the PATH and, if not found, in /data/local/tmp.
 #H# The script needs root access.
 #H#
 #H# The default working directory is /tmp/certs. If the directory /tmp does not exist, the script 
@@ -46,7 +46,9 @@
 # History
 #   30.09.2025 /bs v1.0.0
 #     initial release
-#    
+#   05.11.2025 /bs v1.1.0
+#     the script now handles ZIP files with missing PEM files (unzip -p ends with a return value of 0, even if no file was extracted  )
+#     the script now also supports 7zz for adding the new certificate to the zip file  
 #
 
 # ----------------------------------------------------------------------
@@ -68,7 +70,11 @@ SCRIPT_PARAMETER="$*"
 
 
 ZIP="$( which zip )"
+
 ZIP="${ZIP:=/data/local/tmp/zip}"
+
+_7ZZ="$( which 7zz )"
+_7ZZ="${_7ZZ:=/data/local/tmp/7zz}"
 
 OTACERTS_ZIP_FILE_NAME="otacerts.zip"
 
@@ -461,7 +467,13 @@ fi
 # ---------------------------------------------------------------------
 
 if [ ! -x "${ZIP}" ] ; then
-  die 10 "No zip executable found"
+  if [ ! -x "${_7ZZ}" ] ; then
+    die 10 "No zip executable found"
+  else
+    PACKPROG="7zz"
+  fi
+else
+  PACKPROG="zip"
 fi
 
 # ---------------------------------------------------------------------
@@ -620,14 +632,31 @@ ${CUR_OUTPUT}"
     
     unzip -p "${CUR_ZIP_FILE}" META-INF/com/android/otacert >"${NEW_CERT_FILE}"
     if [ $? -eq 0 -a -r "${NEW_CERT_FILE}" ] ; then
-       LogMsg "Adding the certificate \"${NEW_CERT_FILE}\" to the file \"${NEW_OTACERTS_ZIP_FILE}\" ..."
-       ${ZIP} "${NEW_OTACERTS_ZIP_FILE}" "${NEW_CERT_FILE}"
-       if [ $? -ne 0 ] ; then
-         LogError "Error adding the certificate \"${NEW_CERT_FILE}\" to the file \"${NEW_OTACERTS_ZIP_FILE}\""
-         THISRC=200
-       else
-         CERTIFICATES_ADDED=${__TRUE}
-       fi
+      if [ ! -s "${NEW_CERT_FILE}" ] ; then
+        LogWarning "\"${CUR_ZIP_FILE}\" is not an OS image file"
+
+#
+# the file is empty 
+#
+        rm -f "${NEW_CERT_FILE}"
+        continue
+      fi
+      
+      LogMsg "Adding the certificate \"${NEW_CERT_FILE}\" to the file \"${NEW_OTACERTS_ZIP_FILE}\" ..."
+      if [ "${PACKPROG}"x = "zip"x ] ; then
+        ${ZIP} "${NEW_OTACERTS_ZIP_FILE}" "${NEW_CERT_FILE}"
+        TEMPRC=$?
+      else
+        ${_7ZZ} a "${NEW_OTACERTS_ZIP_FILE}"  "${NEW_CERT_FILE}"
+        TEMPRC=$?
+      fi
+      
+      if [ ${TEMPRC} -ne 0 ] ; then
+        LogError "Error adding the certificate \"${NEW_CERT_FILE}\" to the file \"${NEW_OTACERTS_ZIP_FILE}\""
+        THISRC=200
+      else
+        CERTIFICATES_ADDED=${__TRUE}
+      fi
     else
       LogError "Error extracting the certificate from the file file \"${CUR_ZIP_FILE}\" "
       THISRC=200
