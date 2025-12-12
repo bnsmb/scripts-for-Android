@@ -23,29 +23,35 @@
 #     added code to print the global variables found in the repository tree (use the parameter PRINTVARS=0 to print the variables and values)
 #     added support for the environment variables ROM_TYPE and TARGET_PHONE
 #
+#  10.12.2025 v1.3.1.0 /bs
+#     the script now prints an error message if there are more or less then one BUILD_ID definitions in the file ./build/core/build_id.mk
+#
+#  12.12.2025 v1.4.0.0 /bs
+#     the script now reads the "real patchlevel" from the file
+#        ./vendor/lineage/release/flag_values/${BUILD_ID}/RELEASE_PLATFORM_SECURITY_PATCH.textproto
+#      or 
+#        ./build/release/flag_values/${BUILD_ID}/RELEASE_PLATFORM_SECURITY_PATCH.textproto
+#     if one of them exists
+#     the script did not support multiple directories in the parameter -- fixed
+#     remove the usage of the environment variable PRINT
+#
 
 #h# 
 #h# This script works for repositories that were last updated before and after the release of Android 14 QPR2 (in Q1 2024)
-#h# If the script is called without parameters, it must be executed at the top level in a repository tree for AOSP
-#h# 
-#h# Set the environment variable VERBOSE to a non-empty value before executing the script to print verbose messages
-#h# Set the environment variable DEBUG to a non-empty value before executing the script to execute the script with "set -x"
+#h# If the script is called without a parameter, it must be executed at the top level in a repository tree for AOSP
 #h# 
 #
 #h# Usage: 
 #h# 
 #h#    print_security_patch [rom_zip_file|repository_tree] [var=value] [...]
 #h# 
-#h# Known values for the parameter "var=value":
+#h# Known values for the parameter "var=value" (these environment variables can also be defined before starting the script):
 #h# 
 #h# Parameter                  Description
 #h# ---------------------------------------------------------------------------------------
-#h# PRINT=0                    Print the command to build the image for repositories
 #h# PRINTVARS=0                Print the value for the global variables set by this script
-#h# 
 #h# VERBOSE=0                  Turn on verbose messages
-#h# ROM_TYPE=<romtype>         Change the type of the ROM used in the build command (user, eng, or debug)
-#h# TARGET_PHONE=<phone_name>  Change the type of the phone used in the build command
+#h# DEBUG=0                    execute the script with trace enabled (set -x)
 #h# 
 
 # Without the parameter the script prints the security patch level of the repository tree starting at the current working directory
@@ -57,12 +63,9 @@
 # the script defines these environment variables for the repository tree starting in the current working directory:
 #
 #    RELEASE_PLATFORM_SECURITY_PATCH
+#    REAL_PLATFORM_SECURITY_PATCH
 #    BUILD_ID
 #    REPO_FORMAT
-#
-# and  if the parameter PRINT=0 is used
-#
-#    BUILD_COMMAND
 #
 #
 # Returncodes:
@@ -88,21 +91,21 @@
 # ---------------------------------------------------------------------
 # define constants
 
-typeset -r __TRUE=0
-typeset -r __FALSE=1
+typeset  __TRUE=0
+typeset  __FALSE=1
 
 # ---------------------------------------------------------------------
 # get the script name and version
 #
-SCRIPT_VERSION="$( grep "#.*/bs" $0 | grep -v grep | tail -1 | awk '{ print $3}' )"
-SCRIPT_NAME="${0##*/}"
+if [[ $0 == *print_security_patch ]] ; then
+  SCRIPT_VERSION="$( grep "#.*/bs" $0 | grep -v grep | tail -1 | awk '{ print $3}' )"
+  SCRIPT_NAME="${0##*/}"
+else
+# this script is sourced in - use the hardcoded values
+  SCRIPT_VERSION="v1.4.0.0"
+  SCRIPT_NAME="print_security_patchlevel"
+fi
 
-# ---------------------------------------------------------------------
-# variables for the build command printed by this script
-
-TARGET_PHONE="${TARGET_PHONE:=zenfone8}"
-
-ROM_TYPE="${ROM_TYPE:=user}"
 
 # ---------------------------------------------------------------------
 # check for the parameter -h or --help
@@ -111,12 +114,13 @@ if [[ $0 = *print_security_patch ]] ; then
   if [ "$1"x = "-h"x -o  "$1"x = "--help"x ] ; then
     echo "${SCRIPT_NAME} ${SCRIPT_VERSION}"
     grep -E "^#h#" $0 | cut -f2- -d " "
-    echo "Environment variables supported by this script:"
     echo
-    for CUR_VAR in $( grep -E "^[A-Z].*:=" $0 | cut -f1 -d "=" ); do
-      echo "${CUR_VAR} - current value is $( eval echo \\\"\$$CUR_VAR\\\" )"
-    done
-    echo
+
+#    echo "Environment variables supported by this script:"
+#    echo
+#    for CUR_VAR in $( grep -E "^[A-Z].*:=" $0 | cut -f1 -d "=" ); do
+#      echo "${CUR_VAR} - current value is $( eval echo \\\"\$$CUR_VAR\\\" )"    done
+
     exit 99
   fi
 fi
@@ -141,27 +145,23 @@ RELEASE_CONFIG_MAP_FILE="${BUILD_RELEASE_DIR}/release_config_map.mk"
 #
 RELEASE_PLATFORM_SECURITY_PATCH=""
 BUILD_ID=""
+REAL_PLATFORM_SECURITY_PATCH=""
 
 # variables using the values found in the repository
 #
 REPO_FORMAT=""
-BUILD_COMMAND=""
 
 # ---------------------------------------------------------------------
 # variables for the build command printed by this script
 
-PRINT_BUILD_COMMAND=${__FALSE}
-PRINT=""
-
 PRINT_GLOBAL_VARIABLES=${__FALSE}
-PRINTVARS=""
+#PRINTVARS=""
 
-GLOBAL_VARIABLES="TARGET_PHONE  ROM_TYPE BUILD_COMMAND "
-GLOBAL_VARIABLES_IN_THE_REPO="RELEASE_PLATFORM_SECURITY_PATCH BUILD_ID REPO_FORMAT "
+GLOBAL_VARIABLES_IN_THE_REPO="RELEASE_PLATFORM_SECURITY_PATCH REAL_PLATFORM_SECURITY_PATCH BUILD_ID REPO_FORMAT "
 
 # undocumented environment variable 
 #
-  SEPARATOR_LINE="${SEPARATOR_LINE:=# -------------------------------------------------------------------------------------------------------------------------------- }"
+SEPARATOR_LINE="# -------------------------------------------------------------------------------------------------------------------------------- "
 
 # ---------------------------------------------------------------------
 
@@ -197,6 +197,9 @@ function print_security_patchlevel_of_a_repository {
   [ "${DEBUG}"x != ""x ] && set -x
 
   typeset THISRC=0
+  
+  typeset THIS_CONFIG_FILE=""
+  
 #
 # check if the current directory is the top level of a repository for Android
 #
@@ -207,32 +210,75 @@ function print_security_patchlevel_of_a_repository {
   else
   
     if [ -r "${VERSIONS_DEFAULTS_MK}" ]  ;then
+
+# this repository use the format prior to Android 14 QPR2
+
       REPO_FORMAT="old"
 
       LogInfo "Reading the values from the source file \"${VERSIONS_DEFAULTS_MK}\" ..."
 
       RELEASE_PLATFORM_SECURITY_PATCH="$( grep "^[[:space:]]*PLATFORM_SECURITY_PATCH[[:space:]]*:=" "${VERSIONS_DEFAULTS_MK}" 2>/dev/null | awk '{ print $NF }'  )"
+     
       BUILD_ID="$( grep "^[[:space:]]*DEFAULT_PLATFORM_VERSION[[:space:]]*:="  "${VERSIONS_DEFAULTS_MK}" | awk '{ print $NF }' )"
       THISRC=1
 
     elif [ -r  "${BUILD_ID_FILE}" ] ; then
+
+# this repository use the format introduced in Android 14 QPR2
+
       REPO_FORMAT="new"
 
-      LogInfo "Raeding the values from the source file \"${BUILD_ID_FILE}\" ..."
+      LogInfo "Reading the values from the source file \"${BUILD_ID_FILE}\" ..."
 
       FULL_BUILD_ID="$( grep "^BUILD_ID=" "${BUILD_ID_FILE}" | cut -f2 -d "=" )"
+
+      i=$( echo "${FULL_BUILD_ID}" | wc -l )
+      if [ $i = 0 ] ; then
+        LogError "No build id found in the file \"${BUILD_ID_FILE}\" "
+      elif [ $i -ne 1 ] ; then
+        LogMsg ""
+        LogError "More than one build id found in the file \"${BUILD_ID_FILE}\":"
+        LogMsg "-" "$( grep -v "^#"  ${BUILD_ID_FILE} )"
+        LogMsg "Using the last build id from the file \"${BUILD_ID_FILE}\" "
+        FULL_BUILD_ID="$( echo "${FULL_BUILD_ID}" | tail -1 )"
+      fi
+
       BUILD_ID="$( echo "${FULL_BUILD_ID%%.*}"  | tr "[A-Z]" "[a-z]" )"
       PATCH_DATE="$( echo "${FULL_BUILD_ID}"  | cut -f2 -d"." )"
 
-      RELEASE_PLATFORM_SECURITY_PATCH="20$( echo "${PATCH_DATE}" | cut -c1,2 )-$( echo "${PATCH_DATE}" | cut -c3,4 )-$( echo "${PATCH_DATE}" | cut -c5,6 )"
+      VENDOR_RELEASE_PLATFORM_SECURITY_PATCH_FILE="./vendor/lineage/release/flag_values/${BUILD_ID}/RELEASE_PLATFORM_SECURITY_PATCH.textproto"
+      CUR_RELEASE_PLATFORM_SECURITY_PATCH_FILE="./build/release/flag_values/${BUILD_ID}/RELEASE_PLATFORM_SECURITY_PATCH.textproto"
+
+      [ "${PATCH_DATE}"x != ""x ] && RELEASE_PLATFORM_SECURITY_PATCH="20$( echo "${PATCH_DATE}" | cut -c1,2 )-$( echo "${PATCH_DATE}" | cut -c3,4 )-$( echo "${PATCH_DATE}" | cut -c5,6 )"
+
+      if [ "${REAL_PLATFORM_SECURITY_PATCH}"x = ""x ] ; then        
       
+        THIS_CONFIG_FILE="${VENDOR_RELEASE_PLATFORM_SECURITY_PATCH_FILE}"
+
+        if [ -r  "${THIS_CONFIG_FILE}" ] ; then
+          LogInfo "The file\"${THIS_CONFIG_FILE}\" exists"
+          REAL_PLATFORM_SECURITY_PATCH="$( sed -n "/name: \"RELEASE_PLATFORM_SECURITY_PATCH\"/,/}/p" "${THIS_CONFIG_FILE}"  | grep string_value | cut -f2 -d '"' )"
+          LogInfo "The patchdate in the file \"${THIS_CONFIG_FILE}\" is \"${REAL_PLATFORM_SECURITY_PATCH}\""
+        
+        fi
+      fi
+
+
+      if [ "${REAL_PLATFORM_SECURITY_PATCH}"x = ""x ] ; then                         
+
+        THIS_CONFIG_FILE="${CUR_RELEASE_PLATFORM_SECURITY_PATCH_FILE}"
+        if [ -r  "${THIS_CONFIG_FILE}" ] ; then
+          LogInfo "The file\"${THIS_CONFIG_FILE}\" exists"
+          REAL_PLATFORM_SECURITY_PATCH="$( sed -n "/name: \"RELEASE_PLATFORM_SECURITY_PATCH\"/,/}/p" "${THIS_CONFIG_FILE}"  | grep string_value | cut -f2 -d '"' )"
+          LogInfo "The patchdate in the file \"${THIS_CONFIG_FILE}\" is \"${REAL_PLATFORM_SECURITY_PATCH}\""
+        fi         
+      fi
     elif [ -r "${RELEASE_CONFIG_MAP_FILE}" ] ; then
       REPO_FORMAT="new"
 
-
       SCL_FILE="$( grep declare-release-config "${RELEASE_CONFIG_MAP_FILE}" | tr "()" "  " | awk '{ print $NF }' )"
 
-      LogInfo "Raeding the build id from the source file \"${RELEASE_CONFIG_MAP_FILE}\" ..."
+      LogInfo "Reading the build id from the source file \"${RELEASE_CONFIG_MAP_FILE}\" ..."
 
       BUILD_ID="$( grep declare-release-config "${RELEASE_CONFIG_MAP_FILE}"  | tr "," " " | awk '{ print $3}' )"
       THISRC=0
@@ -241,31 +287,37 @@ function print_security_patchlevel_of_a_repository {
 
         SCL_FILE="${BUILD_RELEASE_DIR}/${SCL_FILE}"
         if [ -r "${SCL_FILE}" ] ; then
-          LogInfo "Raeding the security patchlevel from the source file \"${SCL_FILE}\" ..."
+          LogInfo "Reading the security patchlevel from the source file \"${SCL_FILE}\" ..."
           RELEASE_PLATFORM_SECURITY_PATCH="$( grep RELEASE_PLATFORM_SECURITY_PATCH  "${SCL_FILE}" | cut -f4 -d '"' )"
         fi
       fi
     fi
-    
+
+
     if [ ${OUTPUT_ON_ONE_LINE} != ${__TRUE} ] ; then
       if [ "${REPO_FORMAT}"x != ""x ] ; then
         LogMsg "The repository uses the ${REPO_FORMAT} definitions"
       fi
       
       if [ "${RELEASE_PLATFORM_SECURITY_PATCH}"x != ""x ] ; then
-        LogMsg "The current security patch is \"${RELEASE_PLATFORM_SECURITY_PATCH}\" "
+        LogMsg "The security patch in the BUILD_ID is \"${RELEASE_PLATFORM_SECURITY_PATCH}\" "
       else
         LogMsg "Can not detect the current security patch"
       fi
-      
-      
+
+      if [ "${REAL_PLATFORM_SECURITY_PATCH}"x != ""x ] ; then
+        LogMsg "The real security patch is \"${REAL_PLATFORM_SECURITY_PATCH}\" "
+      elif  [ "${REPO_FORMAT}"x != "old"x ] ; then
+        LogInfo "Can not detect the real security patch"
+      fi
+
       if [ "${BUILD_ID}"x != ""x ] ; then
         LogMsg "The current build_id is \"${BUILD_ID}\" "
       else
         LogMsg "Can not detect the current build id"
       fi
     else
-      LogMsg "Repository: ${PWD}, Patch Level: ${RELEASE_PLATFORM_SECURITY_PATCH}, Build ID: ${BUILD_ID}, Repository format: ${REPO_FORMAT} "
+      LogMsg "Repository: ${PWD}, Build ID Patch Level: ${RELEASE_PLATFORM_SECURITY_PATCH}, Real Patch Level: ${REAL_PLATFORM_SECURITY_PATCH}, Build ID: ${BUILD_ID}, Repository format: ${REPO_FORMAT} "
     fi
   fi
 
@@ -316,8 +368,6 @@ function print_security_patchlevel_in_an_image_zip_file {
 
 LogInfo "${SCRIPT_NAME} ${SCRIPT_VERSION}"
 
-[ ${PRINT_BUILD_COMMAND} != ${__FALSE} ] && PRINT="0"
-
 [ ${PRINT_GLOBAL_VARIABLES} != ${__FALSE} ] && PRINTVARS="0"
 
 NO_OF_REPOS=0
@@ -325,9 +375,11 @@ NO_OF_REPOS=0
 
 PARAMETER_FOUND=${__FALSE}
 for CUR_PARAMETER in $* ; do
-  [[ ${CUR_PARAMETER} != *=* ]] && PARAMETER_FOUND=${__TRUE} || (( NO_OF_REPOS =  NO_OF_REPOS + 1 ))
+  if [[ ${CUR_PARAMETER} != *=* ]] ; then
+    PARAMETER_FOUND=${__TRUE}
+    (( NO_OF_REPOS =  NO_OF_REPOS + 1 ))
+  fi
 done
-
 
 LIST_OF_PARAMETERS="$*"
 
@@ -342,12 +394,15 @@ fi
 
 if [ 0 = 0 ] ; then
   
+  CUR_PWD="${PWD}"
   for CUR_PARAMETER in ${LIST_OF_PARAMETERS} ; do
 
+    cd "${CUR_PWD}"
+    
     RELEASE_PLATFORM_SECURITY_PATCH=""
     BUILD_ID=""
+    REAL_PLATFORM_SECURITY_PATCH=""
     REPO_FORMAT=""
-    BUILD_COMMAND=""  
 
     if [[ ${CUR_PARAMETER} = *=* ]] ; then
       LogInfo "Executing now \"${CUR_PARAMETER}\" ..."
@@ -361,12 +416,11 @@ if [ 0 = 0 ] ; then
     fi
   
     if [ -d "${CUR_PARAMETER}" ] ; then
-      
-      if [ "${PRINT}"x != ""x -o "${PRINTVARS}"x != ""x ] ; then
+
+      if [ "${PRINTVARS}"x != ""x ] ; then
         [ ${NO_OF_REPOS} != 0 ] && LogMsg "${SEPARATOR_LINE}"
-        LogMsg "Retrieving the security patch level for the repository at \"${CUR_PARAMETER}\" ..."
       fi
-      
+
       cd "${CUR_PARAMETER}"
       if [ $? -ne 0 ] ; then
         LogError "Can not change the working directory to \"${CUR_PARAMETER}\" "
@@ -377,35 +431,9 @@ if [ 0 = 0 ] ; then
         TEMPRC=$?
         [ ${TEMPRC} -gt ${THISRC} ] && THISRC=${TEMPRC}
         if [ ${TEMPRC} -le 1 ] ; then
-          if [ "${PRINT}"x != ""x  ] ; then
-
-            if [ ! -d vendor/omni/ ] ; then
-              LogWarning "This is not a repository for the OmniROM - the build command for this repo is not known by this script"
-            else
-              if [ "${REPO_FORMAT}"x = "new"x ] ; then
-                export BUILD_COMMAND="brunch ${TARGET_PHONE} ${BUILD_ID} ${ROM_TYPE}"
-              else
-                export BUILD_COMMAND="brunch omni_${TARGET_PHONE}_${ROM_TYPE}"
-              fi
-   
-              LogMsg "
-# The command to build the image in the directory \"${CUR_PARAMETER}\" is:
-
-${BUILD_COMMAND}
-"
-            fi        
-          fi
           
           if [ "${PRINTVARS}"x != ""x  ] ; then
-            LogMsg ""
-            LogMsg "The values for the global variables defined in this script or in the script parameter are:"
-            LogMsg ""
   
-            for CUR_VAR in ${GLOBAL_VARIABLES} ; do
-              eval "CUR_VALUE=\"\$${CUR_VAR}\""
-              LogMsg "${CUR_VAR}=\"${CUR_VALUE}\""
-            done
-
             LogMsg ""
             LogMsg "The values for the global variables found in the repos in the directory \"${CUR_PARAMETER}\" are:"
             LogMsg ""
