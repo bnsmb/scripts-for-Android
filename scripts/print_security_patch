@@ -33,7 +33,10 @@
 #        ./build/release/flag_values/${BUILD_ID}/RELEASE_PLATFORM_SECURITY_PATCH.textproto
 #     if one of them exists
 #     the script did not support multiple directories in the parameter -- fixed
-#     remove the usage of the environment variable PRINT
+#     removed the usage of the environment variable PRINT
+#
+#  27.12.2025 v1.4.0.1 /bs
+#     __TRUE and __FALSE are not set if already defined
 #
 
 #h# 
@@ -91,8 +94,8 @@
 # ---------------------------------------------------------------------
 # define constants
 
-typeset  __TRUE=0
-typeset  __FALSE=1
+[ "${__TRUE}"x = ""x ] &&  typeset  __TRUE=0
+[ "${__FALSE}"x = ""x ] && typeset  __FALSE=1
 
 # ---------------------------------------------------------------------
 # get the script name and version
