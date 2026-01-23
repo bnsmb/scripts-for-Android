@@ -619,6 +619,18 @@
 #   29.09.2025 v3.2.9.8 /bs #VERSION#
 #      added support for LMODroid 6.2
 #
+#   05.11.2025 v3.2.9.9 /bs #VERSION#
+#      added support for /e/ 3.2.0-a15
+#
+#   10.11.2025 v3.2.9.9 /bs #VERSION#
+#      added support for iodeOS 4.27
+#
+#   18.11.2025 v3.2.9.10 /bs #VERSION#
+#      added support for iodeOS 6.9
+#
+#   18.12.2025 v3.2.9.11 /bs #VERSION#
+#      added support for DerpFest 16.0
+#
 # Author
 #   Bernd.Schemmer (at) gmx.de
 #   Homepage: http://bnsmb.de
@@ -654,6 +666,7 @@
 #    LMODroid               4.2 (Android 13), 6.2 (Anroid 15)
 #    EvolutionX             15.0 (Android 15)
 #    crDroid                11.7 (Android 15)
+#    iodeOS                 4.7 (Android 13), 6.9 (Android 15)
 #
 #
 # Details
@@ -926,17 +939,21 @@ e-3.0.4*     : /data/backup/ASUS_ZENFONE8/e/e-3.0.4/twrp_e-3.0.4-t-2025071050780
 e-3.0*       : /data/backup/ASUS_ZENFONE8/e/e-3.0/twrp-e-3.0-t-20250529496537-community-sake.img : /e/ 3.0
 #
 e-3.1.1-a15* : /data/backup/ASUS_ZENFONE8/e/e-3.1.1-a15/orangefox_e-3.1.1-a15-20250829521742-community-sake.img : /e/ 3.1.1
+e-3.2-a15-* : /data/backup/ASUS_ZENFONE8/e_local/e_a15/3.2/OrangeFox_e-3.2.0-a15-20251105-UNOFFICIAL-sake.img : /e/ 3.2.0
+#
 #
 lineage-20.0-20240716-nightly-sake-signed.zip : /data/backup/ASUS_ZENFONE8/Lineage-20/2024-07-16/twrp_lineage-20.0-20240716-nightly-sake-signed.img : LineageOS 20.0
 lineage-20* : /data/backup/ASUS_ZENFONE8/Lineage-20/twrp_lineage-20.0-20240528-nightly-sake-signed.img : LineageOS 20.x
 lineage-21* : /data/backup/ASUS_ZENFONE8/Lineage-21/twrp_3.7.0_12-1-I006D_for_lineageOS21-20240220-sake.img : LineageOS 21.x
 #
-lineage-22.2-2025*-UNOFFICIAL-sake.zip : /data/backup/ASUS_ZENFONE8/Lineage-22-original-local/orangefox_lineage-22.2-20250801-UNOFFICIAL-sake.img : LineageOS 22.2 self compiled
+lineage-22.2-2025*-UNOFFICIAL-sake.zip : /data/backup/ASUS_ZENFONE8/Lineage-22-original-local/2025-10-06/OrangeFox_lineage-22.2-20251006-UNOFFICIAL-sake-GAPPS.img : LineageOS 22.2 self compiled
 #
 lineage-22.2-20250823-microG-sake.zip : /data/backup/ASUS_ZENFONE8/Lineage-22_with_MicroG/2025-08-23/OrangeFox_lineage-22.2-20250823-microG-sake-boot.img : LineageOS 22.2 with MicroG
 lineage-22.2-20250925-microG-sake.zip : /data/backup/ASUS_ZENFONE8/Lineage-22_with_MicroG/2025-09-25/OrangeFox_lineage-22.2-20250925-microG-sake-boot.img : LineageOS 22.2 with MicroG
 #
 lineage-22* : /data/backup/ASUS_ZENFONE8/Lineage-22-original/2025-07-15/orangefox_lineage-22.2-20250715-nightly-sake-signed.img : LineageOS 22.x
+#
+lineage-23.0* : /data/backup/ASUS_ZENFONE8/Lineage-23-local/OrangeFox_lineage-23.0-20251120-UNOFFICIAL-sake.img : LineageOS 23.x
 #
 sake-* : /data/backup/ASUS_ZENFONE8/Lineage-21/twrp_3.7.0_12-1-I006D_for_lineageOS21-20240220-sake.img : LineageOS 21.x
 #
@@ -948,7 +965,14 @@ omni* : ${DEFAULT_TWRP_IMAGE} : OmniROM
 #
 crDroidAndroid-15.0-2025*-sake-v11.7*.zip : /data/backup/ASUS_ZENFONE8/crdroid/orangefox_crDroidAndroid-15.0-20250803-sake-v11.7.img : crDroid 11.7
 #
-EvolutionX-15.0-*-sake-10.7-*Unofficial*.zip : /data/backup/ASUS_ZENFONE8/evolutionX/orangefox_EvolutionX-15.0-20250804-sake-10.7-Unofficial.img : EvolutionX 15.0
+EvolutionX-15.0-*-sake-10.7-*Unofficial*.zip : /data/backup/ASUS_ZENFONE8/evolutionX/orangefox_EvolutionX-15.0-20250804-sake-10.7-Unofficial.img : EvolutionX 10.7
+EvolutionX-16.0-*-sake-11.4*zip : /data/backup/ASUS_ZENFONE8/evolutionX/Evolution-11.4.1/OrangeFox_EvolutionX-16.0-20251118-sake-11.4.1-Unofficial.img : : EvolutionX 11.4.1
+#
+iode-4.27-*.zip :/data/backup/ASUS_ZENFONE8/iodeos/build_on_t540p/4.x/OrangeFox_iode-4.27-20251110-UNOFFICIAL-sake.img : iodeOS 4.27
+iode-6.9-*.zip : /data/backup/ASUS_ZENFONE8/iodeos/6.x/OrangeFox_iode-6.9-20251112-sake.img: iodeOS 6.9
+#
+DerpFest-v16.* : /data/backup/ASUS_ZENFONE8/derpfest/16.0/OrangeFox_DerpFest-v16.0-20251218-sake-Community-Stable.img : DerpFest 16.0
+#
 "
 fi
 
@@ -974,15 +998,18 @@ ro.lineage.build.version : 20.0 : /data/backup/ASUS_ZENFONE8/Lineage-20/2024-07-
 ro.lineage.build.version : 20* : /data/backup/ASUS_ZENFONE8/Lineage-20/twrp_lineage-20.0-20240528-nightly-sake-signed.img : LineageOS 
 ro.lineage.build.version : 21* : /data/backup/ASUS_ZENFONE8/Lineage-21/twrp_3.7.0_12-1-I006D_for_lineageOS21-20240220-sake.img : LineageOS 
 #
+ro.lineage.version : 22.2-20250408-UNOFFICIAL-sake : /data/backup/ASUS_ZENFONE8/Lineage-22-local/OrangeFox_lineage-22.2-20250408-UNOFFICIAL-sake.img 
 ro.lineage.version : 22.2-20250823-microG-sake : /data/backup/ASUS_ZENFONE8/Lineage-22_with_MicroG/2025-08-23/OrangeFox_lineage-22.2-20250823-microG-sake-boot.img : LineageOS 22.2 with MicroG
 ro.lineage.version : 22.2-20250529-UNOFFICIAL-sake : /data/backup/ASUS_ZENFONE8/Lineage-22-local/orangefox_lineage-22.2-20250529-UNOFFICIAL-sake.img : LineageOS 22.2
-ro.lineage.version : 22.2-2025*-UNOFFICIAL-sake : /data/backup/ASUS_ZENFONE8/Lineage-22-original-local/orangefox_lineage-22.2-20250801-UNOFFICIAL-sake.img : LineagaeOS 22.2 self compiled
+ro.lineage.version : 22.2-2025*-UNOFFICIAL-sake : /data/backup/ASUS_ZENFONE8/Lineage-22-original-local/2025-10-06/OrangeFox_lineage-22.2-20251006-UNOFFICIAL-sake-GAPPS.img : LineagaeOS 22.2 self compiled
 #
 #
 ro.lineage.version : 22.2-20250529-UNOFFICIAL-sake : /data/backup/ASUS_ZENFONE8/Lineage-22-local/orangefox_lineage-22.2-20250529-UNOFFICIAL-sake.zip : LineageOS 22.2
 ro.lineage.version : 22.*-UNOFFICIAL-sake : /data/backup/ASUS_ZENFONE8/Lineage-22-local/twrp_lineage-22.2-20250408-UNOFFICIAL-sake.img : LineageOS 22.2 (local)
 #
 ro.lineage.build.version : 22.2 : /data/backup/ASUS_ZENFONE8/Lineage-22-original/2025-07-15/orangefox_lineage-22.2-20250715-nightly-sake-signed.img  : LineageOS 22.x
+#
+ro.lineage.version : 23.0-*-UNOFFICIAL-sake* : /data/backup/ASUS_ZENFONE8/Lineage-23-local/OrangeFox_lineage-23.0-20251120-UNOFFICIAL-sake.img : LineageOS 23.x
 #
 ro.statix.version : v7.1-*-20240106 : /data/backup/ASUS_ZENFONE8/Statix/20240106/twrp_statix_sake-20240106-14-v7.1-UPSIDEDOWNCAKE.img : StatixOS 
 ro.statix.version : v7.10-*-20240712 : /data/backup/ASUS_ZENFONE8/Statix/20240712/twrp_statix_sake-20240712-14-v7.10-UNOFFICIAL.img : StatixOS
@@ -1005,13 +1032,22 @@ ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.20250322.023704 r
 ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.202506* release-keys : /data/backup/ASUS_ZENFONE8/e/e-3.0.1/twrp-e-3.0.1-t-20250607498934-community-sake.img : /e/ 3.0.1
 ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.20250710* release-keys : /data/backup/ASUS_ZENFONE8/e/e-3.0.4/twrp-e-3.0.4-t-20250710507809-community-sake.img : /e/ 3.0.4
 ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.20250529* release-keys : /data/backup/ASUS_ZENFONE8/e/e-3.0/twrp-e-3.0-t-20250529496537-community-sake.img : /e/ 3.0
+#
+ro.lineage.display.version : 3.2-a15-* : /data/backup/ASUS_ZENFONE8/e_local/e_a15/3.2/OrangeFox_e-3.2.0-a15-20251105-UNOFFICIAL-sake.img : /e/ 3.2.0
+#
 ro.build.description : e_sake-user 15 BP1A.250505.005 eng.* : /data/backup/ASUS_ZENFONE8/e/e-3.0.4-a15/orangefox_e-3.0.4-a15-20250712508365-community-sake.img :  /e/ 3.0.4-a15
 ro.build.description : e_sake-user 15 BP1A.250505.005 eng.* : /data/backup/ASUS_ZENFONE8/e/e-3.1.1-a15/orangefox_e-3.1.1-a15-20250829521742-community-sake.img : /e/ 3.1.1
 #
 ro.crdroid.build.version : 11.7  : /data/backup/ASUS_ZENFONE8/crdroid/orangefox_crDroidAndroid-15.0-20250803-sake-v11.7.img : crDroid 11.7
 #
-ro.evolution.build.version : EvolutionX-15.0-*-sake-10.7-*Unofficial : /data/backup/ASUS_ZENFONE8/evolutionX/orangefox_EvolutionX-15.0-20250804-sake-10.7-Unofficial.img : EvolutionX 15.0
+ro.evolution.build.version : EvolutionX-15.0-*-sake-10.7-*Unofficial : /data/backup/ASUS_ZENFONE8/evolutionX/orangefox_EvolutionX-15.0-20250804-sake-10.7-Unofficial.img : EvolutionX 10.7
+ro.evolution.build.version : EvolutionX-16.0-*-sake-11.4.1-*Unofficial : /data/backup/ASUS_ZENFONE8/evolutionX/Evolution-11.4.1/OrangeFox_EvolutionX-16.0-20251118-sake-11.4.1-Unofficial.img : EvolutionX 11.4.1
 #
+ro.build.description : iode_sake-user 13 TQ3A.230901.001 eng.root.20251110.090506 dev-keys : /data/backup/ASUS_ZENFONE8/iodeos/build_on_t540p/4.x/OrangeFox_iode-4.27-20251110-UNOFFICIAL-sake.img : iodeOS 4.27
+ro.build.description : lineage_sake-user 15 BP1A.250505.005 eng.xtrnaw test-keys : /data/backup/ASUS_ZENFONE8/iodeos/6.x/OrangeFox_iode-6.9-20251112-sake.img : iodeOS 6.9
+#
+ro.derpfest.build.version : DerpFest-v16.0* : /data/backup/ASUS_ZENFONE8/derpfest/16.0/OrangeFox_DerpFest-v16.0-20251218-sake-Community-Stable.img : DerpFest 16.0
+
 "
 fi
 
