@@ -5,10 +5,10 @@
 # Note that the script does NOT install or change anything!
 #
 # History
-#   10.04.2024 /bs
+#   10.04.2024 1.0.0.0 /bs
 #     initial release
 #
-#   26.04.2024 /bs
+#   26.04.2024 1.1.0.0 /bs
 #     if the environment variable ALL_PKGS is not empty the script creates install commands for all apks.
 #
 #h# Usage:
