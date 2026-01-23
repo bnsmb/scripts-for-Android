@@ -156,7 +156,7 @@ svc data disable
 
 echo "Enable logcat for boot messages ..."
 
-if [ -r /data/scripts/0001logcatboot -a -d /data/adb/post-fs-data.d/ ] ; then
+if ${SU_PREFIX} test -r /data/scripts/0001logcatboot -a -d /data/adb/post-fs-data.d/  ; then
   ${SU_PREFIX} cp /data/scripts/0001logcatboot /data/adb/post-fs-data.d/0001logcatboot &&  \
     ${SU_PREFIX} chmod 755 /data/adb/post-fs-data.d/0001logcatboot
 fi
