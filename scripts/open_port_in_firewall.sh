@@ -35,7 +35,7 @@
 #h# The default direction is "out"
 #h# The default protocoll is "tcp"
 #h# The default action is "enable"
-#h# The default vpn config file is /system/etc/openvpn/vpngate/vpngate.ovpn
+#h# The default vpn config file is system/etc/openvpn/default.ovpn 
 #h#
 #
 # Lines beginning with #h# are printed if the script is executed with the parameter "-h" or "--help"
@@ -48,6 +48,8 @@
 # History
 #   25.07.2025 /bs v1.0.0
 #     initial release
+#   12.02.2025 /bs 1.1.0
+#     the default VPN config file for the script is now /system/etc/openvpn/default.ovpn
 #
 
 # ----------------------------------------------------------------------
@@ -61,7 +63,7 @@ __FALSE=1
 # default values 
 #
 
-DEFAULT_VPN_CONFIG_FILE="/system/etc/openvpn/vpngate/vpngate.ovpn"
+DEFAULT_VPN_CONFIG_FILE="/system/etc/openvpn/default.ovpn"
 
 DEFAULT_DIRECTION="out"
 
