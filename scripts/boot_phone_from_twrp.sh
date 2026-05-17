@@ -631,6 +631,12 @@
 #   18.12.2025 v3.2.9.11 /bs #VERSION#
 #      added support for DerpFest 16.0
 #
+#   14.02.2026 v3.2.9.12 /bs #VERSION#
+#      added suport for OmniROM 16 QPR2 
+#
+#   17.05.2026 v3.2.9.13 /bs #VERSION#
+#      the script now prints the OrangeFox version if the phone is booted into the OrangeFox recovery
+#
 # Author
 #   Bernd.Schemmer (at) gmx.de
 #   Homepage: http://bnsmb.de
@@ -658,15 +664,15 @@
 #    ROM                    Version
 #    --------------------------------------------------------
 #    ASUS Android           12, 13 
-#    OmniROM                12, 13, 14, 15, 16 (the OmniROM version is also the Android version)
+#    OmniROM                12, 13, 14, 15, 16, 16 QPR2 (the OmniROM version is also the Android version)
 #    /e/                    1.21, 2.0-t, 2.4.1-t, 2.5-t, 2.6.3-t, 2.7-t, 2.8-t, 2.9-t, 3.0-t (2.x and 3.0-t = Android 13)
 #    /e/                    3.0.4-a15, 3.1.1-a15  (-a15 = Android 15)
-#    StatixXOS              7,x (Android 14)
-#    LineageOS              20 (Android 13), 21 (Android 14), 22 (Android 15)
+#    StatixXOS              7.x (Android 14)
+#    LineageOS              20 (Android 13), 21 (Android 14), 22 (Android 15), 23 (Android 16)
 #    LMODroid               4.2 (Android 13), 6.2 (Anroid 15)
-#    EvolutionX             15.0 (Android 15)
-#    crDroid                11.7 (Android 15)
-#    iodeOS                 4.7 (Android 13), 6.9 (Android 15)
+#    EvolutionX             15.0 (Android 15), 11.4.1 (Android 16)
+#    crDroid                11.7 (Android 15), 12.3 (Android 16)
+#    iodeOS                 4.7 (Android 13), 6.9 (Android 15), 7.1 (Android 16)
 #
 #
 # Details
@@ -939,7 +945,10 @@ e-3.0.4*     : /data/backup/ASUS_ZENFONE8/e/e-3.0.4/twrp_e-3.0.4-t-2025071050780
 e-3.0*       : /data/backup/ASUS_ZENFONE8/e/e-3.0/twrp-e-3.0-t-20250529496537-community-sake.img : /e/ 3.0
 #
 e-3.1.1-a15* : /data/backup/ASUS_ZENFONE8/e/e-3.1.1-a15/orangefox_e-3.1.1-a15-20250829521742-community-sake.img : /e/ 3.1.1
-e-3.2-a15-* : /data/backup/ASUS_ZENFONE8/e_local/e_a15/3.2/OrangeFox_e-3.2.0-a15-20251105-UNOFFICIAL-sake.img : /e/ 3.2.0
+e-3.6-a15-*  : /data/backup/ASUS_ZENFONE8/e_local/e_a15/3.6/OrangeFox_e-3.6-a15-20260314-UNOFFICIAL-sake.img : /e/ 3.6 a15
+e-3.*-a15-*  : /data/backup/ASUS_ZENFONE8/e/e-3.0.4-a15/orangefox_e-3.0.4-a15-20250712508365-community-sake.img : /e/ 3.x
+e-3.6.*-a16* : /data/backup/ASUS_ZENFONE8/e/e-3.6-a16/OrangeFox-e-3.6-a16-20260318595986-community-sake.img : /e/ 3.6 a15
+e-3.7.*-a16* : /data/backup/ASUS_ZENFONE8/e_local/e_a16/e-3.7-a16/OrangeFox_e-3.7.1-a16-20260429-UNOFFICIAL-sake.img : /e/ 3.7 a16
 #
 #
 lineage-20.0-20240716-nightly-sake-signed.zip : /data/backup/ASUS_ZENFONE8/Lineage-20/2024-07-16/twrp_lineage-20.0-20240716-nightly-sake-signed.img : LineageOS 20.0
@@ -953,13 +962,20 @@ lineage-22.2-20250925-microG-sake.zip : /data/backup/ASUS_ZENFONE8/Lineage-22_wi
 #
 lineage-22* : /data/backup/ASUS_ZENFONE8/Lineage-22-original/2025-07-15/orangefox_lineage-22.2-20250715-nightly-sake-signed.img : LineageOS 22.x
 #
-lineage-23.0* : /data/backup/ASUS_ZENFONE8/Lineage-23-local/OrangeFox_lineage-23.0-20251120-UNOFFICIAL-sake.img : LineageOS 23.x
+lineage-23.0* : /data/backup/ASUS_ZENFONE8/Lineage-23-local/OrangeFox_lineage-23.0-20251120-UNOFFICIAL-sake.img : LineageOS 23.0
+#
+lineage-23.2* : /data/backup/ASUS_ZENFONE8/Lineage-23-original/23.2/OrangeFox_lineage-23.2-20260209-UNOFFICIAL-sake-boot.img : LineageOS 23.2
 #
 sake-* : /data/backup/ASUS_ZENFONE8/Lineage-21/twrp_3.7.0_12-1-I006D_for_lineageOS21-20240220-sake.img : LineageOS 21.x
 #
 statix_sake-20240106-14-v7.1-UPSIDEDOWNCAKE.zip : /data/backup/ASUS_ZENFONE8/Statix/20240106/twrp_statix_sake-20240106-14-v7.1-UPSIDEDOWNCAKE.img : StatixOS
 statix_sake-20231224-14-v7.1-UPSIDEDOWNCAKE.zip : /data/backup/ASUS_ZENFONE8/Statix/20231229/twrp_statix_sake-20231224-14-v7.1-UPSIDEDOWNCAKE.img : StatixOS
 statix_sake-20240712-14-v7.10-UNOFFICIAL.zip : /data/backup/ASUS_ZENFONE8/Statix/20240712/twrp_statix_sake-20240712-14-v7.10-UNOFFICIAL.img : StatiXOS
+#
+# *** not neccessary anymore
+# omni-16-2026* : /data/backup/ASUS_ZENFONE8/OrangeFox/OrangeFox_for_OmniROM16.img: OmniROM 16 QPR2
+#
+# all OmniROM versions prior to version 16 QPR2
 #
 omni* : ${DEFAULT_TWRP_IMAGE} : OmniROM
 #
@@ -993,6 +1009,8 @@ if [ "${TWRP_IMAGES_FOR_THE_RUNNING_OS}"x = ""x ] ; then
 #
 vendor.asus.build.ext.version : * : ${DEFAULT_TWRP_IMAGE} :  ASUS Android
 #
+# *** not necessary anymore
+# ro.modversion : OmniROM-16-2026*-zenfone8-* : /data/backup/ASUS_ZENFONE8/OrangeFox/OrangeFox_for_OmniROM16.img : OmniROM 16.x 2026
 #
 ro.lineage.build.version : 20.0 : /data/backup/ASUS_ZENFONE8/Lineage-20/2024-07-16/twrp_lineage-20.0-20240716-nightly-sake-signed.img : LineageOS 
 ro.lineage.build.version : 20* : /data/backup/ASUS_ZENFONE8/Lineage-20/twrp_lineage-20.0-20240528-nightly-sake-signed.img : LineageOS 
@@ -1009,7 +1027,9 @@ ro.lineage.version : 22.*-UNOFFICIAL-sake : /data/backup/ASUS_ZENFONE8/Lineage-2
 #
 ro.lineage.build.version : 22.2 : /data/backup/ASUS_ZENFONE8/Lineage-22-original/2025-07-15/orangefox_lineage-22.2-20250715-nightly-sake-signed.img  : LineageOS 22.x
 #
-ro.lineage.version : 23.0-*-UNOFFICIAL-sake* : /data/backup/ASUS_ZENFONE8/Lineage-23-local/OrangeFox_lineage-23.0-20251120-UNOFFICIAL-sake.img : LineageOS 23.x
+ro.lineage.version : 23.0-*-UNOFFICIAL-sake* : /data/backup/ASUS_ZENFONE8/Lineage-23-local/OrangeFox_lineage-23.0-20251120-UNOFFICIAL-sake.img : LineageOS 23.0
+#
+ro.lineage.version : 23.2-*-UNOFFICIAL-sake* : /data/backup/ASUS_ZENFONE8/Lineage-23-original/23.2/OrangeFox_lineage-23.2-20260209-UNOFFICIAL-sake-boot.img : LineageOS 23.2
 #
 ro.statix.version : v7.1-*-20240106 : /data/backup/ASUS_ZENFONE8/Statix/20240106/twrp_statix_sake-20240106-14-v7.1-UPSIDEDOWNCAKE.img : StatixOS 
 ro.statix.version : v7.10-*-20240712 : /data/backup/ASUS_ZENFONE8/Statix/20240712/twrp_statix_sake-20240712-14-v7.10-UNOFFICIAL.img : StatixOS
@@ -1022,6 +1042,7 @@ ro.omni.version : * : ${DEFAULT_TWRP_IMAGE} : OmniROM
 ro.modversion : 2.8-t-202503*-UNOFFICIAL-sake : /data/backup/ASUS_ZENFONE8/e_local/twrp_e-2.8-current.img : /e/ 2.8 unofficial
 ro.modversion : 2.9-t-202503*-UNOFFICIAL-sake : /data/backup/ASUS_ZENFONE8/e_local/twrp_e-2.9-current.img : /e/ 2.9 unofficial
 #
+ro.build_description : e_sake-user 15 BP1A.250505.005* : /data/backup/ASUS_ZENFONE8/e_local/e_a15/3.6/OrangeFox_e-3.6-a15-20260314-UNOFFICIAL-sake.img : /e/ 3.6
 ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.20240325.220445* : /data/backup/ASUS_ZENFONE8/e/e-1.21t/twrp_recovery-e-1.21-t-20240325389105-dev-sake.img : /e/ 1.21
 ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.20240514.193325* : /data/backup/ASUS_ZENFONE8/e/e-2.0t/twrp_recovery-e-2.0-t-20240514401453-dev-sake.img : /e/ 2.0
 ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.20241108.113816 release-keys : /data/backup/ASUS_ZENFONE8/e/e-2.5/twrp-e-2.5-t-20241108446630-community-sake.img : /e/ 2.5
@@ -1032,11 +1053,15 @@ ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.20250322.023704 r
 ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.202506* release-keys : /data/backup/ASUS_ZENFONE8/e/e-3.0.1/twrp-e-3.0.1-t-20250607498934-community-sake.img : /e/ 3.0.1
 ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.20250710* release-keys : /data/backup/ASUS_ZENFONE8/e/e-3.0.4/twrp-e-3.0.4-t-20250710507809-community-sake.img : /e/ 3.0.4
 ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.20250529* release-keys : /data/backup/ASUS_ZENFONE8/e/e-3.0/twrp-e-3.0-t-20250529496537-community-sake.img : /e/ 3.0
+ro.build.description : e_sake-user 15 BP1A.250505.005 eng* : /data/backup/ASUS_ZENFONE8/e_local/e_a15/3.6/OrangeFox_e-3.6-a15-20260314-UNOFFICIAL-sake.img : /e/ 3.6
+ro.build.description : e_sake-user 16 BP2A.250805.005 eng* : /data/backup/ASUS_ZENFONE8/e_local/e_a16/e-3.7-a16/OrangeFox_e-3.7.1-a16-20260429-UNOFFICIAL-sake.img : /e/ 3.7
+
 #
 ro.lineage.display.version : 3.2-a15-* : /data/backup/ASUS_ZENFONE8/e_local/e_a15/3.2/OrangeFox_e-3.2.0-a15-20251105-UNOFFICIAL-sake.img : /e/ 3.2.0
 #
-ro.build.description : e_sake-user 15 BP1A.250505.005 eng.* : /data/backup/ASUS_ZENFONE8/e/e-3.0.4-a15/orangefox_e-3.0.4-a15-20250712508365-community-sake.img :  /e/ 3.0.4-a15
-ro.build.description : e_sake-user 15 BP1A.250505.005 eng.* : /data/backup/ASUS_ZENFONE8/e/e-3.1.1-a15/orangefox_e-3.1.1-a15-20250829521742-community-sake.img : /e/ 3.1.1
+ro.build.description : e_sake-user 15 BP1A.250505.005 eng* : /data/backup/ASUS_ZENFONE8/e_local/e_a15/3.6/OrangeFox_e-3.6-a15-20260314-UNOFFICIAL-sake.img : /e/ 3.6
+#ro.build.description : e_sake-user 15 BP1A.250505.005 eng.* : /data/backup/ASUS_ZENFONE8/e/e-3.0.4-a15/orangefox_e-3.0.4-a15-20250712508365-community-sake.img :  /e/ 3.0.4-a15
+#ro.build.description : e_sake-user 15 BP1A.250505.005 eng.* : /data/backup/ASUS_ZENFONE8/e/e-3.1.1-a15/orangefox_e-3.1.1-a15-20250829521742-community-sake.img : /e/ 3.1.1
 #
 ro.crdroid.build.version : 11.7  : /data/backup/ASUS_ZENFONE8/crdroid/orangefox_crDroidAndroid-15.0-20250803-sake-v11.7.img : crDroid 11.7
 #
@@ -4927,16 +4952,24 @@ function boot_phone_from_the_TWRP_image {
 
       TWRP_BOOT_IMAGE="$( ${ADB} ${ADB_OPTIONS} shell getprop ro.product.bootimage.name )"
       TWRP_BOOT_IMAGE_VERSION="$( ${ADB} ${ADB_OPTIONS} shell getprop ro.twrp.version )"
+ 
+      RECOVERY_TYPE="TWRP"
+      RECOVERY_VERSION="${TWRP_BOOT_IMAGE_VERSION}"
 
-      if [ "${TWRP_BOOT_IMAGE_VERSION}"x = ""x ] ; then
+      ORANGEFOX_BOOT_IMAGE_VERSION="$( ${ADB} ${ADB_OPTIONS} shell getprop ro.orangefox.release.version )"
+
+      if [ "${ORANGEFOX_BOOT_IMAGE_VERSION}"x != ""x ] ; then
+        RECOVERY_TYPE="OrangeFox"
+        RECOVERY_VERSION="${ORANGEFOX_BOOT_IMAGE_VERSION}"
+      elif [ "${TWRP_BOOT_IMAGE_VERSION}"x = ""x ] ; then
         LogWarning "Can not get the value of the property \"ro.twrp.version\" "
       fi
 
       if [ "${TWRP_BOOT_IMAGE}"x = ""x ] ; then
         LogWarning "Can not get the value of the property \"ro.product.bootimage.name \" "
       fi
-    
-      LogMsg "The phone is booted into TWRP: \"${TWRP_BOOT_IMAGE}\" version \"${TWRP_BOOT_IMAGE_VERSION}\" "
+
+      LogMsg "The phone is booted into the recovery ${RECOVERY_TYPE} for \"${TWRP_BOOT_IMAGE}\" version \"${RECOVERY_VERSION}\" "
     fi
   fi
 
