@@ -5,24 +5,30 @@
 # Note: This script is only a proof of concept...
 #
 #h#
-#h# Usage: remount_dynamic_partitions.sh [var=value] [--verbose|-v] [--help|-h] [--keep|-k]
+#h# Usage: remount_dynamic_partitions.sh [var=value] [--verbose|-v] [--help|-h] [--keep|-k] [--rw|rw] [--ro|ro]
 #h#
 #h# Parameter: 
 #h#   --verbose | -v  print more messages
 #h#   --help | -h     print this usage help
 #h#   --keep | -k     do not delete the input files for dmctl
+#h#   --ro | ro       short cut for MOUNT_OPTIONS="-o ro"
+#h#   --rw | rw       short cut for MOUNT_OPTIONS="-o rw"
 #h#
 #h# The options to mount the partitions are read from the environment variable MOUNT_OPTIONS, 
-#h# the default mount options are "-o ro" (=> mount read-only). To mount the partitions read/write
-#h# set the variable MOUNT_OPTIONS to "-o rw" before starting the script; to not use any mount option
-#h# set the variable MOUNT_OPTIONS to "none" before starting the script
+#h# the default mount options are "-o ro" (=> mount read-only).
+#h# To mount the partitions read/write set the variable MOUNT_OPTIONS to "-o rw" before starting the script; 
+#h# to not use any mount option set the variable MOUNT_OPTIONS to "none" before starting the script
 #h#
+#h# The directory used for temporary files is /data/local/tmp. If that directory does not exist, the temporary files
+#h# are created in the directory /tmp. To use another directory for temporary files set the variable TMPDIR.
+#h#
+
 #
 # The parameter for the slot: 
 #
 #    active, inactive, next, current, _a, _b, 0, and 1 
 #
-# are supported but the functionality is not yet implemented
+# are supported but the functionality is not yet implemented. The script always mounts the dynamic partitions for the current slot.
 #
 # History
 #   03.09.2024 1.0.0 /bs
@@ -30,6 +36,12 @@
 #
 #   07.09.2024 1.1.0 /bs
 #    added the environment variable AWK
+#
+#   17.05.2026 2.0.0 /bs
+#    added the parameter --ro and --rw
+#    the script now uses /tmp for temporary files and the mount points if the directory /data/local/tmp does not exist
+#    the script now uses the output of the command "dmctl table <dm_device>" to create the new logical device
+#      (in the previous version the script uses the output of the command lpdump for this purpose which can be wrong)
 #
 
 __TRUE=0
@@ -64,6 +76,7 @@ KEEP_INPUT_FILES=${__FALSE}
 MOUNT_OPTIONS="${MOUNT_OPTIONS:=-o ro}"
 
 [ "${MOUNT_OPTIONS}"x = "none"x ] && MOUNT_OPTIONS=""
+
 
 # ---------------------------------------------------------------------
 
@@ -259,6 +272,14 @@ while [ $# -ne 0 ] ; do
       SLOT=${CUR_PARAMETER}
       ;;
 
+    --ro | ro )
+       MOUNT_OPTIONS="-o ro"
+       ;;
+
+    --rw | rw )
+       MOUNT_OPTIONS="-o rw"
+       ;;
+
     -k | --keep )
        KEEP_INPUT_FILES=${__TRUE}
        ;;
@@ -284,16 +305,32 @@ while [ $# -ne 0 ] ; do
 done
 
 # ---------------------------------------------------------------------
+
+# this statement is only here to add this variable to the list environment variables in the usage help
+TMPDIR="${TMPDIR:=${TMPDIR}}"
+
+if [ "${TMPDIR}"x = ""x ] ; then
+  if [ -d /data/local/tmp ] ; then
+    TMPDIR="/data/local/tmp"
+  elif [ -d /tmp ] ; then
+    TMPDIR="/tmp"
+  else
+    TMPDIR="/data/local/tmp"
+  fi
+else
+  echo "Using the defined directory for temporary files (environment variable TMPDIR): ${TMPDIR}"
+fi
+
+# ---------------------------------------------------------------------
 # environment variables used
 #
-BASEDIR="${BASEDIR:=/data/local/tmp}"
+BASEDIR="${BASEDIR:=${TMPDIR}}"
 
 LPDUMP="${LPDUMP:=$( which lpdump )}"
 GETPROP="$( which getprop )"
 DMCTL="${DMCTL:=$( which dmctl )}"
 AWK="${AWK:=$( which awk )}"
 
-TMPDIR="${TMPDIR:=/data/local/tmp}"
 
 TMPFILE1="${TMPDIR}/${SCRIPT_NAME}.1.tmp"
 LIST_OF_TEMP_FILES="${TMPFILE1}"
@@ -328,9 +365,9 @@ case ${SLOT} in
 esac
 
 
-DELETE_SCRIPT_NAME="${DELETE_SCRIPT_NAME:=/data/local/tmp/delete_dm_devices${SLOT}.$$.sh}"
+DELETE_SCRIPT_NAME="${DELETE_SCRIPT_NAME:=${TMPDIR}/delete_dm_devices${SLOT}.$$.sh}"
 
-UMOUNT_SCRIPT_NAME="${UMOUNT_SCRIPT_NAME:=/data/local/tmp/umount_dm_devices${SLOT}.$$.sh}"
+UMOUNT_SCRIPT_NAME="${UMOUNT_SCRIPT_NAME:=${TMPDIR}/umount_dm_devices${SLOT}.$$.sh}"
 
 DEVICE_NAME_PREFIX="${DEVICE_NAME_PREFIX:=dm-${SLOT#*_}-}"
 
@@ -378,7 +415,7 @@ fi
 ERRORS_FOUND=${__FALSE}
 
 if [ "${CURRENT_ACTIVE_SLOT}"x != "${SLOT}"x ] ; then
-  LogError "Mount the inactive slot is currently not yet supported"
+  LogError "Mounting the inactive slot is currently not yet supported"
   ERRORS_FOUND=${__TRUE}
 fi
 
@@ -416,6 +453,19 @@ if [ "${DMCTL}"x = ""x ] ; then
 elif ! ${SU_PREFIX} test -x "${DMCTL}"  ; then
   echo "ERROR: The file \"${DMCTL}\" is not an executable"
   ERRORS_FOUND=${__TRUE}
+else
+  CUR_OUTPUT="$( ${SU_PREFIX} "${DMCTL}" list devices )"
+  echo "${CUR_OUTPUT}" | grep "<empty>" >/dev/null
+  if [ $? -eq 0 ] ; then
+    echo "ERROR: dmctl does not find any dm device:" 
+    echo "${CUR_OUTPUT}"
+    if [ "$( getprop ro.bootmode )"x = "recovery"x ] ; then
+      echo " 
+Try to mount the /system partition using the recovery menu and then restart this script again
+"
+    fi
+    ERRORS_FOUND=${__TRUE}
+  fi 
 fi
 
 if [ "${GETPROP}"x = ""x ] ; then
@@ -534,25 +584,29 @@ for CUR_LOGICAL_PARTITION in ${LOGICAL_PARTITIONS_IN_SUPER} ; do
   
     LIST_OF_TEMP_FILES="${LIST_OF_TEMP_FILES} ${CUR_INPUT_FILE}"
 
-    echo "${LIST_OF_LOGICAL_PARTITIONS}" | grep " ${CUR_LOGICAL_PARTITION} " >"${TMPFILE1}"
-  
+    dmctl table "${CUR_LOGICAL_PARTITION}" | grep -v "^Targets " >"${TMPFILE1}"
+
     DMCTL_COMMANDS="create ${CUR_DEVICE_NAME}"
- 
-    LOGICAL_START_SECTOR="0"
-  
+
+#  dmctl create [LOGCIAL_DEVICE_NAME] 
+#    linear [LOGICAL_START_SECTOR] [PARTITION_SIZE]  /dev/block/by-name/super [PHYSICAL_PARTITION_START_SECTOR]
+
     while read CUR_LINE ; do
 
-      PARTITION_START_SECTOR="$( echo "${CUR_LINE}" | awk '{ print $2 }'   )"
-      PARTITION_END_SECTOR="$( echo "${CUR_LINE}" | awk '{ print $4 }'   )"
-      PARTITION_SIZE="$(         echo "${CUR_LINE}" | awk '{ print $6 }'  | tr -d "()"  )"
-  
-      DMCTL_COMMANDS="${DMCTL_COMMANDS}    
-linear ${LOGICAL_START_SECTOR} ${PARTITION_SIZE} /dev/block/by-name/super ${PARTITION_START_SECTOR}"
+      LOGICAL_PARTITION_POSITION="$( echo "${CUR_LINE}" | awk -F: '{ print $1 }'   )"
+      
+      LOGICAL_START_SECTOR="${LOGICAL_PARTITION_POSITION%-*}"
+      LOGICAL_END_SECTOR="${LOGICAL_PARTITION_POSITION#*-}"
 
-      (( LOGICAL_START_SECTOR = LOGICAL_START_SECTOR + PARTITION_SIZE ))
+      (( LOGICAL_PARTITION_SIZE = LOGICAL_END_SECTOR - LOGICAL_START_SECTOR ))
+      
+      PHYSICAL_PARTITION_START_SECTOR="$( echo "${CUR_LINE}" | awk '{ print $NF }'   )"
+
+      DMCTL_COMMANDS="${DMCTL_COMMANDS}    
+linear ${LOGICAL_START_SECTOR} ${LOGICAL_PARTITION_SIZE} /dev/block/by-name/super ${PHYSICAL_PARTITION_START_SECTOR}"
 
     done <"${TMPFILE1}"
-   
+
     echo "${DMCTL_COMMANDS}" >"${CUR_INPUT_FILE}"
     if [ $? -ne 0 ] ; then
       LogError "Error creating the file with the commands for dmctl \"${CUR_INPUT_FILE}\" - can not create the temporary DM mapper device for the dynamic partition \"${CUR_LOGICAL_PARTITION}\" "
