@@ -93,7 +93,7 @@
 #H# To manually correct the SELinux context of the files in the overlay filesystem execute the command
 #H#
 #H# find /dev/ov/upper -context 'u:object_r:unlabeled:s0' -print0 |
-#H#    xargs -0 chcon u:object_r:system_file:s0
+#H#    xargs -0 chcon -v -h u:object_r:system_file:s0
 #H#
 #H# after mounting the virtual disk.
 #H#
@@ -889,7 +889,7 @@ function set_selinux_context_for_files {
     NEW_SELINUX_CONTEXT="$( stat -c %C "${UPPER_DIR}" )"
 
     LogMsg "Now correcting the SELinux context for all files and directories in the overlay filesystem with the SELinux context \"${UNLABELED_SELINUX_CONTEXT}\" to \"${NEW_SELINUX_CONTEXT}\" ..."
-    find "${UPPER_DIR}" -context "${UNLABELED_SELINUX_CONTEXT}" -print0 | xargs -0 -r chcon "${NEW_SELINUX_CONTEXT}"
+    find "${UPPER_DIR}" -context "${UNLABELED_SELINUX_CONTEXT}" -print0 | xargs -0 -r chcon -h "${NEW_SELINUX_CONTEXT}"
     if [ $? -eq 0 ] ; then
       LogMsg "... SELinux context for the files successfully modified"
       THISRC=${__TRUE}
