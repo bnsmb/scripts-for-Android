@@ -18,7 +18,7 @@
 #   07.09.2024 1.1.0 /bs
 #     added the parameter --noloop to ignore loop devices
 #
-#   18.11.2026 v4.2.0 /bs
+#   18.11.2026 v1.2.0 /bs
 #     replace "su - -c " with "su - " ("su -" does not work anymmore with Magisk 31.1)
 #
 __TRUE=0
