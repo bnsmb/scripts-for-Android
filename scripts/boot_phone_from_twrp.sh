@@ -637,6 +637,13 @@
 #   17.05.2026 v3.2.9.13 /bs #VERSION#
 #      the script now prints the OrangeFox version if the phone is booted into the OrangeFox recovery
 #
+#   19.09.2026 v3.2.9.14 /bs #VERSION#
+#      added support for LineageOS 24.x 
+#      added support for EvolutionX 17.x
+#
+#   18.11.2026 v3.2.10.0 /bs
+#     replace "su - -c " with "su - " ("su -" does not work anymmore with Magisk 31.1)
+
 # Author
 #   Bernd.Schemmer (at) gmx.de
 #   Homepage: http://bnsmb.de
@@ -667,13 +674,14 @@
 #    OmniROM                12, 13, 14, 15, 16, 16 QPR2 (the OmniROM version is also the Android version)
 #    /e/                    1.21, 2.0-t, 2.4.1-t, 2.5-t, 2.6.3-t, 2.7-t, 2.8-t, 2.9-t, 3.0-t (2.x and 3.0-t = Android 13)
 #    /e/                    3.0.4-a15, 3.1.1-a15  (-a15 = Android 15)
+#    /e/                    3.*-a16 (-a16 = Android 16)
 #    StatixXOS              7.x (Android 14)
-#    LineageOS              20 (Android 13), 21 (Android 14), 22 (Android 15), 23 (Android 16)
+#    LineageOS              20 (Android 13), 21 (Android 14), 22 (Android 15), 23 (Android 16). 24 (Android 17)
 #    LMODroid               4.2 (Android 13), 6.2 (Anroid 15)
-#    EvolutionX             15.0 (Android 15), 11.4.1 (Android 16)
+#    EvolutionX             15.0 (Android 15), 11.4.1 (Android 16), 12.2 (Android 17)
 #    crDroid                11.7 (Android 15), 12.3 (Android 16)
-#    iodeOS                 4.7 (Android 13), 6.9 (Android 15), 7.1 (Android 16)
-#
+#    iodeOS                 4.7 (Android 13), 6.9 (Android 15), 7.1 (Android 16) 
+#    DerpFest               16 (= Android 16)
 #
 # Details
 #
@@ -949,6 +957,9 @@ e-3.6-a15-*  : /data/backup/ASUS_ZENFONE8/e_local/e_a15/3.6/OrangeFox_e-3.6-a15-
 e-3.*-a15-*  : /data/backup/ASUS_ZENFONE8/e/e-3.0.4-a15/orangefox_e-3.0.4-a15-20250712508365-community-sake.img : /e/ 3.x
 e-3.6.*-a16* : /data/backup/ASUS_ZENFONE8/e/e-3.6-a16/OrangeFox-e-3.6-a16-20260318595986-community-sake.img : /e/ 3.6 a15
 e-3.7.*-a16* : /data/backup/ASUS_ZENFONE8/e_local/e_a16/e-3.7-a16/OrangeFox_e-3.7.1-a16-20260429-UNOFFICIAL-sake.img : /e/ 3.7 a16
+e-4.0-a16-*  : /data/backup/ASUS_ZENFONE8/e_local/e_a16/e-4.0/OrangeFox_e-4.0-a16-20260630-UNOFFICIAL-sake.img : /e/ 4.0 a16
+e-4.3-a16-*  : /data/backup/ASUS_ZENFONE8/e_local/e_a16/e-4.3/OrangeFox_e-4.3-a16-20260922-UNOFFICIAL-sake-boot.img : /e/ 4.3 a16
+e-4.4-a16.*  : /data/backup/ASUS_ZENFONE8/e_local/e_a16/e-4.4/e-4.4.1-a16-20261027-UNOFFICIAL-sake-boot.img : /e/ 4.4.1 a16
 #
 #
 lineage-20.0-20240716-nightly-sake-signed.zip : /data/backup/ASUS_ZENFONE8/Lineage-20/2024-07-16/twrp_lineage-20.0-20240716-nightly-sake-signed.img : LineageOS 20.0
@@ -966,6 +977,8 @@ lineage-23.0* : /data/backup/ASUS_ZENFONE8/Lineage-23-local/OrangeFox_lineage-23
 #
 lineage-23.2* : /data/backup/ASUS_ZENFONE8/Lineage-23-original/23.2/OrangeFox_lineage-23.2-20260209-UNOFFICIAL-sake-boot.img : LineageOS 23.2
 #
+Lineage-24-local/lineage-24.0-  : /data/backup/ASUS_ZENFONE8/Lineage-24-local/lineage-24.0-20260913-UNOFFICIAL-sake-boot.img : LineageOS 24.0
+*
 sake-* : /data/backup/ASUS_ZENFONE8/Lineage-21/twrp_3.7.0_12-1-I006D_for_lineageOS21-20240220-sake.img : LineageOS 21.x
 #
 statix_sake-20240106-14-v7.1-UPSIDEDOWNCAKE.zip : /data/backup/ASUS_ZENFONE8/Statix/20240106/twrp_statix_sake-20240106-14-v7.1-UPSIDEDOWNCAKE.img : StatixOS
@@ -983,6 +996,7 @@ crDroidAndroid-15.0-2025*-sake-v11.7*.zip : /data/backup/ASUS_ZENFONE8/crdroid/o
 #
 EvolutionX-15.0-*-sake-10.7-*Unofficial*.zip : /data/backup/ASUS_ZENFONE8/evolutionX/orangefox_EvolutionX-15.0-20250804-sake-10.7-Unofficial.img : EvolutionX 10.7
 EvolutionX-16.0-*-sake-11.4*zip : /data/backup/ASUS_ZENFONE8/evolutionX/Evolution-11.4.1/OrangeFox_EvolutionX-16.0-20251118-sake-11.4.1-Unofficial.img : : EvolutionX 11.4.1
+EvolutionX-17.*zip : /data/backup/ASUS_ZENFONE8/evolutionX/Evolution-12.x/OrangeFox_EvolutionX-17.0-20260911-sake-12.2-Unofficial-boot.img : EvolutionX 12.x
 #
 iode-4.27-*.zip :/data/backup/ASUS_ZENFONE8/iodeos/build_on_t540p/4.x/OrangeFox_iode-4.27-20251110-UNOFFICIAL-sake.img : iodeOS 4.27
 iode-6.9-*.zip : /data/backup/ASUS_ZENFONE8/iodeos/6.x/OrangeFox_iode-6.9-20251112-sake.img: iodeOS 6.9
@@ -1031,6 +1045,8 @@ ro.lineage.version : 23.0-*-UNOFFICIAL-sake* : /data/backup/ASUS_ZENFONE8/Lineag
 #
 ro.lineage.version : 23.2-*-UNOFFICIAL-sake* : /data/backup/ASUS_ZENFONE8/Lineage-23-original/23.2/OrangeFox_lineage-23.2-20260209-UNOFFICIAL-sake-boot.img : LineageOS 23.2
 #
+ro.lineage.version : 24.0*-UNOFFICIAL-sake* : /data/backup/ASUS_ZENFONE8/Lineage-24-local/lineage-24.0-20260913-UNOFFICIAL-sake-boot.img : LineageOS 24.0
+#
 ro.statix.version : v7.1-*-20240106 : /data/backup/ASUS_ZENFONE8/Statix/20240106/twrp_statix_sake-20240106-14-v7.1-UPSIDEDOWNCAKE.img : StatixOS 
 ro.statix.version : v7.10-*-20240712 : /data/backup/ASUS_ZENFONE8/Statix/20240712/twrp_statix_sake-20240712-14-v7.10-UNOFFICIAL.img : StatixOS
 ro.statix.version : * : /data/backup/ASUS_ZENFONE8/Statix/20240712/twrp_statix_sake-20240712-14-v7.10-UNOFFICIAL.img : StatixOS
@@ -1054,7 +1070,8 @@ ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.202506* release-k
 ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.20250710* release-keys : /data/backup/ASUS_ZENFONE8/e/e-3.0.4/twrp-e-3.0.4-t-20250710507809-community-sake.img : /e/ 3.0.4
 ro.build.description : e_sake-user 13 TQ3A.230901.001 eng.root.20250529* release-keys : /data/backup/ASUS_ZENFONE8/e/e-3.0/twrp-e-3.0-t-20250529496537-community-sake.img : /e/ 3.0
 ro.build.description : e_sake-user 15 BP1A.250505.005 eng* : /data/backup/ASUS_ZENFONE8/e_local/e_a15/3.6/OrangeFox_e-3.6-a15-20260314-UNOFFICIAL-sake.img : /e/ 3.6
-ro.build.description : e_sake-user 16 BP2A.250805.005 eng* : /data/backup/ASUS_ZENFONE8/e_local/e_a16/e-3.7-a16/OrangeFox_e-3.7.1-a16-20260429-UNOFFICIAL-sake.img : /e/ 3.7
+#ro.build.description : e_sake-user 16 BP2A.250805.005 eng* : /data/backup/ASUS_ZENFONE8/e_local/e_a16/e-3.7-a16/OrangeFox_e-3.7.1-a16-20260429-UNOFFICIAL-sake.img : /e/ 3.7
+ro.build.description : e_sake-user 16 BP2A.250805.005 eng* :/data/backup/ASUS_ZENFONE8/e_local/e_a16/e-4.3/OrangeFox_e-4.3-a16-20260922-UNOFFICIAL-sake-boot.img : /e/ 4.3
 
 #
 ro.lineage.display.version : 3.2-a15-* : /data/backup/ASUS_ZENFONE8/e_local/e_a15/3.2/OrangeFox_e-3.2.0-a15-20251105-UNOFFICIAL-sake.img : /e/ 3.2.0
@@ -1067,12 +1084,13 @@ ro.crdroid.build.version : 11.7  : /data/backup/ASUS_ZENFONE8/crdroid/orangefox_
 #
 ro.evolution.build.version : EvolutionX-15.0-*-sake-10.7-*Unofficial : /data/backup/ASUS_ZENFONE8/evolutionX/orangefox_EvolutionX-15.0-20250804-sake-10.7-Unofficial.img : EvolutionX 10.7
 ro.evolution.build.version : EvolutionX-16.0-*-sake-11.4.1-*Unofficial : /data/backup/ASUS_ZENFONE8/evolutionX/Evolution-11.4.1/OrangeFox_EvolutionX-16.0-20251118-sake-11.4.1-Unofficial.img : EvolutionX 11.4.1
+ro.evolution.build.version : EvolutionX-17.0-*-sake*Unofficial : /data/backup/ASUS_ZENFONE8/evolutionX/Evolution-12.x/OrangeFox_EvolutionX-17.0-20260911-sake-12.2-Unofficial-boot.img : EvolutionX 12.x
 #
 ro.build.description : iode_sake-user 13 TQ3A.230901.001 eng.root.20251110.090506 dev-keys : /data/backup/ASUS_ZENFONE8/iodeos/build_on_t540p/4.x/OrangeFox_iode-4.27-20251110-UNOFFICIAL-sake.img : iodeOS 4.27
 ro.build.description : lineage_sake-user 15 BP1A.250505.005 eng.xtrnaw test-keys : /data/backup/ASUS_ZENFONE8/iodeos/6.x/OrangeFox_iode-6.9-20251112-sake.img : iodeOS 6.9
 #
 ro.derpfest.build.version : DerpFest-v16.0* : /data/backup/ASUS_ZENFONE8/derpfest/16.0/OrangeFox_DerpFest-v16.0-20251218-sake-Community-Stable.img : DerpFest 16.0
-
+ro.derpfest.build.version : DerpFest-v17-* : /data/backup/ASUS_ZENFONE8/derpfest/17.0/OrangeFox_DerpFest-v17-20260919-sake-Community-Stable.img : DerpFest 17.0
 "
 fi
 
@@ -2068,7 +2086,7 @@ function __retrieve_phone_status  {
 #
 # the phone is booted into the Android OS : Check if it'S booted into the normal mode or the safe mode
 #  
-        RO_SYS_SAFEMODE="$( ${TIMEOUT} 5 ${ADB} ${ADB_OPTIONS} shell su - -c "getprop ro.sys.safemode" 2>/dev/null )"
+        RO_SYS_SAFEMODE="$( ${TIMEOUT} 5 ${ADB} ${ADB_OPTIONS} shell su -c "getprop ro.sys.safemode" 2>/dev/null )"
         if [ "${RO_SYS_SAFEMODE}"x = "1"x ] ; then
 #
 # the phone is booted into save mode of the Android OS
@@ -3398,7 +3416,7 @@ function decrypt_data  {
   if [ ${THISRC} = ${__TRUE} -a ${CONT} = ${__TRUE} ] ; then 
 
     if [ "${CUR_ID_ON_THE_PHONE}"x != "root"x ] ; then    
-      CUR_OUTPUT="$( set -x ; ${ADB} ${ADB_OPTIONS} shell su - -c ls -ld /data/media/0/* 2>&1 )" 
+      CUR_OUTPUT="$( set -x ; ${ADB} ${ADB_OPTIONS} shell su -c ls -ld /data/media/0/* 2>&1 )" 
       TEMPRC=$? 
     else
       CUR_OUTPUT="$( set -x ; ${ADB} ${ADB_OPTIONS} shell ls -ld /data/media/0/* 2>&1 )"
@@ -4307,7 +4325,7 @@ function enable_safe_mode  {
     LogError "The phone must be booted into the Android OS to reboot it into the safe mode (PHONE_STATUS is ${PHONE_STATUS})"
     THISRC=${__FALSE}
   else
-    ${ADB} ${ADB_OPTIONS} shell su - -c "setprop persist.sys.safemode 1" 2>/dev/null
+    ${ADB} ${ADB_OPTIONS} shell su -c "setprop persist.sys.safemode 1" 2>/dev/null
     if [ $? -ne 0 ] ; then
       ${ADB} ${ADB_OPTIONS} shell setprop persist.sys.safemode 1 2>/dev/null
       if [ $? -ne 0 ] ; then
@@ -4329,7 +4347,7 @@ function enable_safe_mode  {
 # Usage :  copy_file_on_the_phone [source] [target]
 #
 # source and target can either be a file or a block device on the phone
-# The function uses the prefix "su - -c" only if necessary
+# The function uses the prefix "su -c" only if necessary
 # 
 # returns: 
 #
@@ -4399,7 +4417,7 @@ function copy_file_on_the_phone  {
       else
         LogMsg "Root access is necessary to create the copy"
     
-        CMD_PREFIX="su - -c "
+        CMD_PREFIX="su  -c "
         LogMsg "The shell user on the phone is ${SHELL_USER_ON_THE_PHONE} -- uses the prefix \"${CMD_PREFIX}\" for the commands to execute"
       fi
     else
@@ -4469,7 +4487,7 @@ function copy_file_on_the_phone  {
 # Usage :  download_file_from_the_phone [file_on_the_phone] [local_file]
 #
 # file_on_the_phone can either be a file or a block device on the phone
-# The function uses the prefix "su - -c" only if necessary
+# The function uses the prefix "su -c" only if necessary
 #
 # local_file is a file on the PC
 #
@@ -4540,7 +4558,7 @@ function download_file_from_the_phone  {
       else
         LogMsg "Root access is necessary to download the file"
     
-        CMD_PREFIX="su - -c "
+        CMD_PREFIX="su  -c "
         LogMsg "The shell user on the phone is ${SHELL_USER_ON_THE_PHONE} -- uses the prefix \"${CMD_PREFIX}\" for the commands to execute"
       fi
     else
@@ -4595,7 +4613,7 @@ function download_file_from_the_phone  {
 # local_file is a file on the PC
 #
 # file_on_the_phone can either be a file or a block device on the phone
-# The function uses the prefix "su - -c" only if necessary
+# The function uses the prefix "su -c" only if necessary
 #
 # returns: 
 #
@@ -4664,7 +4682,7 @@ function upload_file_to_the_phone  {
       else
         LogMsg "Root access is necessary to upload the file"
 
-        CMD_PREFIX="su - -c "
+        CMD_PREFIX="su -c "
         LogMsg "The shell user on the phone is ${SHELL_USER_ON_THE_PHONE} -- uses the prefix \"${CMD_PREFIX}\" for the commands to execute"
       fi
     else

@@ -49,6 +49,8 @@
 #   05.11.2025 /bs v1.1.0
 #     the script now handles ZIP files with missing PEM files (unzip -p ends with a return value of 0, even if no file was extracted  )
 #     the script now also supports 7zz for adding the new certificate to the zip file  
+#  18.11.2026 v1.2.0 /bs
+#     replace "su - -c " with "su - " ("su -" does not work anymmore with Magisk 31.1)
 #
 
 # ----------------------------------------------------------------------
@@ -431,16 +433,16 @@ if [ "${THIS_USER}"x != "root"x ] ; then
 # check for root access via su
 #
 
-  su - -c id 2>/dev/null >/dev/null
+  su -c id 2>/dev/null >/dev/null
   if [ $? -eq 0 ] ; then
 
-#    ROOT_PREFIX="su - -c "
+#    ROOT_PREFIX="su  -c "
 
     echo "Restarting the script as user \"root\" ..."
 
-    exec su - -c $0 ${SCRIPT_PARAMETER}
+    exec su -c $0 ${SCRIPT_PARAMETER}
  
-    die 200 "Restarting the script as user \"root\" via \"su - -c $0 $*\" failed"
+    die 200 "Restarting the script as user \"root\" via \"su  -c $0 $*\" failed"
 
   else
     die 100 "This script needs root access rights (the current user is \"${THIS_USER}\")"
@@ -503,7 +505,7 @@ if [ "${ZIP_FILES}"x = ""x  ] ; then
   if [ ${OTACERTS_ALREADY_CHANGED} != ${__TRUE} ] ; then
     LogMsg "This is the original file from the OS"
   else
-    LogMsg "This is already a modified file (use \"su - -c umount ${OTACERTS_ZIP_FILE}\" to restore the original file)"
+    LogMsg "This is already a modified file (use \"su  -c umount ${OTACERTS_ZIP_FILE}\" to restore the original file)"
   fi
   LogMsg 
   die 0 "No parameter found - nothing to do"
@@ -713,7 +715,7 @@ The certificates in the file \"${OTACERTS_ZIP_FILE}\" are now:
       if [ "${TEST_USER}"x != ""x ] ; then
         LogMsg "Checking whether access to the working directory \"${WORKDIR}\" is permitted for all users ... "
 
-        CUR_OUTPUT="$( su - ${TEST_USER} -c unzip -l "${OTACERTS_ZIP_FILE}" )"
+        CUR_OUTPUT="$( su  ${TEST_USER} -c unzip -l "${OTACERTS_ZIP_FILE}" )"
         if [ $? -ne 0 ] ; then
           LogWarning "The used working directory is NOT readable by all users - the update may therefor fail"
         else

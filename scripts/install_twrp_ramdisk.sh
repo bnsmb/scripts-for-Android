@@ -15,6 +15,9 @@
 # History
 #   15.05.2023 v1.0.0.0
 #     initial release
+#   18.11.2026 v1.1.0 /bs
+#     replace "su - -c " with "su - " ("su -" does not work anymmore with Magisk 31.1)
+
 #
 #
 #H# Supported environment variables
@@ -126,7 +129,7 @@ fi
 CUR_ID="$( id -u -n )"
 if [ "${CUR_ID}"x != "root"x ] ; then
 	echo "The user starting the script is \"${CUR_ID}\" -- restarting the script as user \"root\" ..."
-	su - -c $0 $*
+	su -c $0 $*
 	exit $?
 fi
 

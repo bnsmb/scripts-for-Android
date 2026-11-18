@@ -20,6 +20,8 @@
 # History
 #   06.11.2024 1.0.0 /bs
 #    initial release
+#   18.11.2026 v1.1.0 /bs
+#     replace "su - -c " with "su - " ("su -" does not work anymmore with Magisk 31.1)
 #
 
 __TRUE=0
@@ -31,7 +33,7 @@ __FALSE=1
 
 CUR_USER="$( id -un )"
 
-[ "${CUR_USER}"x != "root"x ] && PREFIX="su - -c " || PREFIX=""
+[ "${CUR_USER}"x != "root"x ] && PREFIX="su -c " || PREFIX=""
 
 if [ "$1"x = "-h"x -o "$1"x = "--help"x   ] ; then
   grep -E "^#h#|^#e#" $0 | cut -c4- | sed "s#recreate_bind_mount.sh#$0#g"

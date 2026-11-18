@@ -3,7 +3,7 @@
 #
 # This script will be copied to the phone and executed there
 #
-# The script is executed by the user shell; use "su - -c <command>" to execute commands as user root
+# The script is executed by the user shell; use "su -c <command>" to execute commands as user root
 #
 # code to get the UID used for an app:
 #
@@ -20,7 +20,7 @@
 __TRUE=0
 __FALSE=1
 
-SU_PREFIX="su - -c "
+SU_PREFIX="su -c "
 
 LOGFILE="/sdcard/Download/${0##*/}.log"
 
@@ -379,6 +379,11 @@ else
   echo "OK, no setup wizard found"
 fi
 
+
+# do not use the setupwizard
+#
+settings put secure user_setup_complete 1
+settings put global device_provisioned= 1
 
 #
 # this settings kills the adb sessions

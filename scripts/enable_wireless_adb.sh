@@ -73,6 +73,9 @@
 #       if the directory does not exist the log file is /cache/enable_wireless_adb.log
 #     added support for the variable ENABLE_WIRELESS_ADB_LOGFILE
 #
+#   18.11.2026 v2.1.0 /bs
+#     replace "su - -c " with "su - " ("su -" does not work anymmore with Magisk 31.1)
+
 
 # for debugging:
 #
@@ -175,13 +178,13 @@ SU_PREFIX=""
 
 if [ "${CUR_USER}" != "root"x ] ; then
   LogMsg "Running as non-root user"
-  CUR_OUTPUT="$( su - -c "id -un" 2>/dev/null )"
+  CUR_OUTPUT="$( su -c "id -un" 2>/dev/null )"
   if [ "${CUR_OUTPUT}"x != "root"x ] ; then
     LogMsg "WARNING: root access not supported -- can not correct the adbd keystore and can not check the port used by the adbd"
     ROOT_ACCESS_OKAY=${__FALSE}
   else
     LogMsg "root access via \"su\" command works"
-    SU_PREFIX="su - -c "      
+    SU_PREFIX="su -c "      
   fi
 fi
 

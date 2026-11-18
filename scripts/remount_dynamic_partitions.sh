@@ -43,6 +43,9 @@
 #    the script now uses the output of the command "dmctl table <dm_device>" to create the new logical device
 #      (in the previous version the script uses the output of the command lpdump for this purpose which can be wrong)
 #
+#   18.11.2026 v2.1.0 /bs
+#     replace "su - -c " with "su - " ("su -" does not work anymmore with Magisk 31.1)
+#
 
 __TRUE=0
 __FALSE=1
@@ -427,9 +430,9 @@ CUR_ID="$( id -un )"
 if [ "${CUR_ID}"x = "root"x ] ; then
   LogInfo "root access without any prefix works"
 else
-  CUR_ID="$( su - -c id -un )"
+  CUR_ID="$( su -c id -un )"
   if [ "${CUR_ID}"x = "root"x ] ; then
-    SU_PREFIX="su - -c "
+    SU_PREFIX="su -c "
     LogInfo "Using the prefix \"${SU_PREFIX}\" for root access"
   else
     LogError " root access to the phone does not work"

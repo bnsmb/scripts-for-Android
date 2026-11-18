@@ -1,7 +1,7 @@
 #h#
 #h# create_ugly_twrp_image.sh - "create" an TWRP image for an Android OS version not supporting TWRP (e.g an OS based on Lineage 20.x or newer)
 #h#
-#h# Usage:  create_ugly_twrp_image.sh [-h] [-v] [boot_partition|boot_partition_image_file] [fox] [noprop|-p]
+#h# Usage:  create_ugly_twrp_image.sh [-h] [-v] [boot_partition|boot_partition_image_file] [fox] [noprop|-p] [prop=value]
 #h#
 #H# Parameter:
 #H#
@@ -9,10 +9,14 @@
 #H#
 #H# boot_partition_image_file - image file with a boot partition on the PC to be used for the TWRP image
 #H#
+#H# fox - use the OrangeFox recovery instead of TWRP; the default name of the file with the OrangeFox recovery is:
+#H#   "/data/backup/ASUS_ZENFONE8/OrangeFox/OrangeFox_Recovery.img"
+#H# set the environment variable FOX_IMAGE to use another OrangeFox recovery image
+#H#
 #H# noprop - do not copy the properties from the running OS on the phone connected via usb
 #H#
-#H# fox - use the OrangeFox recovery instead of TWRP; the name of the file with the OrangeFox recovery is hardcoded in the script 
-#H#   "/data/backup/ASUS_ZENFONE8/OrangeFox/OrangeFox_Recovery.img"
+#H# prop=value - define additional properties for the recovery image (this parameter can be used multiple times)
+#H#
 #H# 
 #H# This script must run on PC running the Linux OS; a working TWRP image for the phone is required and access via adb to the phone 
 #H# is required if the script should copy the boot partition for the TWRP image from the phone or change the properties in the ramdisk
@@ -26,7 +30,7 @@
 #    initial release
 #
 #  25.02.2025 v1.0.0 /bs
-#   added the variable DEFAULT_TWRP_IMAGE for the default TRWP image that is used if the varialbe TWRP_IMAGE is not defined
+#   added the variable DEFAULT_TWRP_IMAGE for the default TRWP image that is used if the variable TWRP_IMAGE is not defined
 #
 #  13.05.2025 v1.0.1 /bs
 #    added a workaround to the file prop.default from the cpio archive
@@ -48,6 +52,19 @@
 #    added the parameter "fox"
 #    the script now prints a message if the parameter for the boot image file does not exist locally
 #
+#  18.02.2026 v2.4.0 /bs
+#    added the script parameter "prop=value" to define properties for the recovery image in the parameter
+#    added the properties 
+#      ro.modversion
+#      ro.crdroid.build.version
+#      ro.evolution.build.version
+#      ro.derpfest.build.version
+#    to the list of properties automatically copied to the recovery image
+#    added support for the environment variable FOX_IMAGE
+#
+#  18.11.2026 v2.4.1 /bs
+#    replace "su - -c " with "su - " ("su -" does not work anymmore with Magisk 31.1)
+
 
 #H# Environment variables used if set:
 #H#
@@ -60,6 +77,8 @@
 #H#  ADB_OPTIONS   - additional options for adb (there is no default for this variable)
 #H#
 #H#  TWRP_IMAGE    - fully qualified name of the TWRP image to be used to create the new TWRP image
+#H#
+#H#  FOX_IMAGE     - fully qualified name of the recovery image to be used if the parameter "fox" is used
 #H#
 #H#  WORKDIR       - working directory (default: /tmp/create_twrp.$$)
 #H#
@@ -79,7 +98,13 @@ typeset __FALSE=1
 
 # KEEP_WORK_DIR=${__TRUE}
 
+# recovery image used if the parameter "fox" is found
+#
+FOX_IMAGE="${FOX_IMAGE:=/data/backup/ASUS_ZENFONE8/OrangeFox/OrangeFox_Recovery.img}"
+
+
 # process the parameter
+
 #
 CUR_PARAMETER=""
 
@@ -88,6 +113,8 @@ COPY_PROPERTIES=${__TRUE}
 VERBOSE=${__FALSE}
 
 SHOW_USAGE=${__FALSE}
+
+ADD_PROPERTIES=""
 
 while [ $# -ne 0 ] ; do
 
@@ -112,10 +139,19 @@ while [ $# -ne 0 ] ; do
      VERBOSE=${__TRUE}
      ;;
 
-   lineageos | orangefox | fox  )
-     TWRP_IMAGE="/data/backup/ASUS_ZENFONE8/OrangeFox/OrangeFox_Recovery.img"
+   lineageos | los | orangefox | fox  )
+     TWRP_IMAGE="${FOX_IMAGE}"
      ;;
 
+   *=* )
+      if [[ ${CUR_PARAMETER} == *\ * ]] ; then
+       echo "ERROR: White spaces in the parameter for properties are not supported (\"${CUR_PARAMETER}\")"
+       exit 9
+     fi
+     ADD_PROPERTIES="${ADD_PROPERTIES}
+${CUR_PARAMETER}"
+     ;;
+        
    * )        
      if [ "${BOOT_PARTITION_PARAMETER}"x != ""x ] ; then
        echo "ERROR: unknown parameter found: ${CUR_PARAMETER}"
@@ -147,6 +183,10 @@ ro.omni.version
 ro.lmodroid.build_name
 ro.build.description
 ro.build.display.id
+ro.modversion
+ro.crdroid.build.version
+ro.evolution.build.version
+ro.derpfest.build.version
 "
 
 # ---------------------------------------------------------------------
@@ -200,6 +240,7 @@ ADB="${ADB:=$( which adb )}"
 MAGISKBOOT="${MAGISKBOOT:=$( which magiskboot )}"
 
 DEFAULT_TWRP_IMAGE="/data/backup/ASUS_ZENFONE8/twrp/current_twrp.img"
+
 
 if [ "${MAGISKBOOT}"x = ""x  ] ; then
   echo "
@@ -255,7 +296,7 @@ if [ "${CUR_BOOT_IMAGE_FILE}"x = ""x ] ; then
   if [ "${CUR_OUTPUT}"x = "root"x ] ; then
     PREFIX=""
   else
-    PREFIX="su - -c "
+    PREFIX="su -c "
   fi
 
   CUR_OUTPUT="$( ${ADB} ${ADB_OPTIONS} shell ${PREFIX} id -un )"
@@ -322,7 +363,8 @@ RAMDISK_FILE_TYPE="$( file ./ramdisk.cpio | cut -f2- -d ":" )"
 
 echo "The type of the ramdisk cpio archive in the TWRP image is \"${RAMDISK_FILE_TYPE}\" "
 
-if [ ${COPY_PROPERTIES} = ${__TRUE} ] ; then
+if [ ${COPY_PROPERTIES} = ${__TRUE} -o "${ADD_PROPERTIES}"x != ""x ] ; then
+
 
   echo "${RAMDISK_FILE_TYPE}" | grep " cpio " >/dev/null
   if [ $? -eq 0 ] ; then
@@ -374,27 +416,54 @@ if [ ${COPY_PROPERTIES} = ${__TRUE} ] ; then
   PROPERTIES_CHANGED=${__FALSE}
   
   cp "./prop.default" "./prop.default.$$.org"
-  
-  for CUR_PROP in ${PROPERTIES_TO_COPY_TO_THE_TWRP_IMAGE} ; do
-  
-    CUR_OS_VALUE="$( ${ADB} ${ADB_OPTIONS} shell getprop ${CUR_PROP} | cut -f2- -d"=" )"
+
+  if [ ${COPY_PROPERTIES} = ${__TRUE} ] ; then  
+
+    for CUR_PROP in ${PROPERTIES_TO_COPY_TO_THE_TWRP_IMAGE} ; do
+
+# ignore comments
+#    
+      [[ ${CUR_PROP} == \'* ]] && continue
+
+      CUR_OS_VALUE="$( ${ADB} ${ADB_OPTIONS} shell getprop ${CUR_PROP} | cut -f2- -d"=" )"
+      
+      if [ "${CUR_OS_VALUE}"x = ""x ] ; then  
+        echo "The property \"${CUR_PROP}\" is not defined in the OS running on the phone connected via adb"
+        continue
+      fi
     
-    if [ "${CUR_OS_VALUE}"x = ""x ] ; then  
-      echo "The property \"${CUR_PROP}\" is not defined in the OS running on the phone connected via adb"
-      continue
-    fi
+      CUR_TWRP_VALUE="$( grep "^${CUR_PROP}=" ./prop.default | cut -f2- -d"="  )"
+      if [ "${CUR_TWRP_VALUE}"x = "${CUR_OS_VALUE}"x ] ; then  
+        echo "The value for the property \"${CUR_PROP}\" in the TWRP image is already the correct value: \"${CUR_TWRP_VALUE}\" "
+      elif [ "${CUR_TWRP_VALUE}"x = ""x ] ; then  
+        echo "Adding the property \"${CUR_PROP}=${CUR_OS_VALUE}\" to the TWRP image ..."
+        echo "${CUR_PROP}=${CUR_OS_VALUE}" >>./prop.default
+        PROPERTIES_CHANGED=${__TRUE}
+    
+      else 
+        echo "Changing the value for the property \"${CUR_PROP}\" to \"${CUR_OS_VALUE}\" in the file \"./prop.default\" for the ramdisk in the new TWRP image ..."
+        sed -i -e "s/^${CUR_PROP}=.*/${CUR_PROP}=${CUR_OS_VALUE}/g" ./prop.default
+        PROPERTIES_CHANGED=${__TRUE}
+      fi
+    done
+  fi
   
+  for CUR_ENTRY in ${ADD_PROPERTIES} ; do
+
+    CUR_PROP="${CUR_ENTRY%%=*}"
+    NEW_VALUE="${CUR_ENTRY#*=}"
+
     CUR_TWRP_VALUE="$( grep "^${CUR_PROP}=" ./prop.default | cut -f2- -d"="  )"
-    if [ "${CUR_TWRP_VALUE}"x = "${CUR_OS_VALUE}"x ] ; then  
+    if [ "${CUR_TWRP_VALUE}"x = "${NEW_VALUE}"x ] ; then  
       echo "The value for the property \"${CUR_PROP}\" in the TWRP image is already the correct value: \"${CUR_TWRP_VALUE}\" "
     elif [ "${CUR_TWRP_VALUE}"x = ""x ] ; then  
-      echo "Adding the property \"${CUR_PROP}=${CUR_OS_VALUE}\" to the TWRP image ..."
-      echo "${CUR_PROP}=${CUR_OS_VALUE}" >>./prop.default
+      echo "Adding the property \"${CUR_PROP}=${NEW_VALUE}\" to the TWRP image ..."
+      echo "${CUR_PROP}=${NEW_VALUE}" >>./prop.default
       PROPERTIES_CHANGED=${__TRUE}
-  
+    
     else 
-      echo "Changing the value for the property \"${CUR_PROP}\" to \"${CUR_OS_VALUE}\" in the file \"./prop.default\" for the ramdisk in the new TWRP image ..."
-      sed -i -e "s/^${CUR_PROP}=.*/${CUR_PROP}=${CUR_OS_VALUE}/g" ./prop.default
+      echo "Changing the value for the property \"${CUR_PROP}\" to \"${NEW_VALUE}\" in the file \"./prop.default\" for the ramdisk in the new TWRP image ..."
+      sed -i -e "s/^${CUR_PROP}=.*/${CUR_PROP}=${NEW_VALUE}/g" ./prop.default
       PROPERTIES_CHANGED=${__TRUE}
     fi
   done

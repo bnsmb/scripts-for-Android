@@ -7,6 +7,8 @@
 # History
 #   05.12.2024/bs
 #     initial release
+#   18.11.2026 v1.1.0 /bs
+#     replace "su - -c " with "su - " ("su -" does not work anymmore with Magisk 31.1)
 #
 #
 function die {
@@ -45,7 +47,7 @@ for CUR_PACKAGE in ${LIST_OF_PACKAGES} ; do
   echo "Checking the package \"${CUR_PACKAGE}\" ..."
   CURRENT_APK="$( dumpsys package "${CUR_PACKAGE}" | grep current.apk | tr -d "\t " )"
 
-  su - -c unzip -t  "${CURRENT_APK}"  2>/dev/null | grep libmagiskboot.so >/dev/null
+  su -c unzip -t  "${CURRENT_APK}"  2>/dev/null | grep libmagiskboot.so >/dev/null
   if [ $? -eq 0 ] ; then
     echo "
 The package name for Magisk is \"${CUR_PACKAGE}\" 

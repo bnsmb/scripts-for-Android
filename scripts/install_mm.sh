@@ -74,7 +74,7 @@
 #     the script now deletes the temporary test files /sdcard/Download/xxx.$$ 
 #
 #   18.11.2026 v1.3.0 /bs
-#     replace "su - -c " with "su - " ("su -" does not work anymmore with Magisks 31.1)
+#     replace "su - -c " with "su - " ("su -" does not work anymmore with Magisk 31.1)
 #
 # read the script version from the script source code
 #

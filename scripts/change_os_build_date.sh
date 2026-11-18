@@ -46,6 +46,9 @@
 #   30.09.2025 /bs v1.2.0
 #     added code to also change the SPL
 #     added the parameters --spl and --spl=value
+#   18.11.2026 v1.3.0 /bs
+#     replace "su - -c " with "su - " ("su -" does not work anymmore with Magisk 31.1)
+
 #
 
 # ----------------------------------------------------------------------
@@ -554,15 +557,15 @@ if [ "${THIS_USER}"x != "root"x ] ; then
 
 # check for root access via su
 #
-  su - -c id 2>/dev/null >/dev/null
+  su -c id 2>/dev/null >/dev/null
   if [ $? -eq 0 ] ; then
    echo "Restarting the script as user \"root\" ..."
 #
 # root access via su is workgin
 #
-    exec su - -c $0 ${SCRIPT_PARAMETER}
+    exec su -c $0 ${SCRIPT_PARAMETER}
   
-    die 200 "Restarting the script as user \"root\" via \"su - -c $0 $*\" failed"
+    die 200 "Restarting the script as user \"root\" via \"su -c $0 $*\" failed"
   else
     die 100 "This script needs root access rights (the current user is \"${THIS_USER}\")"
   fi

@@ -185,6 +185,9 @@ ENABLE_SINGLE_STEP_ON_ERROR=${__TRUE}
 #H#     added the option "S" or "status" to force the script to reread the phone status to the menue that is printed when a task failed
 #H#     the script now rereads the phone status when the user selects "c" or "r" in the menue printed after a task failed
 #H#
+#H#  18.11.2026 v4.1.0 /bs
+#H#     replace "su - -c " with "su - " ("su -" does not work anymmore with Magisk 31.1)
+
 
 
 # global variables
@@ -1586,6 +1589,8 @@ boot_phone_from_twrp_image:force
 
 install_magisk_in_boot_partition_only:noreboot:_a
 boot_phone_from_twrp_image:force
+format_data_via_twrp
+mount_data_via_twrp
 enable_adb:reboot:_a
 install_magisk_in_data_adb_only:noreboot:copy_apk:use_apk
 wait_for_access_via_adb:120:kill
@@ -3143,14 +3148,14 @@ function check_root_access {
   
   while [ ${THISRC} = ${__FALSE} ] ; do
 
-    CUR_OUTPUT="$( timeout 120 ${ADB} ${ADB_OPTIONS} shell su - -c id  2>&1 )"
+    CUR_OUTPUT="$( timeout 120 ${ADB} ${ADB_OPTIONS} shell su -c id  2>&1 )"
     TEMPRC=$?
 
     LogInfo "${__FUNCTION}: Output of the adb command to check the root access is :" && \
       LogMsg "-" "${CUR_OUTPUT}"
 
     if [ ${TEMPRC} = 0 ] ; then
-      ROOT_ACCESS_PREFIX="su - -c "
+      ROOT_ACCESS_PREFIX="su  -c "
       THISRC=${__TRUE}
       break
     fi
@@ -3315,6 +3320,7 @@ R reset_usb      - reset the USB port for the  phone
 f format         - format /data
 m mount          - mount /data
 S status         - retrieve, update, and print the phone status
+cancel           - cancel an ongoing snapshot update
 shell            - open a shell
 !cmd             - execute the command \"cmd\"
 
@@ -3406,6 +3412,32 @@ quit             - end the script
             break
             ;;
           
+          cancel )
+            retrieve_phone_status
+            print_phone_status
+            case ${PHONE_STATUS} in
+
+              4 )
+                LogMsg "Now canceling the snapshot update .."
+                CUR_OUTPUT="$( set -x; fastboot snapshot-update cancel 2>&1 )"
+                TEMPRC=$?
+                LogMsg "-" "${CUR_OUTPUT}"
+                ;;
+
+              1 | 2 | 7 )
+                LogMsg "Now canceling the snapshot update .."
+                CUR_OUTPUT="$( adb shell 'set -x ; bootctl get-snapshot-merge-status; bootctl set-snapshot-merge-status cancelled; bootctl get-snapshot-merge-status'  2>&1 )"
+                TEMPRC=$?
+                LogMsg "-" "${CUR_OUTPUT}"
+                ;;
+
+              * )
+               LogMsg "Can not cancel the snapshot update in the current phone state"
+               ;;
+            esac
+            ;;
+
+            
           R | reset_usb )
             LogMsg "The list of known adb devices is now:"
             CUR_OUTPUT="$( adb devices 2>&1 )"
@@ -13278,7 +13310,7 @@ function task_install_archive_file {
       
       USER_ON_THE_PHONE="$( ${ADB} ${ADB_OPTIONS} shell id -u -n )"
       if [ "${USER_ON_THE_PHONE}"x != "root"x ] ; then
-        CMD_PREFIX="su - -c "
+        CMD_PREFIX="su -c "
         LogMsg "The user on the phone is the user \"${USER_ON_THE_PHONE}\" -- using the command prefix \"${CMD_PREFIX}\" "
       else
         CMD_PREFIX=""
@@ -18709,3 +18741,4 @@ ${CUR_COMMAND_HINTS}"
 
   return ${THISRC}
 }
+

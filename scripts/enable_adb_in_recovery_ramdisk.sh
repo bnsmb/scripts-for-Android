@@ -13,6 +13,9 @@
 #   the script now uses "better" names for the temporary files
 #   enhanced the check after unpacking the cpio archive
 #
+#  18.11.2026 v4.1.0 /bs
+#   replace "su - -c " with "su - " ("su -" does not work anymmore with Magisk 31.1)
+#
 
 #h# Environment variables used if set
 #h#
@@ -113,7 +116,7 @@ fi
 CUR_USER="$( id -un )"
 
 if [ "${CUR_USER}"x != "root"x ] ; then
-  PREFIX="su - -c "
+  PREFIX="su  -c "
 else
   PREFIX=""
 fi

@@ -10,6 +10,9 @@
 # History:
 #   06.12.2024 v1.0.0 /bs
 #
+#   8.11.2026 v1.1.0 /bs
+#     replace "su - -c " with "su - " ("su -" does not work anymmore with Magisk 31.1)
+
 
 # MicroG config file
 #
@@ -30,7 +33,7 @@ if [ "$1"x != "-x"x ] ; then
   exit 1
 elif [ "$( id -un )"x != "root"x ] ; then
   echo "Restarting the script as user \"root\" ..."
-  su - -c $0 $*
+  su -c $0 $*
   exit $?
 elif [ ! -r   "${MICROG_CONFIG_FILE}" ] ; then
   echo "ERROR: The MicroG config file \"${MICROG_CONFIG_FILE}\" does not exist"
