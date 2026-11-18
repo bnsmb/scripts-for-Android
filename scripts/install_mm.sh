@@ -54,7 +54,7 @@
 #   Magisk must be installed and active on the phone
 #   The Magisk Modules to install must exist on the machine on which this script is running
 #   A shell on the phone or a connection via adb command to the phone is required
-#   root access is required (either direct or via "su -")
+#   root access is required (either direct or via "su ")
 #
 #
 # History
@@ -72,6 +72,9 @@
 #
 #   19.04.2025 v1.2.1 /bs
 #     the script now deletes the temporary test files /sdcard/Download/xxx.$$ 
+#
+#   18.11.2026 v1.3.0 /bs
+#     replace "su - -c " with "su - " ("su -" does not work anymmore with Magisks 31.1)
 #
 # read the script version from the script source code
 #
@@ -304,9 +307,9 @@ CUR_ID="$( ${ADB_SHELL_COMMAND} id -un )"
 if [ "${CUR_ID}"x = "root"x ] ; then
   LogMsg "root access without any prefix works"
 else
-  CUR_ID="$( ${ADB_SHELL_COMMAND} su - -c id -un )"
+  CUR_ID="$( ${ADB_SHELL_COMMAND} su -c id -un )"
   if [ "${CUR_ID}"x = "root"x ] ; then
-    SU_PREFIX="su - -c "
+    SU_PREFIX="su -c "
     LogMsg "Using the prefix \"${SU_PREFIX}\" for root access"
   else
     die 105 " root access to the phone does not work"
